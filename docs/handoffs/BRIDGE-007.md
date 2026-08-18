@@ -2,36 +2,40 @@
 
 ## Task
 
-BRIDGE-007 — Tray / background UX (Task 2 of 3: Windows NotifyIcon pairing adapter).
+BRIDGE-007 — Tray / background UX (Task 3 of 3: wire host + hide console + docs).
 
 ## Goal
 
-Compile a host-only WinForms `NotifyIcon` pairing UX without putting `System.Windows.Forms` in Core, and without breaking Ubuntu `dotnet test SimPulse.sln`.
+Register one pairing UX (Windows interactive tray or console), run NotifyIcon on an STA `Application.Run` thread, hide the Windows console via `WinExe`, and mark ACs done.
 
 ## Status
 
-IN_PROGRESS (Task 2 complete; do not mark BRIDGE-007 DONE)
+DONE
 
 ## Files changed
 
-- `apps/windows-bridge/SimPulse.Bridge.Core/Application/TrayPairingUxText.cs` — menu labels + PIN balloon/tooltip text (no WinForms)
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/TrayPairingUxTextTests.cs`
-- `apps/windows-bridge/SimPulse.Bridge/Tray/NotifyIconPairingUx.cs` — `#if WINDOWS_TRAY` NotifyIcon adapter
-- `apps/windows-bridge/SimPulse.Bridge/SimPulse.Bridge.csproj` — Windows `net8.0-windows` + `UseWindowsForms` + `WINDOWS_TRAY`; Linux stays `net8.0`
-- `docs/BACKLOG.md`, `docs/CURRENT_STATE.md`, `docs/KNOWN_ISSUES.md`, this handoff
+- `apps/windows-bridge/SimPulse.Bridge.Core/Application/PairingUxMode.cs` — tray vs console selection
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/PairingUxModeTests.cs`
+- `apps/windows-bridge/SimPulse.Bridge/Program.cs` — single `IPairingUx` + STA start before `host.Run`
+- `apps/windows-bridge/SimPulse.Bridge/Worker.cs` — `BeginPairingWindow` then `OnWindowOpened` (unchanged this task)
+- `apps/windows-bridge/SimPulse.Bridge/Tray/TrayMessageLoop.cs` — STA thread constructs `NotifyIconPairingUx` then `Application.Run`
+- `apps/windows-bridge/SimPulse.Bridge/Tray/NotifyIconPairingUx.cs` — capture `SynchronizationContext` after first control; restore tooltip to “SimPulse Bridge” after balloon
+- `apps/windows-bridge/SimPulse.Bridge/SimPulse.Bridge.csproj` — Windows `WinExe`, Linux `Exe`
+- `.env.example`, `docs/DEVELOPMENT.md`, `docs/BACKLOG.md`, `docs/CURRENT_STATE.md`, `docs/KNOWN_ISSUES.md` (KI-003), `docs/SECURITY.md`, `apps/windows-bridge/README.md`, this handoff
 
 ## Decisions made
 
-- SDK 8.0.424 rejects `UseWindowsForms` on `net8.0` (NETSDK1136). Host TFM is `net8.0-windows` on Windows only so Ubuntu CI can still build `net8.0` without WinForms types.
-- Adapter is not registered in `Program.cs` (Task 3). Exit injects `IHostApplicationLifetime` and disposes the icon on `ApplicationStopping`.
-- PIN display text lives in Core so Ubuntu tests cover balloon/tooltip content; NotifyIcon itself is not unit-tested.
+- Never register tray and console UX together. Tray when `WINDOWS_TRAY` + `UserInteractive` + `SIMPULSE_BRIDGE_TRAY` is not `0`.
+- Construct `NotifyIconPairingUx` on the STA thread that calls `Application.Run` (before `host.Run`). Capturing `SynchronizationContext` at construction on MTA is a no-op; capture after the first WinForms control exists.
+- `SIMPULSE_BRIDGE_CONSOLE=1` is documentation only; debug console via `--property:OutputType=Exe`.
+- Linux TFM stays `net8.0` so Ubuntu `dotnet test SimPulse.sln` still builds.
 
 ## Tests executed
 
-- Focused `TrayPairingUxTextTests` — 3 passed
-- Host Release build on Windows — 0 warnings, 0 errors (`net8.0-windows`)
-- `dotnet test SimPulse.sln --configuration Release` — 81 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 59)
-- `dotnet build SimPulse.sln --configuration Release` — 0 warnings, 0 errors
+- Focused `PairingUxModeTests` — 4 passed (RED: `PairingUxMode` missing; GREEN after implementation)
+- Host Release build (`net8.0-windows`, PE subsystem 2 / WinExe) — 0 warnings, 0 errors
+- `dotnet test SimPulse.sln --configuration Release` — 85 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 63)
+- Smoke `dotnet run --property:OutputType=Exe`: STA tray started, PIN shown via `NotifyIconPairingUx`, then host stopped after a fixture path miss (unrelated)
 
 ## Tests passing
 
@@ -39,17 +43,16 @@ Yes
 
 ## Known failures
 
-None.
+None known.
 
 ## Remaining work
 
-- Task 3: register NotifyIcon vs Console UX, STA message loop / WinExe, DEVELOPMENT/.env docs, mark BRIDGE-007 ACs
-- Do not mark BRIDGE-007 DONE until tray ACs are met
+None for BRIDGE-007. TLS remains under KI-003.
 
 ## Risks
 
-Without Task 3 wiring, the adapter never runs. NotifyIcon still needs an STA message loop (`Application.Run`) when the Worker is MTA.
+WinExe hides console logs; operators must use `OutputType=Exe` or a debugger to see structured logs. BalloonTipClosed may be delayed or skipped on some Windows versions (tooltip restore is best-effort).
 
 ## Suggested next action
 
-Task 3: wire `Program.cs` (Windows interactive → NotifyIcon; else Console), hide console via WinExe on Windows, document how to run tray vs console.
+TLS for Bridge transport (KI-003 remaining) or live iRacing 60 Hz variable table.

@@ -244,7 +244,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
-- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` runs at Bridge host start and again from **Pair new device** via `TrayPairingPresenter` (BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
 
 ### BUG-001 — Pre-merge iRacing mmap review fixes
 
@@ -262,10 +262,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P2
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** BRIDGE-001
-- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart (today restart is required after the initial window closes — see KI-003).
-- **Notes:** Task 1 (Core `IPairingUx` + `TrayPairingPresenter` + `ConsolePairingUx`) complete. Task 2 added Windows-only `NotifyIconPairingUx` (not registered in `Program.cs` yet). Task 3 wires tray vs console, WinExe, and docs ACs. See `docs/handoffs/BRIDGE-007.md`.
+- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
+- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. See `docs/handoffs/BRIDGE-007.md` and `docs/DEVELOPMENT.md`.
 
 ## Dependency edges (do not parallelize these pairs)
 

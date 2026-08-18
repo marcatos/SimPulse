@@ -30,10 +30,12 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         Stopwatch started = Stopwatch.StartNew();
         _lifetime = lifetime;
         _logger = logger;
-        _syncContext = SynchronizationContext.Current;
         _iconImage = (Icon)SystemIcons.Application.Clone();
         _menu = CreateMenu();
         _icon = CreateIcon();
+        _syncContext = SynchronizationContext.Current;
+        _icon.BalloonTipClosed += RestoreIconText;
+        _icon.BalloonTipClicked += RestoreIconText;
         _stoppingRegistration = lifetime.ApplicationStopping.Register(Dispose);
         _logger.LogInformation(
             "NotifyIcon pairing UX ready. ElapsedMs={ElapsedMs} Component={Component}",
@@ -117,6 +119,11 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         _icon.ShowBalloonTip(timeoutMs);
     }
 
+    private void RestoreIconText(object? sender, EventArgs e)
+    {
+        _icon.Text = TrayPairingUxText.IconText;
+    }
+
     private void OnPairNewDevice(object? sender, EventArgs e)
     {
         _logger.LogInformation("Pair new device requested. Component={Component}", Component);
@@ -131,6 +138,8 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
 
     private void DisposeIcon()
     {
+        _icon.BalloonTipClosed -= RestoreIconText;
+        _icon.BalloonTipClicked -= RestoreIconText;
         _icon.Visible = false;
         _icon.Dispose();
         _menu.Dispose();

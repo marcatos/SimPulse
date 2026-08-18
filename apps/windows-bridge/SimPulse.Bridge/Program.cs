@@ -5,6 +5,9 @@ using SimPulse.Bridge.Core.Adapters;
 using SimPulse.Bridge.Core.Adapters.Iracing;
 using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
+#if WINDOWS_TRAY
+using SimPulse.Bridge.Tray;
+#endif
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -26,7 +29,7 @@ builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ITrustedDeviceStore>(CreateTrustedDeviceStore);
 builder.Services.AddSingleton<IPairingPinGenerator, PairingPinGenerator>();
 builder.Services.AddSingleton<PairingCoordinator>();
-builder.Services.AddSingleton<IPairingUx, ConsolePairingUx>();
+RegisterPairingUx(builder.Services);
 builder.Services.AddSingleton<TrayPairingPresenter>();
 builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
 builder.Services.AddSingleton<IIracingSharedMemory>(sp =>
@@ -61,7 +64,52 @@ builder.Services.AddSingleton<BridgeRuntime>();
 builder.Services.AddHostedService<Worker>();
 
 IHost host = builder.Build();
+StartTrayMessageLoopIfNeeded(host);
 host.Run();
+
+static void RegisterPairingUx(IServiceCollection services)
+{
+    if (!ShouldUseTray())
+    {
+        services.AddSingleton<IPairingUx, ConsolePairingUx>();
+        return;
+    }
+
+#if WINDOWS_TRAY
+    services.AddSingleton<TrayPairingUxHolder>();
+    services.AddSingleton<IPairingUx>(sp =>
+        sp.GetRequiredService<TrayPairingUxHolder>().Instance
+        ?? throw new InvalidOperationException("Tray pairing UX was not started."));
+#endif
+}
+
+static void StartTrayMessageLoopIfNeeded(IHost host)
+{
+    ILogger logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
+    if (!ShouldUseTray())
+    {
+        logger.LogInformation("Pairing UX is console. Component={Component}", "Program");
+        return;
+    }
+
+#if WINDOWS_TRAY
+    TrayPairingUxHolder holder = host.Services.GetRequiredService<TrayPairingUxHolder>();
+    holder.Instance = TrayMessageLoop.Start(host);
+    logger.LogInformation("Pairing UX is Windows tray. Component={Component}", "Program");
+#endif
+}
+
+static bool ShouldUseTray()
+{
+#if WINDOWS_TRAY
+    return PairingUxMode.UseTray(
+        windowsTrayBuild: true,
+        Environment.UserInteractive,
+        Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_TRAY"));
+#else
+    return false;
+#endif
+}
 
 static ITrustedDeviceStore CreateTrustedDeviceStore(IServiceProvider services)
 {

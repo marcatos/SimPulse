@@ -15,7 +15,7 @@
 
 ## Pairing window lifecycle (Phase 0)
 
-`BeginPairingWindow()` is called **once** when the Bridge host starts (`Worker.ExecuteAsync`). After a successful pair, 5-minute expiry, or 5-attempt lockout, the window stays closed for the remainder of that process lifetime. Opening a new window today requires a **process restart** (or a future tray **Pair new device** action in BRIDGE-007).
+`BeginPairingWindow()` is called when the Bridge host starts (`Worker.ExecuteAsync`) and again when the tray **Pair new device** command fires (`TrayPairingPresenter`). After a successful pair, 5-minute expiry, or 5-attempt lockout, the current window closes until the next explicit open. A process restart is not required.
 
 ## Reconnect trust (Phase 0)
 
