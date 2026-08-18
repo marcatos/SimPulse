@@ -12,6 +12,7 @@ namespace SimPulse.Bridge.Core.Adapters.Iracing;
 public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposable
 {
     private readonly ILogger<WindowsIracingSharedMemory> _logger;
+    private readonly IracingMemorySnapshotReader _snapshotReader = new();
     private MemoryMappedFile? _map;
     private byte[] _scratch = [];
     private bool _opened;
@@ -70,6 +71,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
     {
         MemoryMappedFile? map = _map;
         _map = null;
+        _snapshotReader.Clear();
         map?.Dispose();
         if (_opened)
         {
@@ -98,7 +100,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
                 return false;
             }
 
-            if (!IracingMemorySnapshotReader.TryRead(buffer, out snapshot))
+            if (!_snapshotReader.TryReadSnapshot(buffer, out snapshot))
             {
                 return false;
             }

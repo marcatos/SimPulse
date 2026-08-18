@@ -3,12 +3,31 @@ using SimPulse.Domain;
 
 namespace SimPulse.Bridge.Core.Adapters.Iracing;
 
-public static class IracingMemorySnapshotReader
+public sealed class IracingMemorySnapshotReader
 {
+    private int? _cachedSessionInfoUpdate;
+    private string? _cachedYaml;
+
     public static bool TryRead(ReadOnlySpan<byte> buffer, out IracingMemorySnapshot snapshot)
+    {
+        return new IracingMemorySnapshotReader().TryReadSnapshot(buffer, out snapshot);
+    }
+
+    public void Clear()
+    {
+        _cachedSessionInfoUpdate = null;
+        _cachedYaml = null;
+    }
+
+    public bool TryReadSnapshot(ReadOnlySpan<byte> buffer, out IracingMemorySnapshot snapshot)
     {
         if (IracingHeaderReader.TryReadLayout(buffer, out IracingHeaderLayout layout))
         {
+            if (!layout.Connected)
+            {
+                Clear();
+            }
+
             snapshot = new IracingMemorySnapshot(
                 ReadYaml(buffer, layout),
                 layout.Connected,
@@ -27,11 +46,18 @@ public static class IracingMemorySnapshotReader
             ? System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(
                 buffer[IracingSdkConstants.HeaderSessionInfoUpdateOffset..])
             : 0;
-        snapshot = new IracingMemorySnapshot(yaml, connected, update, IracingTelemetryValues.Unknown());
+        if (!connected)
+        {
+            Clear();
+            snapshot = new IracingMemorySnapshot(yaml, connected, update, IracingTelemetryValues.Unknown());
+            return true;
+        }
+
+        snapshot = new IracingMemorySnapshot(ResolveYaml(update, yaml), connected, update, IracingTelemetryValues.Unknown());
         return true;
     }
 
-    private static string? ReadYaml(ReadOnlySpan<byte> buffer, in IracingHeaderLayout layout)
+    private string? ReadYaml(ReadOnlySpan<byte> buffer, in IracingHeaderLayout layout)
     {
         if (!layout.Connected || layout.SessionInfoLen <= 0 || layout.SessionInfoOffset < 0)
         {
@@ -43,7 +69,21 @@ public static class IracingMemorySnapshotReader
             return null;
         }
 
-        return IracingHeaderReader.DecodeYaml(buffer.Slice(layout.SessionInfoOffset, layout.SessionInfoLen));
+        if (_cachedSessionInfoUpdate == layout.SessionInfoUpdate && _cachedYaml is not null)
+        {
+            return _cachedYaml;
+        }
+
+        return ResolveYaml(
+            layout.SessionInfoUpdate,
+            IracingHeaderReader.DecodeYaml(buffer.Slice(layout.SessionInfoOffset, layout.SessionInfoLen)));
+    }
+
+    private string? ResolveYaml(int sessionInfoUpdate, string? yaml)
+    {
+        _cachedSessionInfoUpdate = sessionInfoUpdate;
+        _cachedYaml = yaml;
+        return yaml;
     }
 
     private static IracingTelemetryValues ReadTelemetry(ReadOnlySpan<byte> buffer, in IracingHeaderLayout layout)

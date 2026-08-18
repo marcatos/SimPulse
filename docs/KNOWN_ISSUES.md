@@ -25,7 +25,7 @@ Do not hide defects because they are outside the current task.
 - **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
 - **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (`irsdkEnableMem=1`; Bridge may already be running).
 - **Suspected cause:** Live bytes are read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
-- **Done in adapters (BRIDGE-008, not live-verified):** player car (`DriverCarIdx`), `SessionNum`, `SessionTime`, and `sessionInfoUpdate` YAML cache. Available identity changes re-run `Parse` on the cached YAML (BUG-004). Lap tracking resets on Available `SessionNum`. Latest `varBuf` by tickCount. `IRSDKDataValidEvent` wait is best-effort (missing/timeout → false, caller still reads, then poll idle). Trusted clients still get race-events only — no 60 Hz WebSocket telemetry frames.
+- **Done in adapters (BRIDGE-008, not live-verified):** player car (`DriverCarIdx`), `SessionNum`, `SessionTime`, and `sessionInfoUpdate` YAML cache. mmap Latin1 YAML string is reused when `sessionInfoUpdate` is unchanged (BUG-005). Available identity changes re-run `Parse` on the cached YAML (BUG-004). Lap tracking resets on Available `SessionNum`. LapStart/LapComplete carry `sessionNum` so tracker keys do not drop race lap 1. Latest `varBuf` by tickCount. `IRSDKDataValidEvent` wait is best-effort (missing/timeout → false, caller still reads, then poll idle). Trusted clients still get race-events only — no 60 Hz WebSocket telemetry frames.
 - **Remaining:** live smoke with a real sim + mmap (`irsdkEnableMem=1`). ANALYTICS-003 `RaceReportBuilder` peak-event wiring stays out of scope.
 - **Related:** ADR 0006, BRIDGE-003, BRIDGE-008, BUG-001, BUG-004
 
@@ -69,4 +69,4 @@ Do not hide defects because they are outside the current task.
 ## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
 
 - **Status:** No known defects introduced.
-- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap session/lap ticks are produced by BRIDGE-003 / BRIDGE-008.
+- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, sessionNum, lapNumber)` before race-event logging and trusted-client broadcast. Live iRacing mmap session/lap ticks are produced by BRIDGE-003 / BRIDGE-008.

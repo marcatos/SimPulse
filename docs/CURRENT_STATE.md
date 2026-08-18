@@ -16,7 +16,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, HeartRateWindows lap/event averages gated by timeline offset, non-medical wording).
 - Windows Bridge worker + Core library: fixture replay adapter, first-party iRacing mmap session reader (YAML subset + IRSDK variable table; fake memory in tests), gated PIN pairing (CSPRNG, 5-minute window, 5-attempt lockout) + trusted-device store (in-memory or JSON file), Windows tray pairing UX (`WinExe` + `NotifyIcon`, **Show current PIN** / **Pair new device** without restart, console fallback if tray startup fails; last PIN cleared when the window closes; PR #3 merged), MEL file logs under `%LOCALAPPDATA%\SimPulse\logs` (IO failures disable file logging without crashing the host), `SessionLifecycleTracker` wired in `BridgeRuntime` for session/lap race-event dedupe, loopback WebSocket listen/accept (`HttpListener` on `/ws/`), race-event envelopes broadcast to trusted clients (no biometrics, no 60 Hz telemetry frames).
-- iRacing variable table (BRIDGE-008 DONE): latest `varBuf` by tickCount; `DriverCarIdx` / `SessionNum` / `SessionTime` / `Lap` when present; YAML re-tokenized only on `sessionInfoUpdate`; vehicle/session type re-resolved from cached YAML when car idx or SessionNum changes; lap tracking reset on SessionNum; LapStart/LapComplete from Lap increases. Tests use synthetic buffers — no live iRacing run.
+- iRacing variable table (BRIDGE-008 DONE): latest `varBuf` by tickCount; `DriverCarIdx` / `SessionNum` / `SessionTime` / `Lap` when present; YAML re-tokenized only on `sessionInfoUpdate`; mmap Latin1 YAML string reused when `sessionInfoUpdate` is unchanged (BUG-005); vehicle/session type re-resolved from cached YAML when car idx or SessionNum changes; lap tracking reset on SessionNum; LapStart/LapComplete from Lap increases include `sessionNum` + `lapNumber` so tracker keys do not drop race lap 1. Tests use synthetic buffers — no live iRacing run.
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions CI (INFRA-002 DONE): `.github/workflows/ci.yml` runs `dotnet test SimPulse.sln` on `windows-latest` and `ubuntu-latest`; test-result artifacts use `retention-days: 7`. PR #1 checks green 2026-08-18.
 - Apple CI placeholder (INFRA-003 DONE): workflow records NOT EXECUTED until an Xcode project exists.
@@ -30,7 +30,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Active work
 
-- None on this branch. BRIDGE-008 and BUG-004 are DONE (`docs/handoffs/BRIDGE-008.md`).
+- None on this branch. BRIDGE-008, BUG-004, and BUG-005 are DONE (`docs/handoffs/BUG-005.md`).
 
 ## Blocked work
 
@@ -44,14 +44,14 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Latest successful build
 
-- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424). BRIDGE-008 variable table + live-session apply (including BUG-004 identity re-resolve and SessionNum lap reset) are covered. No live iRacing process was used. BRIDGE-007 tray host (PR #3 merged) is `net8.0-windows` `WinExe` with `UseWindowsForms`; Linux stays `net8.0` `Exe`. File logs default to `%LOCALAPPDATA%\SimPulse\logs`.
+- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424). BRIDGE-008 + BUG-004 + BUG-005 (sessionNum lap keys; mmap YAML string cache) are covered. No live iRacing process was used. BRIDGE-007 tray host (PR #3 merged) is `net8.0-windows` `WinExe` with `UseWindowsForms`; Linux stays `net8.0` `Exe`. File logs default to `%LOCALAPPDATA%\SimPulse\logs`.
 - **iOS / watchOS:** NOT EXECUTED (no Xcode / no `.xcodeproj`).
 
 ## Latest successful tests
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **126 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 104). Re-run 2026-08-18 after BRIDGE-008 Task 4 docs. No live sim. |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **129 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 107). Re-run 2026-08-18 after BUG-005. No live sim. |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936). Tray UX is PR #3 (merged). |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |

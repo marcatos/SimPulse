@@ -284,6 +284,22 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
   - Tests pass without a live sim
 - **Notes:** Header/var parsers + YAML list match (unmatched lookups → Unavailable). Live path reads latest varBuf; `IracingLiveSession` caches YAML on `sessionInfoUpdate`, re-resolves identity, emits lap events, and leaves `NormalizedSimulatorUpdate.Telemetry` null. Verified with synthetic buffers + `FakeIracingSharedMemory` (`dotnet test SimPulse.sln --configuration Release`, 126 passed on Windows 2026-08-18). No live-on-track / iRacing session was run. Live mmap smoke remains KI-002. See `docs/handoffs/BRIDGE-008.md`.
 
+### BUG-005 — SessionNum in lap keys + YAML decode cache
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-008, BUG-004
+- **Acceptance criteria:**
+  - LapStart/LapComplete include `sessionNum` (and keep `lapNumber`)
+  - `SessionLifecycleTracker.BuildKey` includes `sessionNum` so practice→race lap 1 is not dropped
+  - Two LapStart with same SessionId and lapNumber=1 but different sessionNum both Observe() as non-null; same sessionNum duplicate is dropped
+  - mmap snapshot reader caches last `(SessionInfoUpdate, yaml string)` for the open map; unchanged update reuses the cached string and still reads the latest telemetry row
+  - Disconnect/Close clears the YAML cache
+  - Synthetic two-snapshot test: same sessionInfoUpdate + mutated yaml bytes → SessionYaml stays the first decode
+  - `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Critical + Important (YAML-every-frame) for `feat/iracing-var-table`. Does not start TLS/Apple, torn-read retry, EventWaitHandle caching, or full mmap slice copy.
+
 ### BUG-004 — Re-resolve session type from cached YAML
 
 - **Area:** Bridge
