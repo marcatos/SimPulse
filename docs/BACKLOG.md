@@ -214,9 +214,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ADR 0006
 - **Acceptance criteria:** Detect sim, parse session YAML subset (track, car, session type); no GPL deps; copyright notice if headers vendored.
+- **Notes:** First-party `IIracingSharedMemory` + YAML subset parser. Tests use `FakeIracingSharedMemory` and synthetic `tests/fixtures/iracing/session-info-sample.yaml`. Live path opens `Local\IRSDKMemMapFileName` (no throw if missing). No IRSDKSharper. See `docs/handoffs/BRIDGE-003.md`.
 
 ### BRIDGE-004 — Session and lap lifecycle
 
@@ -225,7 +226,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-002 or BRIDGE-003
 - **Acceptance criteria:** SESSION_START/END, LAP_START/COMPLETE from normalized ticks; idempotent.
-- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap ticks are still BRIDGE-003.
+- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap session ticks come from BRIDGE-003.
 
 ### BRIDGE-005 — WebSocket server
 

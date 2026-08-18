@@ -5,7 +5,7 @@ Do not hide defects because they are outside the current task.
 | ID | Date | Component | Severity | Status |
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Open |
-| KI-002 | 2026-08-18 | Bridge / iRacing | High (blocks Phase 3 live) | Open |
+| KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Open |
 | KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
@@ -19,12 +19,12 @@ Do not hide defects because they are outside the current task.
 - **Suspected cause:** No macOS/Xcode in the current environment (by design for Phase 0).
 - **Related:** ADR 0009, INFRA-003, WATCH-001, IOS-001
 
-## KI-002 — Live iRacing adapter not implemented
+## KI-002 — Live iRacing still requires a running sim + memmap
 
-- **Symptoms:** Bridge fixture adapter works; live sim detection always reports unavailable.
-- **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running.
-- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`.
-- **Suspected cause:** Phase 0 intentionally ships a stub `IRacingAdapter`.
+- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge now probes `Local\IRSDKMemMapFileName`. If the map is missing (iRacing closed, memmap disabled, or non-Windows), the adapter reports unavailable and emits an empty stream — same idle behavior as the old stub.
+- **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
+- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or run iRacing with memory telemetry enabled.
+- **Suspected cause:** Live session YAML is read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
 - **Related:** ADR 0006, BRIDGE-003
 
 ## KI-003 — Transport pairing UX still console-only
@@ -67,4 +67,4 @@ Do not hide defects because they are outside the current task.
 ## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
 
 - **Status:** No known defects introduced.
-- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap ticks remain BRIDGE-003.
+- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap session ticks are produced by BRIDGE-003.

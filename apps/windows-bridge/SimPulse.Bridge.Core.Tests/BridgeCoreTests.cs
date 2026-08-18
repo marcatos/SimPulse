@@ -69,16 +69,16 @@ public sealed class BridgeRuntimeTests
     }
 
     [Fact]
-    public async Task IRacing_stub_is_unavailable()
+    public async Task IRacing_adapter_unavailable_when_memory_closed()
     {
-        IRacingAdapter adapter = new();
+        IRacingAdapter adapter = new(new FakeIracingSharedMemory(open: false), new SystemClock());
         Assert.False(await adapter.IsAvailableAsync(CancellationToken.None));
     }
 
     [Fact]
     public async Task Unavailable_adapter_stops_when_cancelled()
     {
-        IRacingAdapter adapter = new();
+        IRacingAdapter adapter = new(new FakeIracingSharedMemory(open: false), new SystemClock());
         using ILoggerFactory factory = LoggerFactory.Create(_ => { });
         BridgeRuntime runtime = new(adapter, factory.CreateLogger<BridgeRuntime>());
         using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(100));

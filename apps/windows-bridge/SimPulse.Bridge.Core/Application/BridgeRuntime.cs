@@ -46,7 +46,7 @@ public sealed class BridgeRuntime
         if (!available)
         {
             _logger.LogWarning(
-                "No simulator source available. Fixture path unset or iRacing adapter not implemented. ElapsedMs={ElapsedMs}",
+                "No simulator source available. Fixture path unset and iRacing mmap not open. ElapsedMs={ElapsedMs}",
                 total.ElapsedMilliseconds);
             await WaitUntilCancelled(cancellationToken);
             _logger.LogInformation("Bridge runtime idle-stop after {ElapsedMs} ms", total.ElapsedMilliseconds);
