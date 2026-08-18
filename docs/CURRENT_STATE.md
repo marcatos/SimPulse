@@ -1,0 +1,73 @@
+# Current state
+
+Agents must read this file before substantial work and update it after material changes.
+
+**Date:** 2026-08-18  
+**Milestone:** Phase 0 — Foundation  
+**Product version:** 0.1.0-unreleased
+
+## Current milestone
+
+Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 work in isolated lanes.
+
+## Completed features
+
+- Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
+- Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
+- C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, non-medical wording).
+- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, in-memory trusted-device store, structured logging.
+- Apple Swift source scaffolding without an Xcode project (ADR 0009).
+- GitHub Actions workflow for .NET on Windows and Ubuntu; Apple job records NOT EXECUTED.
+
+## Partially completed features
+
+- Protocol: JSON types and compatibility tests exist; no LAN WebSocket or pairing UX (KI-003).
+- iRacing: stub only; live mmap is BRIDGE-003 (KI-002).
+- Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
+- Swift mirrors: names exist; not compiled.
+
+## Active work
+
+- None after INFRA-001. Claim a BACKLOG id before starting.
+
+## Blocked work
+
+- All WATCH-* and IOS-* implementation: no Swift/Xcode on the Windows workstation (KI-001).
+- PROTO-003 Swift codec: same.
+
+## Known broken behavior
+
+- `scripts/build-ios.sh`, `test-ios.sh`, `archive-ios.sh`, `build-watch.sh` exit 1 by design until an Xcode project exists.
+- Bridge without `SIMPULSE_FIXTURE_PATH` does not emit simulator sessions.
+
+## Latest successful build
+
+- **.NET Bridge host:** `dotnet build apps/windows-bridge/SimPulse.Bridge --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.301).
+- **iOS / watchOS:** NOT EXECUTED (no Xcode / no `.xcodeproj`).
+
+## Latest successful tests
+
+| Suite | Platform | Result |
+| --- | --- | --- |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **20 passed**, 0 failed (Domain 6, Analytics 4, Protocol 5, Bridge.Core 5) |
+| xcodebuild iOS | n/a | NOT EXECUTED |
+| xcodebuild watchOS | n/a | NOT EXECUTED |
+
+## Architecture summary
+
+Monorepo. Hexagonal Bridge (`ISimulatorAdapter`). JSON protocol v1 (LAN, pairing required, TLS later). HealthKit is source of truth for workouts. Correlation uses explicit clock sources (ADR 0004). No cloud. No GPL iRacing wrappers (IRSDKSharper rejected).
+
+## Immediate recommended next tasks
+
+Windows (no Mac required):
+
+1. PROTO-001 remaining freeze extras if needed, then BRIDGE-005 WebSocket
+2. BRIDGE-006 pairing store on disk
+3. BRIDGE-003 iRacing mmap (own reader, BSD header notice)
+4. ANALYTICS-002 RaceReport model
+
+Mac (unblocks Watch/iOS):
+
+1. Generate Xcode project (ADR 0009)
+2. WATCH-001 workout lifecycle
+3. IOS-001 session history
