@@ -136,6 +136,30 @@ public sealed class PairingCoordinatorTests
     }
 
     [Fact]
+    public async Task Unregister_drops_connection_so_revoke_does_not_touch_it()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection connection = new() { DeviceId = "phone-gone" };
+
+        await harness.Coordinator.HandleAsync(
+            connection,
+            PairingEnvelope("phone-gone", FixedPin),
+            CancellationToken.None);
+        Assert.True(harness.Coordinator.IsRegistered(connection));
+        Assert.True(connection.IsTrusted);
+        connection.Sent.Clear();
+
+        harness.Coordinator.Unregister(connection);
+        Assert.False(harness.Coordinator.IsRegistered(connection));
+
+        await harness.Coordinator.RevokeAsync("phone-gone", CancellationToken.None);
+
+        Assert.True(connection.IsTrusted);
+        Assert.Empty(connection.Sent);
+        Assert.False(await harness.Store.IsTrustedAsync("phone-gone", CancellationToken.None));
+    }
+
+    [Fact]
     public void BeginPairingWindow_logs_pin_once_at_information()
     {
         ListLogger<PairingCoordinator> logger = new();

@@ -34,13 +34,13 @@ DONE
 - Wrong PIN → `PairingReject` (`invalid_pin`), not trusted.
 - `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; else in-memory.
 - Revoke untrusts live connections so `BroadcastToTrustedAsync` skips them.
-- Transport unchanged except inbound callback → `PairingCoordinator.HandleAsync`.
+- Transport inbound callback → `PairingCoordinator.HandleAsync`; disconnect also calls `PairingCoordinator.Unregister` so dead sockets are not retained.
 
 ## Tests executed
 
-- Focused pairing/file tests — 10 passed
+- Focused pairing tests — 10 passed
 - PairingReject protocol test — 1 passed
-- `dotnet test SimPulse.sln --configuration Release` — 42 passed, 0 failed (Domain 6, Analytics 6, Protocol 6, Bridge.Core 24)
+- `dotnet test SimPulse.sln --configuration Release` — 45 passed, 0 failed (Domain 6, Analytics 6, Protocol 6, Bridge.Core 27)
 
 ## Tests passing
 

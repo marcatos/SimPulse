@@ -46,7 +46,8 @@ builder.Services.AddSingleton<IBridgeTransport>(sp =>
         sp.GetRequiredService<IClientSessionHub>(),
         sp.GetRequiredService<IClock>(),
         sp.GetRequiredService<ILogger<HttpListenerWebSocketTransport>>(),
-        pairing.HandleAsync);
+        pairing.HandleAsync,
+        pairing.Unregister);
 });
 builder.Services.AddSingleton<BridgeRuntime>();
 builder.Services.AddHostedService<Worker>();

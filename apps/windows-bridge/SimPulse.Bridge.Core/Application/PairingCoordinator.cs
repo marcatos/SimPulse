@@ -75,6 +75,19 @@ public sealed class PairingCoordinator
         _logger.LogInformation("Revoke finished. ElapsedMs={ElapsedMs}", started.ElapsedMilliseconds);
     }
 
+    public void Unregister(IClientConnection connection)
+    {
+        if (_connections.TryRemove(connection, out _))
+        {
+            _logger.LogDebug("Pairing connection unregistered. Trusted={Trusted}", connection.IsTrusted);
+        }
+    }
+
+    public bool IsRegistered(IClientConnection connection)
+    {
+        return _connections.ContainsKey(connection);
+    }
+
     private async Task DispatchAsync(
         IClientConnection connection,
         MessageEnvelope envelope,

@@ -20,6 +20,7 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
     private readonly IClock _clock;
     private readonly ILogger<HttpListenerWebSocketTransport> _logger;
     private readonly WebSocketMessagePump _pump;
+    private readonly Action<IClientConnection> _onDisconnected;
 
     public HttpListenerWebSocketTransport(
         string host,
@@ -27,7 +28,8 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
         IClientSessionHub hub,
         IClock clock,
         ILogger<HttpListenerWebSocketTransport> logger,
-        Func<IClientConnection, MessageEnvelope, CancellationToken, Task>? onMessage = null)
+        Func<IClientConnection, MessageEnvelope, CancellationToken, Task>? onMessage = null,
+        Action<IClientConnection>? onDisconnected = null)
     {
         _host = host;
         _port = port;
@@ -35,6 +37,7 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
         _clock = clock;
         _logger = logger;
         _pump = new WebSocketMessagePump(logger, onMessage ?? ((_, _, _) => Task.CompletedTask));
+        _onDisconnected = onDisconnected ?? (_ => { });
     }
 
     public async Task RunAsync(
@@ -160,6 +163,7 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
         finally
         {
             _hub.Unregister(connection);
+            _onDisconnected(connection);
             _logger.LogInformation(
                 "WebSocket closed. ConnectionId={ConnectionId} Trusted={Trusted} ElapsedMs={ElapsedMs}",
                 connectionId,
