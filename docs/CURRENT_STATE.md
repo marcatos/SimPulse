@@ -23,13 +23,13 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Partially completed features
 
 - Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Remaining KI-003 gaps are tray PIN UX and TLS.
-- iRacing: first-party mmap session reader (BRIDGE-003 DONE). Live still requires iRacing + memmap (KI-002). 60 Hz variable table is out of scope.
+- iRacing: first-party mmap session reader (BRIDGE-003 + BUG-001 DONE). Bridge can start before iRacing and subscribe until mmap appears. Live YAML still requires the sim + memmap (KI-002). 60 Hz variable table is out of scope.
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
 
 ## Active work
 
-- None on this worktree. BRIDGE-003, BRIDGE-005, and BRIDGE-006 are DONE (`docs/handoffs/BRIDGE-003.md`).
+- None on this worktree. BUG-001 (pre-merge iRacing mmap review fixes), BRIDGE-003, BRIDGE-005, and BRIDGE-006 are DONE (`docs/handoffs/BUG-001.md`, `docs/handoffs/BRIDGE-003.md`).
 
 ## Blocked work
 
@@ -39,18 +39,18 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Known broken behavior
 
 - `scripts/build-ios.sh`, `test-ios.sh`, `archive-ios.sh`, `build-watch.sh` exit 1 by design until an Xcode project exists.
-- Bridge without `SIMPULSE_FIXTURE_PATH` emits live iRacing sessions only when `Local\IRSDKMemMapFileName` is present and connected (KI-002).
+- Bridge without `SIMPULSE_FIXTURE_PATH` waits on `SubscribeAsync` until `Local\IRSDKMemMapFileName` appears and is connected; no live session YAML until then (KI-002).
 
 ## Latest successful build
 
-- **.NET Bridge host:** `dotnet build apps/windows-bridge/SimPulse.Bridge --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.301).
+- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424).
 - **iOS / watchOS:** NOT EXECUTED (no Xcode / no `.xcodeproj`).
 
 ## Latest successful tests
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **67 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 45) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **73 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 51) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |

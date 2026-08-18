@@ -21,12 +21,12 @@ Do not hide defects because they are outside the current task.
 
 ## KI-002 — Live iRacing still requires a running sim + memmap
 
-- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge now probes `Local\IRSDKMemMapFileName`. If the map is missing (iRacing closed, memmap disabled, or non-Windows), the adapter reports unavailable and emits an empty stream — same idle behavior as the old stub.
+- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge probes `Local\IRSDKMemMapFileName`. If the map is missing at process start (iRacing closed, memmap disabled, or non-Windows), `IsAvailableAsync` is false but `BridgeRuntime` still enters `SubscribeAsync`. The adapter polls `TryOpen` and starts the session when the mmap appears. No live YAML until the official map is present and `irsdk_stConnected` is set.
 - **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
-- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or run iRacing with memory telemetry enabled.
+- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (Bridge may already be running).
 - **Suspected cause:** Live session YAML is read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
-- **Note:** `SessionType` is taken from the first YAML `SessionInfo.Sessions[].SessionType` until IRSDK `SessionNum` telemetry exists. Adapter timestamps from `IClock.UtcNow` use `ClockSource.Utc` until `SessionTime` is wired.
-- **Related:** ADR 0006, BRIDGE-003
+- **Note:** `SessionType` is taken from the first YAML `SessionInfo.Sessions[].SessionType` until IRSDK `SessionNum` telemetry exists. Vehicle/car is the first `DriverInfo` YAML entry (`CarPath` / `CarScreenName`) until `DriverCarIdx` is read from telemetry — the player car is not selected yet. Adapter timestamps from `IClock.UtcNow` use `ClockSource.Utc` until `SessionTime` is wired. Session YAML is re-parsed on each poll; full `sessionInfoUpdate` change detection is a follow-up. ANALYTICS-003 `RaceReportBuilder` is not wired in the Bridge.
+- **Related:** ADR 0006, BRIDGE-003, BUG-001
 
 ## KI-003 — Transport pairing UX still console-only
 

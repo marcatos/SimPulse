@@ -246,6 +246,18 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
 - **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
 
+### BUG-001 — Pre-merge iRacing mmap review fixes
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-003
+- **Acceptance criteria:**
+  - BridgeRuntime enters SubscribeAsync when `IsAvailableAsync` is false so mmap can appear after startup
+  - IRSDK session YAML decoded as Windows-1252 / Latin1
+  - KI-002 / BRIDGE-003 handoff document first-DriverInfo car and sessionInfoUpdate follow-up
+- **Notes:** Whole-branch Important findings for `feat/iracing-mmap-hr-windows`. Should-fix done: shared `IracingHeaderReader` offsets; Debug on repeated TryOpen. Session YAML Latin1; runtime always subscribes. Player car / `sessionInfoUpdate` / ANALYTICS-003 wiring left as KI-002 follow-ups.
+
 ### BRIDGE-007 — Tray / background UX
 
 - **Area:** Bridge
