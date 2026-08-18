@@ -8,7 +8,7 @@
 | Unauthorized Bridge connection | Untrusted PC feeds iPhone | Explicit PIN pairing; persist trusted device IDs; revocation | Device attestation if needed |
 | Replay of protocol messages | Duplicate events | Message IDs; idempotent merge | Sequence numbers + window |
 | Spoofed simulator events | Distorted reports | Adapter is local process; paired Bridge is the trust boundary | Signed session summaries |
-| Compromised pairing credentials | Attacker becomes trusted | Store hashes not PINs; PIN is short-lived | Rotate pairing material |
+| Compromised pairing credentials | Attacker becomes trusted | PIN is not persisted; generated with `RandomNumberGenerator`; valid only during an explicit pairing window (5 minutes, successful pair, or 5 failed attempts) | Rotate pairing material |
 | Local data exposure | Biometrics on disk | HealthKit for workouts; Bridge does not persist HR | iOS Data Protection review |
 | Sensitive logs | HR in log files | Never log sample payloads; redact IDs if needed | Log scrub tests |
 

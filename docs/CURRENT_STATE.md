@@ -15,13 +15,13 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, non-medical wording).
-- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, PIN pairing + trusted-device store (in-memory or JSON file), structured logging, idempotent `SessionLifecycleTracker` for session/lap race events, loopback WebSocket listen/accept (`HttpListener` on `/ws/`).
+- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, gated PIN pairing (CSPRNG, 5-minute window, 5-attempt lockout) + trusted-device store (in-memory or JSON file), structured logging, `SessionLifecycleTracker` wired in `BridgeRuntime` for session/lap race-event dedupe, loopback WebSocket listen/accept (`HttpListener` on `/ws/`), race-event envelopes broadcast to trusted clients (no biometrics).
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions workflow for .NET on Windows and Ubuntu; Apple job records NOT EXECUTED.
 
 ## Partially completed features
 
-- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with PIN pairing. Remaining KI-003 gaps are tray PIN UX and TLS.
+- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Remaining KI-003 gaps are tray PIN UX and TLS.
 - iRacing: stub only; live mmap is BRIDGE-003 (KI-002).
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
@@ -38,7 +38,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Known broken behavior
 
 - `scripts/build-ios.sh`, `test-ios.sh`, `archive-ios.sh`, `build-watch.sh` exit 1 by design until an Xcode project exists.
-- Bridge without `SIMPULSE_FIXTURE_PATH` does not emit simulator sessions.
+- Bridge without `SIMPULSE_FIXTURE_PATH` does not emit simulator sessions (iRacing mmap is still BRIDGE-003).
 
 ## Latest successful build
 
@@ -49,7 +49,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **45 passed**, 0 failed (Domain 6, Analytics 6, Protocol 6, Bridge.Core 27) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **54 passed**, 0 failed (Domain 6, Analytics 6, Protocol 7, Bridge.Core 35) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
 

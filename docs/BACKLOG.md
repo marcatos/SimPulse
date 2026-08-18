@@ -224,6 +224,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-002 or BRIDGE-003
 - **Acceptance criteria:** SESSION_START/END, LAP_START/COMPLETE from normalized ticks; idempotent.
+- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap ticks are still BRIDGE-003.
 
 ### BRIDGE-005 — WebSocket server
 
@@ -232,7 +233,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** PROTO-001
 - **Acceptance criteria:** Accepts paired clients; reconnect; ignores unknown messages; no biometrics outbound.
-- **Notes:** Loopback `HttpListener` transport (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Pairing gate is BRIDGE-006.
+- **Notes:** Loopback `HttpListener` transport (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Pairing gate is BRIDGE-006. Reconnect after a client close is covered by `Accepts_second_client_after_first_closes`.
 
 ### BRIDGE-006 — Pairing and trusted devices
 
@@ -241,7 +242,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
-- **Notes:** Six-digit PIN (not persisted); `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged once at Information when the pairing window opens.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). Window is a real gate: closed until `BeginPairingWindow()`, expires after 5 minutes or a successful pair, and locks after 5 failed attempts until a new window. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information each time a window opens.
 
 ### BRIDGE-007 — Tray / background UX
 

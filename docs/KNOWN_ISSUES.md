@@ -27,9 +27,9 @@ Do not hide defects because they are outside the current task.
 
 ## KI-003 — Transport pairing UX still console-only
 
-- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. PIN pairing trusts devices and unpaired connections get no broadcast telemetry. PIN is logged once at Information when the pairing window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
-- **Workaround:** Read the one-time PIN from Bridge console logs. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`.
-- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept and PIN pairing; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
+- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. Pairing requires an open window (`BeginPairingWindow`): 6-digit CSPRNG PIN, 5-minute expiry, success closes the window, 5 failed attempts lock until a new window. Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information each time a window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
+- **Workaround:** Read the current window PIN from Bridge console logs. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`.
+- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
 - **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
 
 ## KI-004 — Entitlements are code-level only
@@ -45,4 +45,4 @@ Do not hide defects because they are outside the current task.
 ## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
 
 - **Status:** No known defects introduced.
-- **Note:** `SessionLifecycleTracker` dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)`. Standalone until BRIDGE-003 wires normalized ticks through `BridgeRuntime`.
+- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap ticks remain BRIDGE-003.
