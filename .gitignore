@@ -86,3 +86,7 @@ __pycache__/
 
 # Node (if added later)
 node_modules/
+
+# Local git worktrees and agent scratch
+.worktrees/
+.superpowers/
