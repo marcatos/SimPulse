@@ -5,19 +5,37 @@ namespace SimPulse.Bridge.Core.Adapters.Iracing;
 
 public static class IracingHeaderReader
 {
-    public static bool TryReadSessionYaml(ReadOnlySpan<byte> buffer, out string? yaml, out bool connected)
+    public static bool TryReadHeader(
+        ReadOnlySpan<byte> buffer,
+        out int status,
+        out int sessionInfoLen,
+        out int sessionInfoOffset,
+        out bool connected)
     {
-        yaml = null;
+        status = 0;
+        sessionInfoLen = 0;
+        sessionInfoOffset = 0;
         connected = false;
         if (buffer.Length < IracingSdkConstants.HeaderMinSize)
         {
             return false;
         }
 
-        int status = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderStatusOffset..]);
-        int infoLen = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderSessionInfoLenOffset..]);
-        int infoOffset = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderSessionInfoOffsetOffset..]);
+        status = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderStatusOffset..]);
+        sessionInfoLen = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderSessionInfoLenOffset..]);
+        sessionInfoOffset = BinaryPrimitives.ReadInt32LittleEndian(buffer[IracingSdkConstants.HeaderSessionInfoOffsetOffset..]);
         connected = (status & IracingSdkConstants.StatusConnected) != 0;
+        return true;
+    }
+
+    public static bool TryReadSessionYaml(ReadOnlySpan<byte> buffer, out string? yaml, out bool connected)
+    {
+        yaml = null;
+        if (!TryReadHeader(buffer, out _, out int infoLen, out int infoOffset, out connected))
+        {
+            return false;
+        }
+
         if (!connected || infoLen <= 0 || infoOffset < 0 || infoOffset + infoLen > buffer.Length)
         {
             return true;

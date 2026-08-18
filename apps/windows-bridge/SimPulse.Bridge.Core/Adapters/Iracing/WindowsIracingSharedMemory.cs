@@ -81,12 +81,11 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         try
         {
             using MemoryMappedViewAccessor accessor = _map.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
-            if (!TryReadHeader(accessor, out int status, out int infoLen, out int infoOffset))
+            if (!TryReadHeader(accessor, out _, out int infoLen, out int infoOffset, out bool connected))
             {
                 return false;
             }
 
-            bool connected = (status & IracingSdkConstants.StatusConnected) != 0;
             string? yaml = connected ? TryReadYaml(accessor, infoOffset, infoLen) : null;
             snapshot = new IracingMemorySnapshot(yaml, connected);
             _logger.LogDebug(
@@ -116,20 +115,21 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         MemoryMappedViewAccessor accessor,
         out int status,
         out int infoLen,
-        out int infoOffset)
+        out int infoOffset,
+        out bool connected)
     {
         status = 0;
         infoLen = 0;
         infoOffset = 0;
+        connected = false;
         if (accessor.Capacity < IracingSdkConstants.HeaderMinSize)
         {
             return false;
         }
 
-        status = accessor.ReadInt32(IracingSdkConstants.HeaderStatusOffset);
-        infoLen = accessor.ReadInt32(IracingSdkConstants.HeaderSessionInfoLenOffset);
-        infoOffset = accessor.ReadInt32(IracingSdkConstants.HeaderSessionInfoOffsetOffset);
-        return true;
+        byte[] header = new byte[IracingSdkConstants.HeaderMinSize];
+        accessor.ReadArray(0, header, 0, header.Length);
+        return IracingHeaderReader.TryReadHeader(header, out status, out infoLen, out infoOffset, out connected);
     }
 
     private static string? TryReadYaml(MemoryMappedViewAccessor accessor, int infoOffset, int infoLen)

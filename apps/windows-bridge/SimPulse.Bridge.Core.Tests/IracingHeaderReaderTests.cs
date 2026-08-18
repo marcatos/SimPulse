@@ -50,4 +50,41 @@ public sealed class IracingHeaderReaderTests
         Assert.False(connected);
         Assert.Null(parsed);
     }
+
+    [Fact]
+    public void TryReadHeader_reads_status_and_session_info_offsets()
+    {
+        byte[] buffer = new byte[IracingSdkConstants.HeaderMinSize];
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderStatusOffset),
+            IracingSdkConstants.StatusConnected);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderSessionInfoLenOffset),
+            42);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderSessionInfoOffsetOffset),
+            96);
+
+        Assert.True(IracingHeaderReader.TryReadHeader(
+            buffer,
+            out int status,
+            out int infoLen,
+            out int infoOffset,
+            out bool connected));
+        Assert.Equal(IracingSdkConstants.StatusConnected, status);
+        Assert.Equal(42, infoLen);
+        Assert.Equal(96, infoOffset);
+        Assert.True(connected);
+    }
+
+    [Fact]
+    public void TryReadHeader_rejects_short_buffer()
+    {
+        Assert.False(IracingHeaderReader.TryReadHeader(
+            new byte[IracingSdkConstants.HeaderMinSize - 1],
+            out _,
+            out _,
+            out _,
+            out _));
+    }
 }
