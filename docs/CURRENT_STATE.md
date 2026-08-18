@@ -15,21 +15,21 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, HeartRateWindows lap/event averages gated by timeline offset, non-medical wording).
-- Windows Bridge worker + Core library: fixture replay adapter, first-party iRacing mmap session reader (YAML subset; fake memory in tests), gated PIN pairing (CSPRNG, 5-minute window, 5-attempt lockout) + trusted-device store (in-memory or JSON file), Windows tray pairing UX (`WinExe` + `NotifyIcon`, **Show current PIN** / **Pair new device** without restart, console fallback if tray startup fails), MEL file logs under `%LOCALAPPDATA%\SimPulse\logs`, `SessionLifecycleTracker` wired in `BridgeRuntime` for session/lap race-event dedupe, loopback WebSocket listen/accept (`HttpListener` on `/ws/`), race-event envelopes broadcast to trusted clients (no biometrics).
+- Windows Bridge worker + Core library: fixture replay adapter, first-party iRacing mmap session reader (YAML subset; fake memory in tests), gated PIN pairing (CSPRNG, 5-minute window, 5-attempt lockout) + trusted-device store (in-memory or JSON file), Windows tray pairing UX (`WinExe` + `NotifyIcon`, **Show current PIN** / **Pair new device** without restart, console fallback if tray startup fails; last PIN cleared when the window closes), MEL file logs under `%LOCALAPPDATA%\SimPulse\logs` (IO failures disable file logging without crashing the host), `SessionLifecycleTracker` wired in `BridgeRuntime` for session/lap race-event dedupe, loopback WebSocket listen/accept (`HttpListener` on `/ws/`), race-event envelopes broadcast to trusted clients (no biometrics).
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions CI (INFRA-002 DONE): `.github/workflows/ci.yml` runs `dotnet test SimPulse.sln` on `windows-latest` and `ubuntu-latest`; test-result artifacts use `retention-days: 7`. PR #1 checks green 2026-08-18.
 - Apple CI placeholder (INFRA-003 DONE): workflow records NOT EXECUTED until an Xcode project exists.
 
 ## Partially completed features
 
-- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Windows interactive Bridge registers `NotifyIconPairingUx` on an STA message loop and hides the console (`WinExe`); **Show current PIN** redisplays the last PIN; **Pair new device** reopens a PIN window without process restart. Tray startup failure/timeout falls back to console. Remaining KI-003 gap is TLS.
+- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Windows interactive Bridge registers `NotifyIconPairingUx` on an STA message loop and hides the console (`WinExe`); **Show current PIN** redisplays the last PIN only while the window is open; **Pair new device** reopens a PIN window without process restart. Tray startup failure/timeout falls back to console. Remaining KI-003 gap is TLS.
 - iRacing: first-party mmap session reader (BRIDGE-003 + BUG-001 DONE). Bridge can start before iRacing and subscribe until mmap appears. Live YAML still requires the sim + memmap (KI-002). 60 Hz variable table is out of scope.
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
 
 ## Active work
 
-- None. BUG-002 (BRIDGE-007 Important findings) is DONE (`docs/handoffs/BUG-002.md`).
+- None. BUG-003 (BRIDGE-007 Important findings, round 2) is DONE (`docs/handoffs/BUG-003.md`).
 
 ## Blocked work
 
@@ -50,7 +50,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **98 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 76) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **102 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 80) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |

@@ -265,7 +265,20 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-001
 - **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
-- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, and `docs/DEVELOPMENT.md`.
+- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN only while the window is open. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, `docs/handoffs/BUG-003.md`, and `docs/DEVELOPMENT.md`.
+
+### BUG-003 — Pre-merge tray UX review fixes (round 2)
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BUG-002
+- **Acceptance criteria:**
+  - File logger write failures (IO/ACL) disable further file writes and never throw
+  - Pairing PIN is logged at Information only from `PairingCoordinator.BeginPairingWindow` (`Pin=`); UX adapters do not log PIN
+  - **Show current PIN** does not redisplay a consumed, expired, locked, or otherwise closed window PIN; presenter clears last PIN
+  - Core tests cover the above without WinForms; `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Important findings (round 2) for `feat/bridge-007-tray`. See `docs/handoffs/BUG-003.md`. File logger disables after first IO/ACL failure. Coordinator keeps `Pin=` at Information; UX `ShowPin` does not. `IPairingUx.ClearPin()` + presenter consults `IsPairingWindowOpen()`.
 
 ### BUG-002 — Pre-merge tray UX review fixes
 
