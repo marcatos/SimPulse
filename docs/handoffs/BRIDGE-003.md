@@ -39,7 +39,9 @@ DONE
 - Missing mmap or non-Windows → `TryOpen` false, no throw.
 - Synthetic YAML fixture (original), not a scraped copyrighted pack.
 - IRSDK constants file retains the iRacing BSD-style copyright notice.
-- Adapter emits SessionStart + SessionSnapshot when connected with YAML; SessionEnd when connection is lost after a session started; waits (does not exit) if the map is open but not yet connected.
+- Adapter emits SessionStart + SessionSnapshot when connected with YAML; SessionEnd when connection is lost after a session started; then clears stream state, re-`TryOpen`s, and keeps polling so Subscribe/Worker stay up.
+- Timestamps from `IClock.UtcNow` use `ClockSource.Utc` until IRSDK `SessionTime` is used.
+- `SessionType` is the first YAML `SessionInfo.Sessions[].SessionType` until `SessionNum` telemetry exists.
 - 60 Hz telemetry variable table is out of scope.
 
 ## Tests executed
@@ -61,7 +63,7 @@ Live 60 Hz IRSDK variable table; confirm on a PC with iRacing + `irsdkEnableMem=
 
 ## Risks
 
-Named mmap `Local\IRSDKMemMapFileName` must stay aligned with official IRSDK. Session-info YAML subset parser is indentation-tolerant but not a full YAML implementation.
+Named mmap `Local\IRSDKMemMapFileName` must stay aligned with official IRSDK. Session-info YAML subset parser is indentation-tolerant but not a full YAML implementation. `SessionType` stays first-in-YAML until `SessionNum` is read from telemetry.
 
 ## Suggested next action
 

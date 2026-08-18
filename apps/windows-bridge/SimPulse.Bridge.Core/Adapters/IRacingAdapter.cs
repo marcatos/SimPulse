@@ -51,14 +51,6 @@ public sealed class IRacingAdapter : ISimulatorAdapter
     {
         Stopwatch total = Stopwatch.StartNew();
         _logger.LogInformation("iRacing subscribe starting. Component={Component}", nameof(IRacingAdapter));
-        if (!_memory.TryOpen())
-        {
-            _logger.LogInformation(
-                "iRacing subscribe ended; mmap unavailable. ElapsedMs={ElapsedMs}",
-                total.ElapsedMilliseconds);
-            yield break;
-        }
-
         StreamState state = new();
         try
         {
@@ -84,13 +76,27 @@ public sealed class IRacingAdapter : ISimulatorAdapter
     {
         while (!cancellationToken.IsCancellationRequested)
         {
+            if (!EnsureOpen())
+            {
+                if (!await IdleAsync(cancellationToken))
+                {
+                    yield break;
+                }
+
+                continue;
+            }
+
             if (!_memory.TryReadSnapshot(out IracingMemorySnapshot memory) || !memory.Connected)
             {
                 if (state.Snapshot is { } live)
                 {
                     state.Updates++;
                     yield return CreateSessionEnd(state.SessionId, live, state.Events);
-                    yield break;
+                    state.Reset();
+                    _memory.Close();
+                    _logger.LogInformation(
+                        "iRacing subscribe waiting to reconnect. ElapsedMs={ElapsedMs}",
+                        total.ElapsedMilliseconds);
                 }
 
                 if (!await IdleAsync(cancellationToken))
@@ -125,7 +131,7 @@ public sealed class IRacingAdapter : ISimulatorAdapter
     {
         Stopwatch parse = Stopwatch.StartNew();
         IracingSessionInfo info = IracingSessionInfoParser.Parse(yaml);
-        TimestampInstant at = new(_clock.UtcNow, ClockSource.SimulatorSession);
+        TimestampInstant at = TimestampInstant.UtcNow(_clock.UtcNow);
         _logger.LogDebug(
             "iRacing session YAML parsed in {ElapsedMs} ms. YamlLength={YamlLength}",
             parse.ElapsedMilliseconds,
@@ -164,7 +170,7 @@ public sealed class IRacingAdapter : ISimulatorAdapter
         SimulatorSession snapshot,
         List<RaceEvent> events)
     {
-        TimestampInstant at = new(_clock.UtcNow, ClockSource.SimulatorSession);
+        TimestampInstant at = TimestampInstant.UtcNow(_clock.UtcNow);
         RaceEvent end = RaceEvent.Create(sessionId, RaceEventType.SessionEnd, at);
         events.Add(end);
         SimulatorSession closed = snapshot with
@@ -174,6 +180,11 @@ public sealed class IRacingAdapter : ISimulatorAdapter
         };
         _logger.LogInformation("iRacing session ended. SessionId={SessionId}", sessionId);
         return new NormalizedSimulatorUpdate(SimulatorId, sessionId, at, end, null, closed);
+    }
+
+    private bool EnsureOpen()
+    {
+        return _memory.TryOpen();
     }
 
     private async Task<bool> IdleAsync(CancellationToken cancellationToken)
@@ -206,5 +217,12 @@ public sealed class IRacingAdapter : ISimulatorAdapter
         public SimulatorSession? Snapshot { get; set; }
 
         public List<RaceEvent> Events { get; } = [];
+
+        public void Reset()
+        {
+            SessionId = default;
+            Snapshot = null;
+            Events.Clear();
+        }
     }
 }

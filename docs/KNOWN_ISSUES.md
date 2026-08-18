@@ -25,6 +25,7 @@ Do not hide defects because they are outside the current task.
 - **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
 - **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or run iRacing with memory telemetry enabled.
 - **Suspected cause:** Live session YAML is read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
+- **Note:** `SessionType` is taken from the first YAML `SessionInfo.Sessions[].SessionType` until IRSDK `SessionNum` telemetry exists. Adapter timestamps from `IClock.UtcNow` use `ClockSource.Utc` until `SessionTime` is wired.
 - **Related:** ADR 0006, BRIDGE-003
 
 ## KI-003 — Transport pairing UX still console-only
