@@ -35,6 +35,7 @@ public static class IracingHeaderReader
             end--;
         }
 
-        return Encoding.UTF8.GetString(bytes[..end]);
+        // IRSDK session info is Windows-1252; Latin1 matches 0x00-0xFF without a code-page provider.
+        return Encoding.Latin1.GetString(bytes[..end]);
     }
 }

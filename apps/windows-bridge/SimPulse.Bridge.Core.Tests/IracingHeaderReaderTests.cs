@@ -31,6 +31,17 @@ public sealed class IracingHeaderReaderTests
     }
 
     [Fact]
+    public void DecodeYaml_round_trips_latin1_u_umlaut()
+    {
+        byte[] bytes = [0x4E, 0xFC, 0x72, 0x62, 0x75, 0x72, 0x67];
+
+        string decoded = IracingHeaderReader.DecodeYaml(bytes);
+
+        Assert.Equal("Nürburg", decoded);
+        Assert.Equal(bytes, Encoding.Latin1.GetBytes(decoded));
+    }
+
+    [Fact]
     public void Reports_disconnected_without_yaml()
     {
         byte[] buffer = new byte[IracingSdkConstants.HeaderMinSize];
