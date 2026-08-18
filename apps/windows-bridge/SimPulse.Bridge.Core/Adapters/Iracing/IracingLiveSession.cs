@@ -18,6 +18,9 @@ internal sealed class IracingLiveSession
     private SessionId _sessionId;
     private DateTimeOffset _sessionStartUtc;
     private int _cachedUpdate;
+    private string _cachedYaml = "";
+    private int? _cachedDriverCarIdx;
+    private int? _cachedSessionNum;
     private IracingSessionInfo? _info;
     private SimulatorSession? _snapshot;
     private int? _observedLap;
@@ -96,8 +99,7 @@ internal sealed class IracingLiveSession
         _sessionId = SessionId.New();
         TimestampInstant at = TimestampInstant.UtcNow(_clock.UtcNow);
         _sessionStartUtc = at.Value;
-        _cachedUpdate = memory.SessionInfoUpdate;
-        _info = Parse(memory);
+        AcceptYaml(memory);
         RaceEvent start = RaceEvent.Create(_sessionId, RaceEventType.SessionStart, at);
         _events.Add(start);
         emitted.Add(start);
@@ -110,26 +112,52 @@ internal sealed class IracingLiveSession
 
     private void RefreshInfoIfNeeded(IracingMemorySnapshot memory)
     {
-        if (memory.SessionInfoUpdate == _cachedUpdate)
+        int? carIdx = Identity(memory.Telemetry.DriverCarIdx);
+        int? sessionNum = Identity(memory.Telemetry.SessionNum);
+        bool updateChanged = memory.SessionInfoUpdate != _cachedUpdate;
+        bool identityChanged = carIdx != _cachedDriverCarIdx || sessionNum != _cachedSessionNum;
+        if (!updateChanged && !identityChanged)
         {
             return;
         }
 
         Stopwatch parse = Stopwatch.StartNew();
-        _cachedUpdate = memory.SessionInfoUpdate;
-        _info = Parse(memory);
+        if (updateChanged)
+        {
+            AcceptYaml(memory);
+            _logger.LogDebug(
+                "iRacing session YAML re-parsed in {ElapsedMs} ms. SessionInfoUpdate={SessionInfoUpdate} YamlLength={YamlLength}",
+                parse.ElapsedMilliseconds,
+                memory.SessionInfoUpdate,
+                memory.SessionYaml?.Length ?? 0);
+            return;
+        }
+
+        _info = IracingSessionInfoParser.Parse(_cachedYaml, carIdx, sessionNum);
+        _cachedDriverCarIdx = carIdx;
+        _cachedSessionNum = sessionNum;
         _logger.LogDebug(
-            "iRacing session YAML re-parsed in {ElapsedMs} ms. SessionInfoUpdate={SessionInfoUpdate} YamlLength={YamlLength}",
+            "iRacing session identity re-resolved from cached YAML in {ElapsedMs} ms. SessionNum={SessionNum} DriverCarIdx={DriverCarIdx} YamlLength={YamlLength}",
             parse.ElapsedMilliseconds,
-            memory.SessionInfoUpdate,
-            memory.SessionYaml?.Length ?? 0);
+            sessionNum,
+            carIdx,
+            _cachedYaml.Length);
     }
 
-    private static IracingSessionInfo Parse(IracingMemorySnapshot memory)
+    private void AcceptYaml(IracingMemorySnapshot memory)
     {
-        int? carIdx = memory.Telemetry.DriverCarIdx.TryGet(out int idx) ? idx : null;
-        int? sessionNum = memory.Telemetry.SessionNum.TryGet(out int num) ? num : null;
-        return IracingSessionInfoParser.Parse(memory.SessionYaml ?? "", carIdx, sessionNum);
+        int? carIdx = Identity(memory.Telemetry.DriverCarIdx);
+        int? sessionNum = Identity(memory.Telemetry.SessionNum);
+        _cachedUpdate = memory.SessionInfoUpdate;
+        _cachedYaml = memory.SessionYaml ?? "";
+        _cachedDriverCarIdx = carIdx;
+        _cachedSessionNum = sessionNum;
+        _info = IracingSessionInfoParser.Parse(_cachedYaml, carIdx, sessionNum);
+    }
+
+    private static int? Identity(OptionalValue<int> value)
+    {
+        return value.TryGet(out int resolved) ? resolved : null;
     }
 
     private void ResetLapsIfSessionChanged(IracingMemorySnapshot memory)
@@ -277,6 +305,9 @@ internal sealed class IracingLiveSession
         _sessionId = default;
         _sessionStartUtc = default;
         _cachedUpdate = 0;
+        _cachedYaml = "";
+        _cachedDriverCarIdx = null;
+        _cachedSessionNum = null;
         _info = null;
         _snapshot = null;
         _observedLap = null;

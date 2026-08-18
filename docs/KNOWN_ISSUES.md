@@ -25,7 +25,7 @@ Do not hide defects because they are outside the current task.
 - **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
 - **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (Bridge may already be running).
 - **Suspected cause:** Live session YAML is read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
-- **Note:** `SessionType` is taken from the first YAML `SessionInfo.Sessions[].SessionType` until IRSDK `SessionNum` telemetry exists. Vehicle/car is the first `DriverInfo` YAML entry (`CarPath` / `CarScreenName`) until `DriverCarIdx` is read from telemetry — the player car is not selected yet. Adapter timestamps from `IClock.UtcNow` use `ClockSource.Utc` until `SessionTime` is wired. Session YAML is re-parsed on each poll; full `sessionInfoUpdate` change detection is a follow-up. ANALYTICS-003 `RaceReportBuilder` is not wired in the Bridge.
+- **Note:** Live YAML still needs the official mmap (this KI). When telemetry is present, `SessionType`/`Vehicle` come from YAML `Sessions`/`Drivers` matched by Available `SessionNum`/`DriverCarIdx`. YAML is re-tokenized only when `SessionInfoUpdate` changes; identity changes re-run `Parse` on the cached YAML string (BUG-004). ANALYTICS-003 `RaceReportBuilder` is not wired in the Bridge.
 - **Related:** ADR 0006, BRIDGE-003, BUG-001
 
 ## KI-003 — Transport is still cleartext (tray pairing UX shipped)

@@ -125,6 +125,37 @@ public sealed class IRacingAdapterTelemetryTests
     }
 
     [Fact]
+    public async Task Session_num_change_with_same_update_resolves_session_type_from_cached_yaml()
+    {
+        string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));
+        FakeIracingSharedMemory memory = new(
+            open: true,
+            [
+                Snapshot(yaml, update: 1, Telemetry(sessionNum: 0, driverCarIdx: 3)),
+                Snapshot(yaml, update: 1, Telemetry(sessionNum: 1, driverCarIdx: 3))
+            ]);
+        IRacingAdapter adapter = new(memory, new SystemClock(), pollInterval: TimeSpan.Zero);
+
+        List<NormalizedSimulatorUpdate> updates = await CollectUntilAsync(
+            adapter,
+            static list =>
+                list.Exists(u =>
+                    u.SessionSnapshot?.SessionType.TryGet(out SimulatorSessionType practice) == true &&
+                    practice == SimulatorSessionType.Practice) &&
+                list.Exists(u =>
+                    u.SessionSnapshot?.SessionType.TryGet(out SimulatorSessionType race) == true &&
+                    race == SimulatorSessionType.Race));
+
+        Assert.Contains(updates, u =>
+            u.SessionSnapshot?.SessionType.TryGet(out SimulatorSessionType sessionType) == true &&
+            sessionType == SimulatorSessionType.Practice);
+        Assert.Contains(updates, u =>
+            u.SessionSnapshot?.SessionType.TryGet(out SimulatorSessionType sessionType) == true &&
+            sessionType == SimulatorSessionType.Race);
+        Assert.Equal(1, updates.Count(u => u.RaceEvent?.Type == RaceEventType.SessionStart));
+    }
+
+    [Fact]
     public async Task Session_num_change_resets_lap_tracking_without_second_session_start()
     {
         string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));

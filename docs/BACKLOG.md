@@ -282,6 +282,19 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
   - Tests pass on Windows + Ubuntu without a live sim
 - **Notes:** Tasks 1–2 done (header/var parsers + YAML list match; unmatched `driverCarIdx`/`sessionNum` → Unavailable). Tasks 3–4 remaining. See `docs/handoffs/BRIDGE-008.md` and `docs/superpowers/plans/2026-08-18-iracing-var-table.md`.
 
+### BUG-004 — Re-resolve session type from cached YAML
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-008
+- **Acceptance criteria:**
+  - Re-tokenize YAML only when `SessionInfoUpdate` changes (same update + mutated YAML keeps cached vehicle)
+  - When `SessionInfoUpdate` is unchanged but Available `DriverCarIdx` or `SessionNum` identity changes, re-run `Parse` on the cached YAML string with the new telemetry args
+  - Two-drivers fixture, constant update, SessionNum 0 then 1 → Practice then Race; no second SessionStart
+  - `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Review finding: cache skipped `Parse` entirely when the YAML tick was unchanged, so practice→race waited on the next YAML update. Does not take over BRIDGE-008 Task 4. See `docs/handoffs/BUG-004.md`.
+
 ### BUG-003 — Pre-merge tray UX review fixes (round 2)
 
 - **Area:** Bridge
