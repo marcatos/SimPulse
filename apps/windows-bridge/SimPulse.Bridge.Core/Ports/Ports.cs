@@ -50,6 +50,8 @@ public interface IPairingUx
 
     void RedisplayLastPin();
 
+    void ClearPin();
+
     event Action? PairNewDeviceRequested;
 
     event Action? ShowCurrentPinRequested;

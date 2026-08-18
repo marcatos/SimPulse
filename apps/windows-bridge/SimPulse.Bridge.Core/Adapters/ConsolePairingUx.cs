@@ -48,6 +48,12 @@ public sealed class ConsolePairingUx : IPairingUx
             "ConsolePairingUx");
     }
 
+    public void ClearPin()
+    {
+        _lastPin = null;
+        _lastExpiresAtUtc = null;
+    }
+
     public void RequestPairNewDevice()
     {
         PairNewDeviceRequested?.Invoke();

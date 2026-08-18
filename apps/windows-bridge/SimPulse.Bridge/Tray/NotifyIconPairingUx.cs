@@ -89,6 +89,13 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
             Component);
     }
 
+    public void ClearPin()
+    {
+        _lastPin = null;
+        _lastExpiresAtUtc = null;
+        RunOnUi(() => _icon.Text = TrayPairingUxText.IconText);
+    }
+
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

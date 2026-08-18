@@ -13,6 +13,7 @@ public sealed class TrayPairingUxTextTests
         Assert.Equal("Show current PIN", TrayPairingUxText.ShowCurrentPin);
         Assert.Equal("Pair new device", TrayPairingUxText.PairNewDevice);
         Assert.Equal("Exit", TrayPairingUxText.Exit);
+        Assert.Equal("pairing window closed", TrayPairingUxText.PairingWindowClosed);
     }
 
     [Fact]

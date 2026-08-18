@@ -94,6 +94,85 @@ public sealed class TrayPairingPresenterTests
     }
 
     [Fact]
+    public async Task Show_current_pin_after_successful_pair_does_not_redisplay_consumed_pin()
+    {
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            new FixedClock(TrustedAt),
+            new SequencePinGenerator(FirstPin),
+            NullLogger<PairingCoordinator>.Instance);
+        PairingWindowInfo window = coordinator.BeginPairingWindow();
+        FakePairingUx ux = new();
+        TrayPairingPresenter presenter = new(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
+        presenter.OnWindowOpened(window.Pin, window.ExpiresAtUtc);
+        FakeClientConnection device = new() { DeviceId = "phone-1" };
+        await coordinator.HandleAsync(
+            device,
+            PairingEnvelope("phone-1", window.Pin),
+            CancellationToken.None);
+        Assert.True(device.IsTrusted);
+
+        ux.RaiseShowCurrentPin();
+
+        Assert.Null(ux.LastRedisplayedPin);
+        Assert.Null(ux.LastPin);
+        Assert.Equal("pairing window closed", ux.LastStatus);
+        Assert.Equal(0, ux.RedisplayCount);
+    }
+
+    [Fact]
+    public void Show_current_pin_after_expiry_reports_window_closed()
+    {
+        MutableClock clock = new(TrustedAt);
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            clock,
+            new SequencePinGenerator(FirstPin),
+            NullLogger<PairingCoordinator>.Instance);
+        PairingWindowInfo window = coordinator.BeginPairingWindow();
+        FakePairingUx ux = new();
+        TrayPairingPresenter presenter = new(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
+        presenter.OnWindowOpened(window.Pin, window.ExpiresAtUtc);
+
+        clock.UtcNow = TrustedAt.Add(PairingCoordinator.WindowDuration).AddSeconds(1);
+        ux.RaiseShowCurrentPin();
+
+        Assert.Null(ux.LastRedisplayedPin);
+        Assert.Null(ux.LastPin);
+        Assert.Equal("pairing window closed", ux.LastStatus);
+        Assert.Equal(0, ux.RedisplayCount);
+    }
+
+    [Fact]
+    public async Task Show_current_pin_after_lockout_reports_window_closed()
+    {
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            new FixedClock(TrustedAt),
+            new SequencePinGenerator(FirstPin),
+            NullLogger<PairingCoordinator>.Instance);
+        PairingWindowInfo window = coordinator.BeginPairingWindow();
+        FakePairingUx ux = new();
+        TrayPairingPresenter presenter = new(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
+        presenter.OnWindowOpened(window.Pin, window.ExpiresAtUtc);
+        for (int i = 0; i < PairingCoordinator.MaxFailedAttempts; i++)
+        {
+            FakeClientConnection failed = new() { DeviceId = $"phone-bad-{i}" };
+            await coordinator.HandleAsync(
+                failed,
+                PairingEnvelope(failed.DeviceId!, "000000"),
+                CancellationToken.None);
+        }
+
+        ux.RaiseShowCurrentPin();
+
+        Assert.Null(ux.LastRedisplayedPin);
+        Assert.Null(ux.LastPin);
+        Assert.Equal("pairing window closed", ux.LastStatus);
+        Assert.Equal(0, ux.RedisplayCount);
+    }
+
+    [Fact]
     public void Pair_new_device_logs_error_and_does_not_throw_when_window_open_fails()
     {
         PairingCoordinator coordinator = new(

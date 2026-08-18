@@ -44,6 +44,12 @@ internal sealed class FakePairingUx : IPairingUx
         }
     }
 
+    public void ClearPin()
+    {
+        LastPin = null;
+        LastExpiresAtUtc = null;
+    }
+
     public void RaisePairNewDevice()
     {
         if (ThrowOnPairNewDevice)

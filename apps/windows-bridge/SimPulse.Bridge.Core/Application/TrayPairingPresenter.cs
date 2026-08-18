@@ -22,6 +22,7 @@ public sealed class TrayPairingPresenter
         _logger = logger;
         _ux.PairNewDeviceRequested += RequestPairNewDevice;
         _ux.ShowCurrentPinRequested += RequestShowCurrentPin;
+        _pairing.PairingWindowClosed += OnPairingWindowClosed;
     }
 
     public void OnWindowOpened(string pin, DateTimeOffset expiresAtUtc)
@@ -46,11 +47,30 @@ public sealed class TrayPairingPresenter
     {
         try
         {
+            if (!_pairing.IsPairingWindowOpen())
+            {
+                _ux.ClearPin();
+                _ux.ShowStatus(TrayPairingUxText.PairingWindowClosed);
+                return;
+            }
+
             _ux.RedisplayLastPin();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Show current PIN failed. Component={Component}", Component);
+        }
+    }
+
+    private void OnPairingWindowClosed()
+    {
+        try
+        {
+            _ux.ClearPin();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Clear PIN after pairing window closed failed. Component={Component}", Component);
         }
     }
 }
