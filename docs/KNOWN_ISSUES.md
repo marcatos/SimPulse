@@ -8,7 +8,8 @@ Do not hide defects because they are outside the current task.
 | KI-002 | 2026-08-18 | Bridge / iRacing | High (blocks Phase 3 live) | Open |
 | KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
-| KI-005 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
+| KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
+| KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
 
 ## KI-001 — Apple project not generated
 
@@ -33,7 +34,14 @@ Do not hide defects because they are outside the current task.
 - **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
 - **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
 
-## KI-005 — Reconnect trust is DeviceId-only (Phase 0)
+## KI-005 — Android and Wear OS projects not generated
+
+- **Symptoms:** No Gradle project under `apps/android` or `apps/wearos`; Wear AVD exists on Windows but cannot build an app.
+- **Workaround:** Develop Bridge/.NET and protocol contracts; treat Phase 9 as documented only until AND-001.
+- **Suspected cause:** Phase 9 deferred until the Apple vertical slice (Phases 1–5).
+- **Related:** ADR 0010, AND-001, WEAROS-001
+
+## KI-006 — Reconnect trust is DeviceId-only (Phase 0)
 
 - **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted, sent in cleartext over unencrypted WebSocket; there is no per-device reconnect secret and no TLS.
 - **Impact:** Any LAN peer that knows or guesses a trusted DeviceId can impersonate that device until revoke.
