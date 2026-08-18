@@ -27,9 +27,10 @@ Do not hide defects because they are outside the current task.
 
 ## KI-003 — Transport is in-process only
 
-- **Symptoms:** No LAN WebSocket server, no pairing UI.
-- **Workaround:** Protocol unit tests round-trip JSON envelopes.
-- **Related:** PROTO-001, BRIDGE-005, ADR 0003
+- **Symptoms:** Loopback WebSocket transport exists (`http://127.0.0.1:8742/ws/` by default), but pairing is not implemented and all connections stay untrusted. No telemetry is broadcast; no pairing UI.
+- **Workaround:** Protocol unit tests round-trip JSON envelopes. Integration test connects with `ClientWebSocket` and confirms unknown types are ignored.
+- **Suspected cause:** BRIDGE-005 listen/accept shipped; pairing/telemetry gate is Task 4 (BRIDGE-006).
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, ADR 0003
 
 ## KI-004 — Entitlements are code-level only
 

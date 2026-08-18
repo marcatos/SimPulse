@@ -229,9 +229,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Dependencies:** PROTO-001
 - **Acceptance criteria:** Accepts paired clients; reconnect; ignores unknown messages; no biometrics outbound.
+- **Notes:** Loopback `HttpListener` transport exists (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Connections stay untrusted until Task 4 pairing. Do not mark DONE — pairing AC remains.
 
 ### BRIDGE-006 — Pairing and trusted devices
 

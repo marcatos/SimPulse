@@ -23,6 +23,7 @@ builder.Logging.SetMinimumLevel(logLevel);
 
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ITrustedDeviceStore, InMemoryTrustedDeviceStore>();
+builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
 builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
 {
     string? fixturePath = Environment.GetEnvironmentVariable("SIMPULSE_FIXTURE_PATH");
@@ -33,8 +34,30 @@ builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
 
     return new IRacingAdapter();
 });
+builder.Services.AddSingleton<IBridgeTransport>(sp =>
+{
+    (string host, int port) = ReadBindOptions();
+    return new HttpListenerWebSocketTransport(
+        host,
+        port,
+        sp.GetRequiredService<IClientSessionHub>(),
+        sp.GetRequiredService<IClock>(),
+        sp.GetRequiredService<ILogger<HttpListenerWebSocketTransport>>());
+});
 builder.Services.AddSingleton<BridgeRuntime>();
 builder.Services.AddHostedService<Worker>();
 
 IHost host = builder.Build();
 host.Run();
+
+static (string Host, int Port) ReadBindOptions()
+{
+    string host = Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_HOST")
+        ?? HttpListenerWebSocketTransport.DefaultHost;
+    if (!int.TryParse(Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_PORT"), out int port))
+    {
+        port = HttpListenerWebSocketTransport.DefaultPort;
+    }
+
+    return (host, port);
+}
