@@ -27,9 +27,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Infra
 - **Priority:** P0
-- **Status:** READY
+- **Status:** DONE
 - **Dependencies:** INFRA-001
 - **Acceptance criteria:** GitHub Actions runs `dotnet test` on Windows and Ubuntu; artifacts (if any) use `retention-days: 7`.
+- **Notes:** `.github/workflows/ci.yml` matrix runs `dotnet test SimPulse.sln` on `windows-latest` and `ubuntu-latest`; test-result artifacts use `retention-days: 7`. PR #1 checks green 2026-08-18 (Actions runs 32127173207, 32127216936).
 
 ### INFRA-003 — Apple CI placeholder
 
