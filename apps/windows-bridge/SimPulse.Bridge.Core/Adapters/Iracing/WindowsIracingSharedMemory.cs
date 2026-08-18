@@ -12,6 +12,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
 {
     private readonly ILogger<WindowsIracingSharedMemory> _logger;
     private MemoryMappedFile? _map;
+    private bool _opened;
 
     public WindowsIracingSharedMemory(ILogger<WindowsIracingSharedMemory>? logger = null)
     {
@@ -26,14 +27,14 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         }
 
         Stopwatch started = Stopwatch.StartNew();
-        _logger.LogInformation(
+        _logger.LogDebug(
             "iRacing mmap open starting. MapName={MapName} Component={Component}",
             IracingSdkConstants.MemMapFileName,
             nameof(WindowsIracingSharedMemory));
 
         if (!OperatingSystem.IsWindows())
         {
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "iRacing mmap unsupported on this OS after {ElapsedMs} ms. Component={Component}",
                 started.ElapsedMilliseconds,
                 nameof(WindowsIracingSharedMemory));
@@ -45,6 +46,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
             _map = MemoryMappedFile.OpenExisting(
                 IracingSdkConstants.MemMapFileName,
                 MemoryMappedFileRights.Read);
+            _opened = true;
             _logger.LogInformation(
                 "iRacing mmap open succeeded in {ElapsedMs} ms. MapName={MapName}",
                 started.ElapsedMilliseconds,
@@ -53,7 +55,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         }
         catch (Exception ex) when (IsUnavailable(ex))
         {
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "iRacing mmap unavailable after {ElapsedMs} ms. MapName={MapName} Reason={Reason}",
                 started.ElapsedMilliseconds,
                 IracingSdkConstants.MemMapFileName,
@@ -67,6 +69,14 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         MemoryMappedFile? map = _map;
         _map = null;
         map?.Dispose();
+        if (_opened)
+        {
+            _opened = false;
+            _logger.LogInformation(
+                "iRacing mmap closed. MapName={MapName} Component={Component}",
+                IracingSdkConstants.MemMapFileName,
+                nameof(WindowsIracingSharedMemory));
+        }
     }
 
     public bool TryReadSnapshot(out IracingMemorySnapshot snapshot)
