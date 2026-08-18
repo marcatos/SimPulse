@@ -87,7 +87,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Analytics
 - **Priority:** P1
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ANALYTICS-001
 - **Acceptance criteria:** Structured report with `DataPresence` for missing fields.
 
