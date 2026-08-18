@@ -56,6 +56,33 @@ public sealed class SimpleFileLoggerProviderTests
         }
     }
 
+    [Fact]
+    public void Write_failure_disables_file_logging_without_throwing()
+    {
+        string directory = CreateTempLogDirectory();
+        string blockedLogPath = Path.Combine(directory, "bridge-20260818.log");
+        Directory.CreateDirectory(blockedLogPath);
+        try
+        {
+            using SimpleFileLoggerProvider provider = new(directory, new FixedClock(LoggedAt));
+            ILogger logger = provider.CreateLogger("Bridge.Test");
+
+            logger.LogInformation("first-write-fails");
+            Directory.Delete(blockedLogPath);
+            logger.LogInformation("second-write-must-stay-disabled");
+
+            Assert.False(File.Exists(blockedLogPath));
+            Assert.False(Directory.Exists(blockedLogPath));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static string CreateTempLogDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), "SimPulseTests", "logs", Guid.NewGuid().ToString("N"));

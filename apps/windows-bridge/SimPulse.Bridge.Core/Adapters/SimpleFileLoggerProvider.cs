@@ -11,13 +11,21 @@ public sealed class SimpleFileLoggerProvider : ILoggerProvider
     private readonly LogLevel _minLevel;
     private readonly object _sync = new();
     private bool _disposed;
+    private bool _disabled;
 
     public SimpleFileLoggerProvider(string directory, IClock clock, LogLevel minLevel = LogLevel.Trace)
     {
         _directory = directory;
         _clock = clock;
         _minLevel = minLevel;
-        Directory.CreateDirectory(directory);
+        try
+        {
+            Directory.CreateDirectory(directory);
+        }
+        catch (Exception ex) when (IsFileLogFailure(ex))
+        {
+            _disabled = true;
+        }
     }
 
     public ILogger CreateLogger(string categoryName)
@@ -32,7 +40,7 @@ public sealed class SimpleFileLoggerProvider : ILoggerProvider
 
     internal bool IsEnabled(LogLevel logLevel)
     {
-        return !_disposed && logLevel != LogLevel.None && logLevel >= _minLevel;
+        return !_disposed && !_disabled && logLevel != LogLevel.None && logLevel >= _minLevel;
     }
 
     internal void Write(LogLevel logLevel, string categoryName, string message, Exception? exception)
@@ -51,8 +59,25 @@ public sealed class SimpleFileLoggerProvider : ILoggerProvider
 
         lock (_sync)
         {
-            File.AppendAllText(path, line);
+            if (_disabled)
+            {
+                return;
+            }
+
+            try
+            {
+                File.AppendAllText(path, line);
+            }
+            catch (Exception ex) when (IsFileLogFailure(ex))
+            {
+                _disabled = true;
+            }
         }
+    }
+
+    private static bool IsFileLogFailure(Exception ex)
+    {
+        return ex is IOException or UnauthorizedAccessException or NotSupportedException;
     }
 
     private sealed class SimpleFileLogger : ILogger
