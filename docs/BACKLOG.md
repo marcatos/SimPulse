@@ -60,6 +60,14 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Dependencies:** none
 - **Acceptance criteria:** Files listed in the bootstrap spec exist and an agent can recover project state from them alone.
 
+### DOCS-002 — Public README
+
+- **Area:** Docs
+- **Priority:** P1
+- **Status:** DONE
+- **Dependencies:** WATCH-002 screenshots
+- **Acceptance criteria:** Root README is visitor-facing: product story, honest status, screenshots, layout, Windows/macOS getting started, privacy, license. No LAN IPs, Apple IDs, or secrets.
+
 ## Protocol / domain
 
 ### PROTO-001 — Freeze protocol v1 schema and fixtures
