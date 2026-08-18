@@ -39,7 +39,7 @@ public sealed class PairingCoordinator
         _logger = logger;
     }
 
-    public void BeginPairingWindow()
+    public PairingWindowInfo BeginPairingWindow()
     {
         Stopwatch started = Stopwatch.StartNew();
         string pin;
@@ -61,6 +61,7 @@ public sealed class PairingCoordinator
             MaxFailedAttempts,
             started.ElapsedMilliseconds,
             "PairingCoordinator");
+        return new PairingWindowInfo(pin, expiresAt);
     }
 
     public async Task HandleAsync(

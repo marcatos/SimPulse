@@ -26,6 +26,8 @@ builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ITrustedDeviceStore>(CreateTrustedDeviceStore);
 builder.Services.AddSingleton<IPairingPinGenerator, PairingPinGenerator>();
 builder.Services.AddSingleton<PairingCoordinator>();
+builder.Services.AddSingleton<IPairingUx, ConsolePairingUx>();
+builder.Services.AddSingleton<TrayPairingPresenter>();
 builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
 builder.Services.AddSingleton<IIracingSharedMemory>(sp =>
     new WindowsIracingSharedMemory(sp.GetRequiredService<ILogger<WindowsIracingSharedMemory>>()));

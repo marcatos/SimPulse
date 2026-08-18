@@ -22,14 +22,14 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Partially completed features
 
-- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Remaining KI-003 gaps are tray PIN UX and TLS.
+- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Core can reopen a pairing window via `IPairingUx` / `TrayPairingPresenter` without process restart; the host still uses `ConsolePairingUx` (no tray). Remaining KI-003 gaps are tray PIN UX and TLS.
 - iRacing: first-party mmap session reader (BRIDGE-003 + BUG-001 DONE). Bridge can start before iRacing and subscribe until mmap appears. Live YAML still requires the sim + memmap (KI-002). 60 Hz variable table is out of scope.
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
 
 ## Active work
 
-- None on this worktree. BUG-001 (pre-merge iRacing mmap review fixes), BRIDGE-003, BRIDGE-005, and BRIDGE-006 are DONE (`docs/handoffs/BUG-001.md`, `docs/handoffs/BRIDGE-003.md`).
+- BRIDGE-007 tray / pairing PIN UX is IN_PROGRESS on this worktree (`docs/handoffs/BRIDGE-007.md`). Task 1: Core `IPairingUx` + `TrayPairingPresenter` so **Pair new device** can reopen a PIN window without process restart. Tray WinForms adapter is not started (Tasks 2–3).
 
 ## Blocked work
 
@@ -43,14 +43,14 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Latest successful build
 
-- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424).
+- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424). BRIDGE-007 Task 1 host project also built Release.
 - **iOS / watchOS:** NOT EXECUTED (no Xcode / no `.xcodeproj`).
 
 ## Latest successful tests
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **73 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 51) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **78 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 56) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
