@@ -36,3 +36,8 @@ public interface ITrustedDeviceStore
 
     Task<bool> IsTrustedAsync(string deviceId, CancellationToken cancellationToken);
 }
+
+public interface IPairingPinGenerator
+{
+    string Generate();
+}

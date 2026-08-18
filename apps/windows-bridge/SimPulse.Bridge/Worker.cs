@@ -1,6 +1,7 @@
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 
-using SimPulse.Bridge.Core.Adapters;
 using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
 
@@ -9,21 +10,30 @@ namespace SimPulse.Bridge;
 public sealed class Worker : BackgroundService
 {
     private readonly BridgeRuntime _runtime;
+    private readonly IBridgeTransport _transport;
+    private readonly PairingCoordinator _pairing;
     private readonly ILogger<Worker> _logger;
 
-    public Worker(BridgeRuntime runtime, ILogger<Worker> logger)
+    public Worker(
+        BridgeRuntime runtime,
+        IBridgeTransport transport,
+        PairingCoordinator pairing,
+        ILogger<Worker> logger)
     {
         _runtime = runtime;
+        _transport = transport;
+        _pairing = pairing;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        System.Diagnostics.Stopwatch started = System.Diagnostics.Stopwatch.StartNew();
+        Stopwatch started = Stopwatch.StartNew();
         _logger.LogInformation("Bridge host starting. Component={Component}", "Worker");
+        _pairing.BeginPairingWindow();
         try
         {
-            await _runtime.RunAsync(stoppingToken);
+            await RunRuntimeAndTransportAsync(stoppingToken);
             _logger.LogInformation(
                 "Bridge host completed. ElapsedMs={ElapsedMs}",
                 started.ElapsedMilliseconds);
@@ -42,5 +52,22 @@ public sealed class Worker : BackgroundService
                 started.ElapsedMilliseconds);
             throw;
         }
+    }
+
+    private Task RunRuntimeAndTransportAsync(CancellationToken stoppingToken)
+    {
+        return LinkedSiblingTasks.RunAsync(
+            _runtime.RunAsync,
+            cancellationToken => _transport.RunAsync(OnConnectedAsync, cancellationToken),
+            stoppingToken);
+    }
+
+    private Task OnConnectedAsync(IClientConnection connection, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Client connected. Trusted={Trusted} HasDeviceId={HasDeviceId}",
+            connection.IsTrusted,
+            connection.DeviceId is not null);
+        return Task.CompletedTask;
     }
 }

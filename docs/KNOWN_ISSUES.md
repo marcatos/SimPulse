@@ -6,8 +6,10 @@ Do not hide defects because they are outside the current task.
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Open |
 | KI-002 | 2026-08-18 | Bridge / iRacing | High (blocks Phase 3 live) | Open |
-| KI-003 | 2026-08-18 | Protocol | Medium | Open |
+| KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
+| KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
+| KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
 
 ## KI-001 — Apple project not generated
 
@@ -25,13 +27,39 @@ Do not hide defects because they are outside the current task.
 - **Suspected cause:** Phase 0 intentionally ships a stub `IRacingAdapter`.
 - **Related:** ADR 0006, BRIDGE-003
 
-## KI-003 — Transport is in-process only
+## KI-003 — Transport pairing UX still console-only
 
-- **Symptoms:** No LAN WebSocket server, no pairing UI.
-- **Workaround:** Protocol unit tests round-trip JSON envelopes.
-- **Related:** PROTO-001, BRIDGE-005, ADR 0003
+- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. `BeginPairingWindow()` runs **once** at Bridge host start; while open it serves a 6-digit CSPRNG PIN with 5-minute expiry. A successful pair, expiry, or 5 failed attempts closes/locks the window for the rest of that process — **no second window** until process restart (future: tray **Pair new device** in BRIDGE-007). Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information when the window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
+- **Workaround:** Read the current window PIN from Bridge console logs before the window closes. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`. To pair another device after the window closes, restart the Bridge process (until BRIDGE-007 ships).
+- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
+
+## KI-005 — Android and Wear OS projects not generated
+
+- **Symptoms:** No Gradle project under `apps/android` or `apps/wearos`; Wear AVD exists on Windows but cannot build an app.
+- **Workaround:** Develop Bridge/.NET and protocol contracts; treat Phase 9 as documented only until AND-001.
+- **Suspected cause:** Phase 9 deferred until the Apple vertical slice (Phases 1–5).
+- **Related:** ADR 0010, AND-001, WEAROS-001
+
+## KI-006 — Reconnect trust is DeviceId-only (Phase 0)
+
+- **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted, sent in cleartext over unencrypted WebSocket; there is no per-device reconnect secret and no TLS.
+- **Impact:** Any LAN peer that knows or guesses a trusted DeviceId can impersonate that device until revoke.
+- **Workaround:** Revoke compromised DeviceIds; keep Bridge on loopback unless LAN pairing is intentional; treat DeviceId as a capability token, not proof of possession.
+- **Suspected cause:** Phase 0 scope — PIN establishes trust once; reconnect hardening (TLS, per-device secrets) is deferred.
+- **Related:** SECURITY.md, BRIDGE-006, ADR 0003, KI-003
 
 ## KI-004 — Entitlements are code-level only
 
 - **Symptoms:** Free/Premium/Pro gates exist as functions; StoreKit is absent; UI does not enforce limits.
 - **Related:** ADR 0008, IOS-010
+
+## ANALYTICS-002 — RaceReport (2026-08-18)
+
+- **Status:** No known defects introduced.
+- **Note:** `RaceReport` and `RaceReportBuilder.FromDriverSession` use `DataPresence` / `OptionalValue<T>` for missing fields (simulator metadata, positions, peak-HR event association). `PeakHeartRateAssociatedEvent` remains `Unavailable` when `TimelineOffset` is not available — intentional per ADR 0004, not a defect.
+
+## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
+
+- **Status:** No known defects introduced.
+- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap ticks remain BRIDGE-003.

@@ -22,7 +22,10 @@ builder.Logging.AddSimpleConsole(options =>
 builder.Logging.SetMinimumLevel(logLevel);
 
 builder.Services.AddSingleton<IClock, SystemClock>();
-builder.Services.AddSingleton<ITrustedDeviceStore, InMemoryTrustedDeviceStore>();
+builder.Services.AddSingleton<ITrustedDeviceStore>(CreateTrustedDeviceStore);
+builder.Services.AddSingleton<IPairingPinGenerator, PairingPinGenerator>();
+builder.Services.AddSingleton<PairingCoordinator>();
+builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
 builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
 {
     string? fixturePath = Environment.GetEnvironmentVariable("SIMPULSE_FIXTURE_PATH");
@@ -33,8 +36,46 @@ builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
 
     return new IRacingAdapter();
 });
+builder.Services.AddSingleton<IBridgeTransport>(sp =>
+{
+    (string host, int port) = ReadBindOptions();
+    PairingCoordinator pairing = sp.GetRequiredService<PairingCoordinator>();
+    return new HttpListenerWebSocketTransport(
+        host,
+        port,
+        sp.GetRequiredService<IClientSessionHub>(),
+        sp.GetRequiredService<IClock>(),
+        sp.GetRequiredService<ILogger<HttpListenerWebSocketTransport>>(),
+        pairing.HandleAsync,
+        pairing.Unregister);
+});
 builder.Services.AddSingleton<BridgeRuntime>();
 builder.Services.AddHostedService<Worker>();
 
 IHost host = builder.Build();
 host.Run();
+
+static ITrustedDeviceStore CreateTrustedDeviceStore(IServiceProvider services)
+{
+    string? path = Environment.GetEnvironmentVariable("SIMPULSE_TRUSTED_DEVICES_PATH");
+    if (!string.IsNullOrWhiteSpace(path))
+    {
+        return new JsonFileTrustedDeviceStore(
+            path,
+            services.GetRequiredService<ILogger<JsonFileTrustedDeviceStore>>());
+    }
+
+    return new InMemoryTrustedDeviceStore();
+}
+
+static (string Host, int Port) ReadBindOptions()
+{
+    string host = Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_HOST")
+        ?? HttpListenerWebSocketTransport.DefaultHost;
+    if (!int.TryParse(Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_PORT"), out int port))
+    {
+        port = HttpListenerWebSocketTransport.DefaultPort;
+    }
+
+    return (host, port);
+}

@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SimPulse.Bridge.Core\SimPulse.Bridge.Core.csproj" />
     <ProjectReference Include="..\..\..\packages\domain-model\SimPulse.Domain\SimPulse.Domain.csproj" />
+    <ProjectReference Include="..\..\..\packages\protocol\SimPulse.Protocol\SimPulse.Protocol.csproj" />
   </ItemGroup>
 
 </Project>

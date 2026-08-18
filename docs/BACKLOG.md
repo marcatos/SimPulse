@@ -87,7 +87,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Analytics
 - **Priority:** P1
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ANALYTICS-001
 - **Acceptance criteria:** Structured report with `DataPresence` for missing fields.
 
@@ -221,25 +221,28 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** BRIDGE-002 or BRIDGE-003
 - **Acceptance criteria:** SESSION_START/END, LAP_START/COMPLETE from normalized ticks; idempotent.
+- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap ticks are still BRIDGE-003.
 
 ### BRIDGE-005 — WebSocket server
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** PROTO-001
 - **Acceptance criteria:** Accepts paired clients; reconnect; ignores unknown messages; no biometrics outbound.
+- **Notes:** Loopback `HttpListener` transport (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Pairing gate is BRIDGE-006. Reconnect after a client close is covered by `Accepts_second_client_after_first_closes`.
 
 ### BRIDGE-006 — Pairing and trusted devices
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
 
 ### BRIDGE-007 — Tray / background UX
 
@@ -247,7 +250,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Priority:** P2
 - **Status:** BACKLOG
 - **Dependencies:** BRIDGE-001
-- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible.
+- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart (today restart is required after the initial window closes — see KI-003).
 
 ## Dependency edges (do not parallelize these pairs)
 

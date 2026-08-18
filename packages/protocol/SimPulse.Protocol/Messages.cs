@@ -6,6 +6,8 @@ public sealed record PairingRequestMessage(string DeviceId, string Pin);
 
 public sealed record PairingAcceptMessage(string DeviceId, DateTimeOffset TrustedAtUtc);
 
+public sealed record PairingRejectMessage(string DeviceId, string Reason);
+
 public sealed record HeartbeatMessage(string ConnectionId);
 
 public sealed record TimeSyncRequestMessage(DateTimeOffset ClientSentAtUtc);

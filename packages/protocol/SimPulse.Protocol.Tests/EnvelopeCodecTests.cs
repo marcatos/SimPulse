@@ -39,6 +39,41 @@ public sealed class EnvelopeCodecTests
     }
 
     [Fact]
+    public void Round_trips_pairing_reject_payload()
+    {
+        DateTimeOffset sent = DateTimeOffset.Parse("2026-08-18T08:00:00Z");
+        PairingRejectMessage reject = new("phone-1", "invalid_pin");
+
+        string json = EnvelopeCodec.Serialize(MessageTypes.PairingReject, reject, sent, "rej1");
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+
+        Assert.Equal(MessageTypes.PairingReject, envelope.Type);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out PairingRejectMessage? restored));
+        Assert.Equal("phone-1", restored!.DeviceId);
+        Assert.Equal("invalid_pin", restored.Reason);
+    }
+
+    [Fact]
+    public void TryReadPayload_malformed_payload_returns_false_without_throwing()
+    {
+        const string json = """
+            {
+              "protocolVersion": 1,
+              "type": "hello",
+              "messageId": "abc",
+              "sentAtUtc": "2026-08-18T08:00:00Z",
+              "payload": 123
+            }
+            """;
+
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+        bool ok = EnvelopeCodec.TryReadPayload(envelope, out HelloMessage? hello);
+
+        Assert.False(ok);
+        Assert.Null(hello);
+    }
+
+    [Fact]
     public void Unknown_message_type_is_not_treated_as_known()
     {
         Assert.False(EnvelopeCodec.IsKnownType("simulator.understeer-magic"));
