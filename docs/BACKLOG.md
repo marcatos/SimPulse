@@ -280,7 +280,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
   - LapStart/LapComplete from Lap increases
   - No 60 Hz WebSocket frames
   - Tests pass on Windows + Ubuntu without a live sim
-- **Notes:** Task 1 (header + var table byte parsers) in progress. See `docs/handoffs/BRIDGE-008.md` and `docs/superpowers/plans/2026-08-18-iracing-var-table.md`.
+- **Notes:** Tasks 1–2 done (header/var parsers + YAML list match; unmatched `driverCarIdx`/`sessionNum` → Unavailable). Tasks 3–4 remaining. See `docs/handoffs/BRIDGE-008.md` and `docs/superpowers/plans/2026-08-18-iracing-var-table.md`.
 
 ### BUG-003 — Pre-merge tray UX review fixes (round 2)
 

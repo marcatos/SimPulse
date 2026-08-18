@@ -15,22 +15,8 @@ public static class IracingSessionInfoParser
     public static IracingSessionInfo Parse(string yaml, int? driverCarIdx = null, int? sessionNum = null)
     {
         Dictionary<string, Dictionary<string, string>> sections = ParseSections(yaml);
-        OptionalValue<string> vehicleId = First(sections, "DriverInfo", "CarPath");
-        OptionalValue<string> vehicleDisplayName = First(sections, "DriverInfo", "CarScreenName", "CarPath");
-        OptionalValue<string> sessionType = First(sections, "SessionInfo", "SessionType");
-
-        if (driverCarIdx is int carIdx &&
-            TryFindListEntry(yaml, "Drivers", "CarIdx", carIdx.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> driver))
-        {
-            vehicleId = First(driver, "CarPath");
-            vehicleDisplayName = First(driver, "CarScreenName", "CarPath");
-        }
-
-        if (sessionNum is int num &&
-            TryFindListEntry(yaml, "Sessions", "SessionNum", num.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> session))
-        {
-            sessionType = First(session, "SessionType");
-        }
+        ResolveVehicle(yaml, sections, driverCarIdx, out OptionalValue<string> vehicleId, out OptionalValue<string> vehicleDisplayName);
+        OptionalValue<string> sessionType = ResolveSessionType(yaml, sections, sessionNum);
 
         return new IracingSessionInfo(
             First(sections, "WeekendInfo", "TrackID"),
@@ -38,6 +24,49 @@ public static class IracingSessionInfoParser
             vehicleId,
             vehicleDisplayName,
             sessionType);
+    }
+
+    private static void ResolveVehicle(
+        string yaml,
+        Dictionary<string, Dictionary<string, string>> sections,
+        int? driverCarIdx,
+        out OptionalValue<string> vehicleId,
+        out OptionalValue<string> vehicleDisplayName)
+    {
+        if (driverCarIdx is not int carIdx)
+        {
+            vehicleId = First(sections, "DriverInfo", "CarPath");
+            vehicleDisplayName = First(sections, "DriverInfo", "CarScreenName", "CarPath");
+            return;
+        }
+
+        if (TryFindListEntry(yaml, "Drivers", "CarIdx", carIdx.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> driver))
+        {
+            vehicleId = First(driver, "CarPath");
+            vehicleDisplayName = First(driver, "CarScreenName", "CarPath");
+            return;
+        }
+
+        vehicleId = OptionalValue<string>.Unavailable();
+        vehicleDisplayName = OptionalValue<string>.Unavailable();
+    }
+
+    private static OptionalValue<string> ResolveSessionType(
+        string yaml,
+        Dictionary<string, Dictionary<string, string>> sections,
+        int? sessionNum)
+    {
+        if (sessionNum is not int num)
+        {
+            return First(sections, "SessionInfo", "SessionType");
+        }
+
+        if (TryFindListEntry(yaml, "Sessions", "SessionNum", num.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> session))
+        {
+            return First(session, "SessionType");
+        }
+
+        return OptionalValue<string>.Unavailable();
     }
 
     private static OptionalValue<string> First(

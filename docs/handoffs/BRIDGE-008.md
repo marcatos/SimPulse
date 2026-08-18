@@ -5,7 +5,7 @@ Goal
 Resolve vehicle and session type from `Drivers:` / `Sessions:` list entries when `driverCarIdx` / `sessionNum` are supplied. Keep first-entry Parse behavior when those args are unset.
 
 Status
-IN_PROGRESS (Tasks 1–2 complete; Tasks 3–4 remaining)
+IN_PROGRESS (Tasks 1–2 complete, including unmatched-lookup Unavailable; Tasks 3–4 remaining)
 
 Files changed
 - `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSdkConstants.cs`
@@ -29,14 +29,16 @@ Decisions made
 - `Parse(yaml, driverCarIdx, sessionNum)` optional args; default path still first `DriverInfo`/`SessionInfo` keys.
 - List matching uses `CarIdx` / `SessionNum` ordinal string compare with invariant `ToString`.
 - Parser stayed under 300 lines; list parsing was not extracted.
+- When `driverCarIdx` / `sessionNum` are set and no list row matches, vehicle and/or session type are `Unavailable` (no first-entry fallback). Unset args still use first-entry keys. One-arg match/miss is independent.
 
 Tests executed
 - `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingVarTableReaderTests --configuration Release` (RED: types missing; GREEN after implement)
 - `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingSessionInfoParserTests --configuration Release` (RED: first-car `othercar`; GREEN after list match)
+- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingSessionInfoParserTests --configuration Release` (RED: unmatched 99/99 still Available; GREEN after Unavailable)
 - `dotnet test SimPulse.sln --configuration Release`
 
 Tests passing
-109 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 87). Apple/Xcode NOT EXECUTED.
+114 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 92). Apple/Xcode NOT EXECUTED.
 
 Known failures
 None.
@@ -47,7 +49,6 @@ Remaining work
 
 Risks
 - Live sim still required for KI-002 end-to-end; CI uses synthetic buffers only.
-- Unmatched `driverCarIdx` / `sessionNum` keep first-entry fallback (not Unavailable).
 
 Suggested next action
 Task 3: snapshot telemetry + adapter (player car, session time, laps, YAML cache).
