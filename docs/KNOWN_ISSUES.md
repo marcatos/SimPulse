@@ -8,6 +8,7 @@ Do not hide defects because they are outside the current task.
 | KI-002 | 2026-08-18 | Bridge / iRacing | High (blocks Phase 3 live) | Open |
 | KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
+| KI-005 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
 
 ## KI-001 — Apple project not generated
 
@@ -27,10 +28,18 @@ Do not hide defects because they are outside the current task.
 
 ## KI-003 — Transport pairing UX still console-only
 
-- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. Pairing requires an open window (`BeginPairingWindow`): 6-digit CSPRNG PIN, 5-minute expiry, success closes the window, 5 failed attempts lock until a new window. Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information each time a window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
-- **Workaround:** Read the current window PIN from Bridge console logs. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`.
+- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. `BeginPairingWindow()` runs **once** at Bridge host start; while open it serves a 6-digit CSPRNG PIN with 5-minute expiry. A successful pair, expiry, or 5 failed attempts closes/locks the window for the rest of that process — **no second window** until process restart (future: tray **Pair new device** in BRIDGE-007). Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information when the window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
+- **Workaround:** Read the current window PIN from Bridge console logs before the window closes. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`. To pair another device after the window closes, restart the Bridge process (until BRIDGE-007 ships).
 - **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
 - **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
+
+## KI-005 — Reconnect trust is DeviceId-only (Phase 0)
+
+- **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted, sent in cleartext over unencrypted WebSocket; there is no per-device reconnect secret and no TLS.
+- **Impact:** Any LAN peer that knows or guesses a trusted DeviceId can impersonate that device until revoke.
+- **Workaround:** Revoke compromised DeviceIds; keep Bridge on loopback unless LAN pairing is intentional; treat DeviceId as a capability token, not proof of possession.
+- **Suspected cause:** Phase 0 scope — PIN establishes trust once; reconnect hardening (TLS, per-device secrets) is deferred.
+- **Related:** SECURITY.md, BRIDGE-006, ADR 0003, KI-003
 
 ## KI-004 — Entitlements are code-level only
 

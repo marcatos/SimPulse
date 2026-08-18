@@ -242,7 +242,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
-- **Notes:** Six-digit CSPRNG PIN (not persisted). Window is a real gate: closed until `BeginPairingWindow()`, expires after 5 minutes or a successful pair, and locks after 5 failed attempts until a new window. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information each time a window opens.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-005. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
 
 ### BRIDGE-007 — Tray / background UX
 
@@ -250,7 +250,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Priority:** P2
 - **Status:** BACKLOG
 - **Dependencies:** BRIDGE-001
-- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible.
+- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart (today restart is required after the initial window closes — see KI-003).
 
 ## Dependency edges (do not parallelize these pairs)
 
