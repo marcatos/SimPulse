@@ -229,18 +229,19 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** PROTO-001
 - **Acceptance criteria:** Accepts paired clients; reconnect; ignores unknown messages; no biometrics outbound.
-- **Notes:** Loopback `HttpListener` transport exists (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Connections stay untrusted until Task 4 pairing. Do not mark DONE — pairing AC remains.
+- **Notes:** Loopback `HttpListener` transport (`127.0.0.1:8742/ws/` by default; `0.0.0.0` is opt-in). Pairing gate is BRIDGE-006.
 
 ### BRIDGE-006 — Pairing and trusted devices
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
+- **Notes:** Six-digit PIN (not persisted); `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged once at Information when the pairing window opens.
 
 ### BRIDGE-007 — Tray / background UX
 

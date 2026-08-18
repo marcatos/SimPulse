@@ -11,12 +11,18 @@ public sealed class Worker : BackgroundService
 {
     private readonly BridgeRuntime _runtime;
     private readonly IBridgeTransport _transport;
+    private readonly PairingCoordinator _pairing;
     private readonly ILogger<Worker> _logger;
 
-    public Worker(BridgeRuntime runtime, IBridgeTransport transport, ILogger<Worker> logger)
+    public Worker(
+        BridgeRuntime runtime,
+        IBridgeTransport transport,
+        PairingCoordinator pairing,
+        ILogger<Worker> logger)
     {
         _runtime = runtime;
         _transport = transport;
+        _pairing = pairing;
         _logger = logger;
     }
 
@@ -24,6 +30,7 @@ public sealed class Worker : BackgroundService
     {
         Stopwatch started = Stopwatch.StartNew();
         _logger.LogInformation("Bridge host starting. Component={Component}", "Worker");
+        _pairing.BeginPairingWindow();
         try
         {
             await RunRuntimeAndTransportAsync(stoppingToken);

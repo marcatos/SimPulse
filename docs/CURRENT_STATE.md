@@ -15,20 +15,20 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, non-medical wording).
-- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, in-memory trusted-device store, structured logging, idempotent `SessionLifecycleTracker` for session/lap race events, loopback WebSocket listen/accept (`HttpListener` on `/ws/`).
+- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, PIN pairing + trusted-device store (in-memory or JSON file), structured logging, idempotent `SessionLifecycleTracker` for session/lap race events, loopback WebSocket listen/accept (`HttpListener` on `/ws/`).
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions workflow for .NET on Windows and Ubuntu; Apple job records NOT EXECUTED.
 
 ## Partially completed features
 
-- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback, but pairing/telemetry gate is still missing (KI-003).
+- Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with PIN pairing. Remaining KI-003 gaps are tray PIN UX and TLS.
 - iRacing: stub only; live mmap is BRIDGE-003 (KI-002).
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
 
 ## Active work
 
-- BRIDGE-005 — WebSocket transport exists; pairing/telemetry gate is Task 4 (`docs/handoffs/BRIDGE-005.md`).
+- None on this worktree. BRIDGE-005 and BRIDGE-006 are DONE (`docs/handoffs/BRIDGE-006.md`).
 
 ## Blocked work
 
@@ -49,7 +49,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **31 passed**, 0 failed (Domain 6, Analytics 6, Protocol 5, Bridge.Core 14) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **42 passed**, 0 failed (Domain 6, Analytics 6, Protocol 6, Bridge.Core 24) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
 
@@ -61,9 +61,9 @@ Monorepo. Hexagonal Bridge (`ISimulatorAdapter`). JSON protocol v1 (LAN, pairing
 
 Windows (no Mac required):
 
-1. BRIDGE-006 pairing store + BRIDGE-005 pairing gate (Task 4)
-2. BRIDGE-003 iRacing mmap (wire `SessionLifecycleTracker` on normalized ticks)
-3. ANALYTICS-003 HR by lap and event windows
+1. BRIDGE-003 iRacing mmap (wire `SessionLifecycleTracker` on normalized ticks)
+2. ANALYTICS-003 HR by lap and event windows
+3. BRIDGE-007 tray / pairing PIN UX
 
 Mac (unblocks Watch/iOS):
 

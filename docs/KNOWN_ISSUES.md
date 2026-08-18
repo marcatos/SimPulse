@@ -6,7 +6,7 @@ Do not hide defects because they are outside the current task.
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Open |
 | KI-002 | 2026-08-18 | Bridge / iRacing | High (blocks Phase 3 live) | Open |
-| KI-003 | 2026-08-18 | Protocol | Medium | Open |
+| KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 
 ## KI-001 — Apple project not generated
@@ -25,12 +25,12 @@ Do not hide defects because they are outside the current task.
 - **Suspected cause:** Phase 0 intentionally ships a stub `IRacingAdapter`.
 - **Related:** ADR 0006, BRIDGE-003
 
-## KI-003 — Transport is in-process only
+## KI-003 — Transport pairing UX still console-only
 
-- **Symptoms:** Loopback WebSocket transport exists (`http://127.0.0.1:8742/ws/` by default), but pairing is not implemented and all connections stay untrusted. No telemetry is broadcast; no pairing UI.
-- **Workaround:** Protocol unit tests round-trip JSON envelopes. Integration test connects with `ClientWebSocket` and confirms unknown types are ignored.
-- **Suspected cause:** BRIDGE-005 listen/accept shipped; pairing/telemetry gate is Task 4 (BRIDGE-006).
-- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, ADR 0003
+- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. PIN pairing trusts devices and unpaired connections get no broadcast telemetry. PIN is logged once at Information when the pairing window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
+- **Workaround:** Read the one-time PIN from Bridge console logs. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`.
+- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept and PIN pairing; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
 
 ## KI-004 — Entitlements are code-level only
 

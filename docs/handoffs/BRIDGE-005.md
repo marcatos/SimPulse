@@ -10,7 +10,7 @@ Accept WebSocket clients on `http://{host}:{port}/ws/` (default `127.0.0.1:8742`
 
 ## Status
 
-IN_PROGRESS (transport exists; pairing AC remains)
+DONE (pairing gate completed in BRIDGE-006)
 
 ## Files changed
 
