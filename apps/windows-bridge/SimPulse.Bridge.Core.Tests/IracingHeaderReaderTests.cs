@@ -87,4 +87,68 @@ public sealed class IracingHeaderReaderTests
             out _,
             out _));
     }
+
+    [Fact]
+    public void TryReadLayout_round_trips_sessionInfoUpdate_and_connected()
+    {
+        byte[] buffer = new byte[IracingSdkConstants.HeaderLayoutMinSize];
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderStatusOffset),
+            IracingSdkConstants.StatusConnected);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderSessionInfoUpdateOffset),
+            11);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderNumVarsOffset),
+            0);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderVarHeaderOffsetOffset),
+            IracingSdkConstants.HeaderLayoutMinSize);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderNumBufOffset),
+            1);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderBufLenOffset),
+            0);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderVarBufOffset),
+            4);
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderVarBufOffset + 4),
+            IracingSdkConstants.HeaderLayoutMinSize);
+
+        Assert.True(IracingHeaderReader.TryReadLayout(buffer, out IracingHeaderLayout header));
+        Assert.Equal(11, header.SessionInfoUpdate);
+        Assert.True(header.Connected);
+        Assert.Equal(IracingSdkConstants.StatusConnected, header.Status);
+        Assert.Equal(4, header.LatestTickCount);
+        Assert.Equal(IracingSdkConstants.HeaderLayoutMinSize, header.LatestBufOffset);
+    }
+
+    [Fact]
+    public void TryReadLayout_rejects_truncated_buffer()
+    {
+        Assert.False(IracingHeaderReader.TryReadLayout(
+            new byte[IracingSdkConstants.HeaderLayoutMinSize - 1],
+            out _));
+    }
+
+    [Fact]
+    public void TryReadHeader_still_succeeds_on_yaml_only_24_byte_buffer()
+    {
+        byte[] buffer = new byte[IracingSdkConstants.HeaderMinSize];
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer.AsSpan(IracingSdkConstants.HeaderStatusOffset),
+            IracingSdkConstants.StatusConnected);
+
+        Assert.True(IracingHeaderReader.TryReadHeader(
+            buffer,
+            out int status,
+            out _,
+            out _,
+            out bool connected));
+        Assert.Equal(IracingSdkConstants.StatusConnected, status);
+        Assert.True(connected);
+        Assert.False(IracingHeaderReader.TryReadLayout(buffer, out _));
+    }
 }

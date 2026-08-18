@@ -267,6 +267,21 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
 - **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN only while the window is open. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, `docs/handoffs/BUG-003.md`, and `docs/DEVELOPMENT.md`.
 
+### BRIDGE-008 — iRacing variable table
+
+- **Area:** Bridge
+- **Priority:** P1
+- **Status:** IN_PROGRESS
+- **Dependencies:** BRIDGE-003, BUG-001
+- **Acceptance criteria:**
+  - Latest IRSDK varBuf by tickCount
+  - `DriverCarIdx`, `SessionNum`, `SessionTime`, `Lap` read when present
+  - YAML re-parsed only on `sessionInfoUpdate` change
+  - LapStart/LapComplete from Lap increases
+  - No 60 Hz WebSocket frames
+  - Tests pass on Windows + Ubuntu without a live sim
+- **Notes:** Task 1 (header + var table byte parsers) in progress. See `docs/handoffs/BRIDGE-008.md` and `docs/superpowers/plans/2026-08-18-iracing-var-table.md`.
+
 ### BUG-003 — Pre-merge tray UX review fixes (round 2)
 
 - **Area:** Bridge

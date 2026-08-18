@@ -23,13 +23,13 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Partially completed features
 
 - Protocol: JSON types and compatibility tests exist; LAN WebSocket listen/accept exists on loopback with gated PIN pairing. Trusted clients receive `simulator.race-event` envelopes. Windows interactive Bridge registers `NotifyIconPairingUx` on an STA message loop and hides the console (`WinExe`); **Show current PIN** redisplays the last PIN only while the window is open; **Pair new device** reopens a PIN window without process restart. Tray startup failure/timeout falls back to console. Remaining KI-003 gap is TLS.
-- iRacing: first-party mmap session reader (BRIDGE-003 + BUG-001 DONE). Bridge can start before iRacing and subscribe until mmap appears. Live YAML still requires the sim + memmap (KI-002). 60 Hz variable table is out of scope.
+- iRacing: first-party mmap session reader (BRIDGE-003 + BUG-001 DONE). BRIDGE-008 Task 1 adds official header layout + typed var-table reads (`SessionTime`, `SessionNum`, `DriverCarIdx`, `Lap`) from synthetic buffers. Live YAML / live 60 Hz still requires the sim + memmap (KI-002). Adapter wiring is Task 3.
 - Entitlements: `CapabilityGate` only; no StoreKit or UI enforcement (KI-004).
 - Swift mirrors: names exist; not compiled.
 
 ## Active work
 
-- None. BUG-003 (BRIDGE-007 Important findings, round 2) is DONE (`docs/handoffs/BUG-003.md`).
+- BRIDGE-008 Task 1 (header + variable table reader) — IN_PROGRESS (`docs/handoffs/BRIDGE-008.md`).
 
 ## Blocked work
 
@@ -43,14 +43,14 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Latest successful build
 
-- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424). BRIDGE-007 host is `net8.0-windows` `WinExe` with `UseWindowsForms`; Linux stays `net8.0` `Exe`. File logs default to `%LOCALAPPDATA%\SimPulse\logs`.
+- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — succeeded, 0 warnings, 0 errors (2026-08-18, Windows 10.0.26200, SDK 8.0.424). BRIDGE-008 Task 1 parsers are covered by synthetic-buffer tests. BRIDGE-007 host is `net8.0-windows` `WinExe` with `UseWindowsForms`; Linux stays `net8.0` `Exe`. File logs default to `%LOCALAPPDATA%\SimPulse\logs`.
 - **iOS / watchOS:** NOT EXECUTED (no Xcode / no `.xcodeproj`).
 
 ## Latest successful tests
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **102 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 80) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **107 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 85) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
