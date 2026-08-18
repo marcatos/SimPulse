@@ -49,13 +49,30 @@ Expected future path: Windows workstation → git → CI → self-hosted Mac min
 
 `.gitattributes` forces LF except for `.ps1`, `.sln`, `.bat`, `.cmd`.
 
+## Windows Bridge tray vs console
+
+On Windows the Bridge host builds as `WinExe` (no console window). A notification-area icon shows the pairing PIN in a balloon. **Show current PIN** redisplays the last PIN (tooltip/balloon) only while that pairing window is still open; after consume, expiry, or lockout it reports `pairing window closed` and does not rotate the PIN. **Pair new device** calls `BeginPairingWindow()` so a new PIN opens without restarting the process. The PIN stays in the tray tooltip until the window closes, a later PIN, or process exit.
+
+If the tray STA/`NotifyIcon` fails or does not become ready within 5 seconds, Bridge logs ERROR and continues with `ConsolePairingUx` instead of exiting.
+
+| Goal | How |
+| --- | --- |
+| Normal run (no console, PIN in tray) | Double-click the Windows build, or `dotnet run --project apps/windows-bridge/SimPulse.Bridge` |
+| Debug with a console (logs visible; tray still used when interactive) | `dotnet run --project apps/windows-bridge/SimPulse.Bridge --property:OutputType=Exe` |
+| Console pairing UX instead of tray | `SIMPULSE_BRIDGE_TRAY=0` (PIN logged at Information). Combine with `OutputType=Exe` so the console exists |
+| Linux / Ubuntu CI | Stays `Exe` + `net8.0`; pairing UX is console |
+
+`SIMPULSE_BRIDGE_CONSOLE=1` documents intent to debug with a console. It does **not** change `OutputType` (MSBuild cannot read that env at build time). Pass `--property:OutputType=Exe` (or set `OutputType` to `Exe` in the project while debugging).
+
+With `WinExe`, the console is hidden. File logs are written under `%LOCALAPPDATA%\SimPulse\logs` (or the user-profile equivalent). Override with `SIMPULSE_LOG_DIR`; disable with `SIMPULSE_LOG_FILE=0`. Use `SIMPULSE_LOG_LEVEL` for verbosity.
+
 ## Logging
 
 Use `Microsoft.Extensions.Logging` with levels Trace/Debug/Information/Warning/Error/Critical.
 
 Default level: Information (`SIMPULSE_LOG_LEVEL`).
 
-Every long-running process logs start, major steps with durations, and a finish summary. Never log raw HR/energy payloads or pairing secrets.
+Every long-running process logs start, major steps with durations, and a finish summary. Never log raw HR/energy payloads. The pairing PIN is logged at Information **once**, by `PairingCoordinator.BeginPairingWindow` (`Pin=`). Tray/console UX may display the PIN but must not log `Pin=`. **Show current PIN** redisplays an open-window PIN without logging it. File logs therefore persist that coordinator PIN line — restrict ACLs on the log directory.
 
 ## Tests without hardware
 

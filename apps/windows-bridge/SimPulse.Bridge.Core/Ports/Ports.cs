@@ -41,3 +41,18 @@ public interface IPairingPinGenerator
 {
     string Generate();
 }
+
+public interface IPairingUx
+{
+    void ShowPin(string pin, DateTimeOffset expiresAtUtc);
+
+    void ShowStatus(string message);
+
+    void RedisplayLastPin();
+
+    void ClearPin();
+
+    event Action? PairNewDeviceRequested;
+
+    event Action? ShowCurrentPinRequested;
+}

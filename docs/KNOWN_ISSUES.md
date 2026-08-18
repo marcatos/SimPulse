@@ -6,7 +6,7 @@ Do not hide defects because they are outside the current task.
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Open |
 | KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Open |
-| KI-003 | 2026-08-18 | Protocol | Low | Open (UX remaining) |
+| KI-003 | 2026-08-18 | Protocol | Low | Open (TLS remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
 | KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
@@ -28,12 +28,12 @@ Do not hide defects because they are outside the current task.
 - **Note:** `SessionType` is taken from the first YAML `SessionInfo.Sessions[].SessionType` until IRSDK `SessionNum` telemetry exists. Vehicle/car is the first `DriverInfo` YAML entry (`CarPath` / `CarScreenName`) until `DriverCarIdx` is read from telemetry — the player car is not selected yet. Adapter timestamps from `IClock.UtcNow` use `ClockSource.Utc` until `SessionTime` is wired. Session YAML is re-parsed on each poll; full `sessionInfoUpdate` change detection is a follow-up. ANALYTICS-003 `RaceReportBuilder` is not wired in the Bridge.
 - **Related:** ADR 0006, BRIDGE-003, BUG-001
 
-## KI-003 — Transport pairing UX still console-only
+## KI-003 — Transport is still cleartext (tray pairing UX shipped)
 
-- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. `BeginPairingWindow()` runs **once** at Bridge host start; while open it serves a 6-digit CSPRNG PIN with 5-minute expiry. A successful pair, expiry, or 5 failed attempts closes/locks the window for the rest of that process — **no second window** until process restart (future: tray **Pair new device** in BRIDGE-007). Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information when the window opens; there is no tray UI. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
-- **Workaround:** Read the current window PIN from Bridge console logs before the window closes. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`. To pair another device after the window closes, restart the Bridge process (until BRIDGE-007 ships).
-- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; tray UX is BRIDGE-007; TLS is a later security step (ADR 0003).
-- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003
+- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. Windows interactive Bridge runs as `WinExe` with `NotifyIconPairingUx` (PIN balloon, **Show current PIN** / **Pair new device** / **Exit**). If tray startup fails or times out (5s), Bridge falls back to `ConsolePairingUx` and keeps running. Non-interactive, `SIMPULSE_BRIDGE_TRAY=0`, or Linux uses `ConsolePairingUx` only. Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information when the window opens. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
+- **Workaround:** On Windows, read the PIN from the tray balloon or **Show current PIN** (does not rotate the PIN; after the window closes it reports `pairing window closed`). WinExe file logs are under `%LOCALAPPDATA%\SimPulse\logs` (`SIMPULSE_LOG_DIR` / `SIMPULSE_LOG_FILE=0`) and include the coordinator Information `Pin=` line — restrict that directory. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`. For console logs while debugging, `dotnet run --property:OutputType=Exe` (see `docs/DEVELOPMENT.md`). Keep Bridge on loopback until TLS exists.
+- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; BRIDGE-007 shipped tray UX. TLS remains Phase 0 follow-up.
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003, KI-006
 
 ## KI-005 — Android and Wear OS projects not generated
 

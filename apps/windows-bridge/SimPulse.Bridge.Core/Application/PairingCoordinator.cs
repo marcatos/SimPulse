@@ -39,7 +39,7 @@ public sealed class PairingCoordinator
         _logger = logger;
     }
 
-    public void BeginPairingWindow()
+    public PairingWindowInfo BeginPairingWindow()
     {
         Stopwatch started = Stopwatch.StartNew();
         string pin;
@@ -61,6 +61,7 @@ public sealed class PairingCoordinator
             MaxFailedAttempts,
             started.ElapsedMilliseconds,
             "PairingCoordinator");
+        return new PairingWindowInfo(pin, expiresAt);
     }
 
     public async Task HandleAsync(
@@ -106,6 +107,16 @@ public sealed class PairingCoordinator
     {
         return _connections.ContainsKey(connection);
     }
+
+    public bool IsPairingWindowOpen()
+    {
+        lock (_windowLock)
+        {
+            return EvaluateWindowUnlocked() == PairingWindowState.Open;
+        }
+    }
+
+    public event Action? PairingWindowClosed;
 
     private async Task DispatchAsync(
         IClientConnection connection,
@@ -182,27 +193,27 @@ public sealed class PairingCoordinator
 
     private bool TryConsumePairingPin(string pin, out string? rejectReason)
     {
+        bool invalidated = false;
+        bool accepted = false;
+        rejectReason = null;
         lock (_windowLock)
         {
             PairingWindowState state = EvaluateWindowUnlocked();
             if (state == PairingWindowState.Closed)
             {
                 rejectReason = WindowClosedReason;
-                return false;
             }
-
-            if (state == PairingWindowState.Locked)
+            else if (state == PairingWindowState.Locked)
             {
                 rejectReason = TooManyAttemptsReason;
-                return false;
             }
-
-            if (!string.Equals(_pin, pin, StringComparison.Ordinal))
+            else if (!string.Equals(_pin, pin, StringComparison.Ordinal))
             {
                 _failedAttempts++;
                 if (_failedAttempts >= MaxFailedAttempts)
                 {
                     _locked = true;
+                    invalidated = true;
                     _logger.LogInformation(
                         "Pairing window locked after failed attempts. FailedAttempts={FailedAttempts} MaxFailedAttempts={MaxFailedAttempts}",
                         _failedAttempts,
@@ -210,13 +221,21 @@ public sealed class PairingCoordinator
                 }
 
                 rejectReason = InvalidPinReason;
-                return false;
             }
-
-            CloseWindowUnlocked();
-            rejectReason = null;
-            return true;
+            else
+            {
+                CloseWindowUnlocked();
+                invalidated = true;
+                accepted = true;
+            }
         }
+
+        if (invalidated)
+        {
+            PairingWindowClosed?.Invoke();
+        }
+
+        return accepted;
     }
 
     private PairingWindowState EvaluateWindowUnlocked()

@@ -244,7 +244,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
-- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` runs at Bridge host start and again from **Pair new device** via `TrayPairingPresenter` (BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
 
 ### BUG-001 — Pre-merge iRacing mmap review fixes
 
@@ -262,9 +262,37 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P2
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** BRIDGE-001
-- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart (today restart is required after the initial window closes — see KI-003).
+- **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
+- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN only while the window is open. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, `docs/handoffs/BUG-003.md`, and `docs/DEVELOPMENT.md`.
+
+### BUG-003 — Pre-merge tray UX review fixes (round 2)
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BUG-002
+- **Acceptance criteria:**
+  - File logger write failures (IO/ACL) disable further file writes and never throw
+  - Pairing PIN is logged at Information only from `PairingCoordinator.BeginPairingWindow` (`Pin=`); UX adapters do not log PIN
+  - **Show current PIN** does not redisplay a consumed, expired, locked, or otherwise closed window PIN; presenter clears last PIN
+  - Core tests cover the above without WinForms; `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Important findings (round 2) for `feat/bridge-007-tray`. See `docs/handoffs/BUG-003.md`. File logger disables after first IO/ACL failure. Coordinator keeps `Pin=` at Information; UX `ShowPin` does not. `IPairingUx.ClearPin()` + presenter consults `IsPairingWindowOpen()`.
+
+### BUG-002 — Pre-merge tray UX review fixes
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-007
+- **Acceptance criteria:**
+  - WinExe writes rolling/simple MEL file logs under `%LOCALAPPDATA%\SimPulse\logs` (or user-profile equivalent); PIN is not logged in extra places; env-configurable
+  - STA/NotifyIcon failure or 5s ready timeout falls back to console UX (or continues) and logs ERROR; process stays alive
+  - Pair new device menu/presenter exceptions are caught and logged ERROR (no ThreadExceptionDialog)
+  - **Show current PIN** redisplays the last PIN without `BeginPairingWindow`; last PIN stored on `ShowPin`; tooltip keeps PIN after balloon close
+  - Core tests cover presenter/mode/file-log path without WinForms; `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Important findings for `feat/bridge-007-tray`. MEL daily file logs; 5s tray ready timeout + console fallback; presenter/menu catch on Pair new device; **Show current PIN** via `RedisplayLastPin`. See `docs/handoffs/BUG-002.md`.
 
 ## Dependency edges (do not parallelize these pairs)
 

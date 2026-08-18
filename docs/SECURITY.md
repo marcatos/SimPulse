@@ -9,13 +9,14 @@
 | Reconnect impersonation (DeviceId-only trust) | Attacker replays a known trusted DeviceId without PIN | Pairing PIN establishes trust once; revoke removes DeviceId from store | Per-device reconnect secret; TLS |
 | Replay of protocol messages | Duplicate events | Message IDs; idempotent merge | Sequence numbers + window |
 | Spoofed simulator events | Distorted reports | Adapter is local process; paired Bridge is the trust boundary | Signed session summaries |
-| Compromised pairing credentials | Attacker becomes trusted | PIN is not persisted; generated with `RandomNumberGenerator`; valid only during an explicit pairing window (5 minutes, successful pair, or 5 failed attempts) | Rotate pairing material |
+| Compromised pairing credentials | Attacker becomes trusted | PIN is not stored in the trusted-device file; generated with `RandomNumberGenerator`; valid only during an explicit pairing window (5 minutes, successful pair, or 5 failed attempts) | Rotate pairing material |
+| Pairing PIN in file logs | Local reader recovers PIN from `bridge-yyyyMMdd.log` | Coordinator logs `Pin=` at Information when a window opens (required); UX adapters do not log `Pin=`; restrict ACLs on `%LOCALAPPDATA%\SimPulse\logs` (or `SIMPULSE_LOG_DIR`) | Drop PIN from file logs or encrypt the log dir |
 | Local data exposure | Biometrics on disk | HealthKit for workouts; Bridge does not persist HR | iOS Data Protection review |
 | Sensitive logs | HR in log files | Never log sample payloads; redact IDs if needed | Log scrub tests |
 
 ## Pairing window lifecycle (Phase 0)
 
-`BeginPairingWindow()` is called **once** when the Bridge host starts (`Worker.ExecuteAsync`). After a successful pair, 5-minute expiry, or 5-attempt lockout, the window stays closed for the remainder of that process lifetime. Opening a new window today requires a **process restart** (or a future tray **Pair new device** action in BRIDGE-007).
+`BeginPairingWindow()` is called when the Bridge host starts (`Worker.ExecuteAsync`) and again when the tray **Pair new device** command fires (`TrayPairingPresenter`). **Show current PIN** redisplays the last PIN without calling `BeginPairingWindow` and without invalidating it, and only while the window is still open. After a successful pair, 5-minute expiry, or 5-attempt lockout, the current window closes, last PIN is cleared, and **Show current PIN** reports `pairing window closed` until the next explicit open. A process restart is not required. The PIN is not persisted in the trusted-device store; the coordinator Information log line includes `Pin=` and file logs retain it.
 
 ## Reconnect trust (Phase 0)
 
