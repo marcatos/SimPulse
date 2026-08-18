@@ -49,7 +49,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **28 passed**, 0 failed (Domain 6, Analytics 6, Protocol 5, Bridge.Core 11) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **31 passed**, 0 failed (Domain 6, Analytics 6, Protocol 5, Bridge.Core 14) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
 

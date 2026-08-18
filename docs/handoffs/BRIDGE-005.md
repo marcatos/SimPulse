@@ -20,6 +20,8 @@ IN_PROGRESS (transport exists; pairing AC remains)
 - `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/WebSocketClientConnection.cs`
 - `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/WebSocketMessagePump.cs`
 - `apps/windows-bridge/SimPulse.Bridge.Core.Tests/WebSocketTransportTests.cs`
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/LinkedSiblingTasksTests.cs`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Application/LinkedSiblingTasks.cs`
 - `apps/windows-bridge/SimPulse.Bridge/Program.cs`, `Worker.cs`
 - `.env.example` (default host `127.0.0.1`; `0.0.0.0` opt-in)
 - `docs/BACKLOG.md`, `docs/CURRENT_STATE.md`, `docs/KNOWN_ISSUES.md`
@@ -29,17 +31,18 @@ IN_PROGRESS (transport exists; pairing AC remains)
 - Default bind `127.0.0.1`; `0.0.0.0` / `*` / `+` maps to `http://+:{port}/ws/`.
 - Tests pick an ephemeral port with `TcpListener` then pass it into the transport.
 - Pairing does not exist yet — connections remain untrusted so broadcast is a no-op until Task 4.
-- Worker runs `BridgeRuntime` and transport with `Task.WhenAll` so listen continues after fixture replay.
+- Worker runs runtime and transport via `LinkedSiblingTasks` (WhenAny + linked CTS cancel + await both). A listen fault does not wait on idle runtime.
+- Accepted sockets are closed (`CloseOutputAsync`) then disposed, including `SemaphoreSlim`.
 - Do not mark BRIDGE-005 DONE (pairing AC remains).
 
 ## Tests executed
 
-- `dotnet test … --filter FullyQualifiedName~ClientSessionHubTests|FullyQualifiedName~WebSocketTransportTests --configuration Release`
-- `dotnet test SimPulse.sln --configuration Release`
+- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests/SimPulse.Bridge.Core.Tests.csproj --configuration Release` — 14 passed
+- `dotnet test SimPulse.sln --configuration Release` — 31 passed
 
 ## Tests passing
 
-Yes (focused 2; full suite recorded in CURRENT_STATE)
+Yes
 
 ## Known failures
 

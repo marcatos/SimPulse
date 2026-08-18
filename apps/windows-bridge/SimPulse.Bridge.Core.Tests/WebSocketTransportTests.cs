@@ -69,6 +69,33 @@ public sealed class WebSocketTransportTests
         await DrainAsync(run);
     }
 
+    [Fact]
+    public async Task Closes_websocket_when_transport_stops()
+    {
+        int port = GetFreeTcpPort();
+        using ILoggerFactory factory = LoggerFactory.Create(_ => { });
+        ClientSessionHub hub = new(factory.CreateLogger<ClientSessionHub>());
+        HttpListenerWebSocketTransport transport = new(
+            "127.0.0.1",
+            port,
+            hub,
+            new SystemClock(),
+            factory.CreateLogger<HttpListenerWebSocketTransport>());
+
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
+        Task run = transport.RunAsync((_, _) => Task.CompletedTask, cts.Token);
+
+        using ClientWebSocket client = await ConnectWithRetryAsync(
+            new Uri($"ws://127.0.0.1:{port}/ws/"),
+            cts.Token);
+
+        Task<WebSocketReceiveResult> receiveClose = client.ReceiveAsync(new byte[16], CancellationToken.None);
+        await cts.CancelAsync();
+        WebSocketReceiveResult close = await receiveClose.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Equal(WebSocketMessageType.Close, close.MessageType);
+        await DrainAsync(run);
+    }
+
     private static int GetFreeTcpPort()
     {
         TcpListener listener = new(IPAddress.Loopback, 0);

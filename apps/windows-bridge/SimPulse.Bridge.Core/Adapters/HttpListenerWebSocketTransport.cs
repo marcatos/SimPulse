@@ -78,6 +78,7 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
         Func<IClientConnection, CancellationToken, Task> onConnected,
         CancellationToken cancellationToken)
     {
+        List<Task> connections = [];
         while (!cancellationToken.IsCancellationRequested && listener.IsListening)
         {
             HttpListenerContext context;
@@ -90,7 +91,20 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
                 break;
             }
 
-            _ = HandleContextAsync(context, onConnected, cancellationToken);
+            connections.Add(HandleContextAsync(context, onConnected, cancellationToken));
+        }
+
+        await Task.WhenAll(connections.Select(ObserveAsync));
+    }
+
+    private static async Task ObserveAsync(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (Exception)
+        {
         }
     }
 
@@ -124,13 +138,16 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
     {
         string connectionId = Guid.NewGuid().ToString("N");
         DateTimeOffset acceptedAt = _clock.UtcNow;
-        WebSocketClientConnection connection = new(socket, connectionId);
+        await using WebSocketClientConnection connection = new(socket, connectionId);
         _logger.LogInformation("WebSocket accepted. ConnectionId={ConnectionId}", connectionId);
         _hub.Register(connection);
+        using CancellationTokenSource receiveLifetime = new();
+        using CancellationTokenRegistration closeOnStop = cancellationToken.Register(
+            () => _ = InitiateCloseAsync(connection, receiveLifetime));
         try
         {
             Task connected = onConnected(connection, cancellationToken);
-            Task read = _pump.ReadLoopAsync(connection, socket, connectionId, cancellationToken);
+            Task read = _pump.ReadLoopAsync(connection, socket, connectionId, receiveLifetime.Token);
             await Task.WhenAll(connected, read);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -148,6 +165,20 @@ public sealed class HttpListenerWebSocketTransport : IBridgeTransport
                 connectionId,
                 connection.IsTrusted,
                 (_clock.UtcNow - acceptedAt).TotalMilliseconds);
+        }
+    }
+
+    private static async Task InitiateCloseAsync(
+        WebSocketClientConnection connection,
+        CancellationTokenSource receiveLifetime)
+    {
+        try
+        {
+            await connection.CloseAsync();
+            receiveLifetime.CancelAfter(TimeSpan.FromSeconds(2));
+        }
+        catch (ObjectDisposedException)
+        {
         }
     }
 

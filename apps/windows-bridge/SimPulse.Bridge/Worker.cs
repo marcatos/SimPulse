@@ -47,11 +47,12 @@ public sealed class Worker : BackgroundService
         }
     }
 
-    private async Task RunRuntimeAndTransportAsync(CancellationToken stoppingToken)
+    private Task RunRuntimeAndTransportAsync(CancellationToken stoppingToken)
     {
-        Task runtimeTask = _runtime.RunAsync(stoppingToken);
-        Task transportTask = _transport.RunAsync(OnConnectedAsync, stoppingToken);
-        await Task.WhenAll(runtimeTask, transportTask);
+        return LinkedSiblingTasks.RunAsync(
+            _runtime.RunAsync,
+            cancellationToken => _transport.RunAsync(OnConnectedAsync, cancellationToken),
+            stoppingToken);
     }
 
     private Task OnConnectedAsync(IClientConnection connection, CancellationToken cancellationToken)
