@@ -127,10 +127,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** READY
+- **Status:** DONE
 - **Dependencies:** WATCH-001
 - **Acceptance criteria:** Elapsed, current/avg/max HR, active calories, state; large numbers; Always On considered.
-- **Notes:** Start/End + metric placeholders shipped with WATCH-001; this item is glance/Always On polish.
+- **Notes:** Large current HR + elapsed + Idle/Recording. Interactive shows avg/max/kcal and Start/End. Always On (`isLuminanceReduced`) hides controls/errors. 4 presentation tests + 4 WATCH-001 tests on iPhone 17 (2026-08-18). Simulator screenshots in `docs/screenshots/watchos/`.
 
 ### WATCH-003 — Persist and sync summary to iPhone
 
