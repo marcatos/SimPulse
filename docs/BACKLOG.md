@@ -267,6 +267,52 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
 - **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN only while the window is open. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, `docs/handoffs/BUG-003.md`, and `docs/DEVELOPMENT.md`.
 
+### BRIDGE-008 — iRacing variable table
+
+- **Area:** Bridge
+- **Priority:** P1
+- **Status:** DONE
+- **Dependencies:** BRIDGE-003, BUG-001
+- **Acceptance criteria:**
+  - Latest IRSDK varBuf by tickCount
+  - `DriverCarIdx`, `SessionNum`, `SessionTime`, `Lap` read when present
+  - YAML re-parsed only on `sessionInfoUpdate` change
+  - Re-resolve vehicle/session type from cached YAML when Available `SessionNum` or `DriverCarIdx` changes (BUG-004)
+  - Lap tracking resets when Available `SessionNum` changes (no second SessionStart)
+  - LapStart/LapComplete from Lap increases
+  - No 60 Hz WebSocket frames
+  - Tests pass without a live sim
+- **Notes:** Header/var parsers + YAML list match (unmatched lookups → Unavailable). Live path reads latest varBuf; `IracingLiveSession` caches YAML on `sessionInfoUpdate`, re-resolves identity, emits lap events, and leaves `NormalizedSimulatorUpdate.Telemetry` null. Verified with synthetic buffers + `FakeIracingSharedMemory` (`dotnet test SimPulse.sln --configuration Release`, 126 passed on Windows 2026-08-18). No live-on-track / iRacing session was run. Live mmap smoke remains KI-002. See `docs/handoffs/BRIDGE-008.md`.
+
+### BUG-005 — SessionNum in lap keys + YAML decode cache
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-008, BUG-004
+- **Acceptance criteria:**
+  - LapStart/LapComplete include `sessionNum` (and keep `lapNumber`)
+  - `SessionLifecycleTracker.BuildKey` includes `sessionNum` so practice→race lap 1 is not dropped
+  - Two LapStart with same SessionId and lapNumber=1 but different sessionNum both Observe() as non-null; same sessionNum duplicate is dropped
+  - mmap snapshot reader caches last `(SessionInfoUpdate, yaml string)` for the open map; unchanged update reuses the cached string and still reads the latest telemetry row
+  - Disconnect/Close clears the YAML cache
+  - Synthetic two-snapshot test: same sessionInfoUpdate + mutated yaml bytes → SessionYaml stays the first decode
+  - `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Critical + Important (YAML-every-frame) for `feat/iracing-var-table`. Does not start TLS/Apple, torn-read retry, EventWaitHandle caching, or full mmap slice copy.
+
+### BUG-004 — Re-resolve session type from cached YAML
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-008
+- **Acceptance criteria:**
+  - Re-tokenize YAML only when `SessionInfoUpdate` changes (same update + mutated YAML keeps cached vehicle)
+  - When `SessionInfoUpdate` is unchanged but Available `DriverCarIdx` or `SessionNum` identity changes, re-run `Parse` on the cached YAML string with the new telemetry args
+  - Two-drivers fixture, constant update, SessionNum 0 then 1 → Practice then Race; no second SessionStart
+  - `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Review finding: cache skipped `Parse` entirely when the YAML tick was unchanged, so practice→race waited on the next YAML update. Does not take over BRIDGE-008 Task 4. See `docs/handoffs/BUG-004.md`.
+
 ### BUG-003 — Pre-merge tray UX review fixes (round 2)
 
 - **Area:** Bridge

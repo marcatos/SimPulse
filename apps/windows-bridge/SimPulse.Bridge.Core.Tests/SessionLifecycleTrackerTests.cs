@@ -50,6 +50,33 @@ public sealed class SessionLifecycleTrackerTests
     }
 
     [Fact]
+    public void Lap_starts_with_same_lap_and_different_session_num_are_both_emitted()
+    {
+        SessionLifecycleTracker tracker = new();
+        SessionId id = SessionId.New();
+        TimestampInstant t = new(DateTimeOffset.Parse("2026-08-18T10:00:00Z"), ClockSource.SimulatorSession);
+        RaceEvent practice = RaceEvent.Create(
+            id,
+            RaceEventType.LapStart,
+            t,
+            new Dictionary<string, string> { ["lapNumber"] = "1", ["sessionNum"] = "0" });
+        RaceEvent race = RaceEvent.Create(
+            id,
+            RaceEventType.LapStart,
+            t,
+            new Dictionary<string, string> { ["lapNumber"] = "1", ["sessionNum"] = "1" });
+        RaceEvent raceAgain = RaceEvent.Create(
+            id,
+            RaceEventType.LapStart,
+            t,
+            new Dictionary<string, string> { ["lapNumber"] = "1", ["sessionNum"] = "1" });
+
+        Assert.NotNull(tracker.Observe(practice));
+        Assert.NotNull(tracker.Observe(race));
+        Assert.Null(tracker.Observe(raceAgain));
+    }
+
+    [Fact]
     public void Session_end_is_idempotent()
     {
         SessionLifecycleTracker tracker = new();

@@ -47,4 +47,17 @@ public sealed class WindowsIracingSharedMemoryTests
                  (e.Message.Contains("unavailable", StringComparison.OrdinalIgnoreCase) ||
                   e.Message.Contains("unsupported", StringComparison.OrdinalIgnoreCase)));
     }
+
+    [Fact]
+    public void WaitForUpdate_returns_false_when_event_missing()
+    {
+        using WindowsIracingSharedMemory memory = new();
+        if (memory.TryOpen())
+        {
+            memory.Close();
+            return;
+        }
+
+        Assert.False(memory.WaitForUpdate(TimeSpan.Zero, CancellationToken.None));
+    }
 }

@@ -20,6 +20,7 @@ public sealed class SessionLifecycleTracker
     private static string BuildKey(RaceEvent e)
     {
         e.Attributes.TryGetValue("lapNumber", out string? lap);
-        return $"{e.SimulatorSessionId}:{e.Type}:{lap ?? ""}";
+        e.Attributes.TryGetValue("sessionNum", out string? sessionNum);
+        return $"{e.SimulatorSessionId}:{e.Type}:{sessionNum ?? ""}:{lap ?? ""}";
     }
 }

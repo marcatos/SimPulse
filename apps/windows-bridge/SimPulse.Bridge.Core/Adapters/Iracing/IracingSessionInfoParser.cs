@@ -1,3 +1,4 @@
+using System.Globalization;
 using SimPulse.Domain;
 
 namespace SimPulse.Bridge.Core.Adapters.Iracing;
@@ -11,15 +12,61 @@ public sealed record IracingSessionInfo(
 
 public static class IracingSessionInfoParser
 {
-    public static IracingSessionInfo Parse(string yaml)
+    public static IracingSessionInfo Parse(string yaml, int? driverCarIdx = null, int? sessionNum = null)
     {
         Dictionary<string, Dictionary<string, string>> sections = ParseSections(yaml);
+        ResolveVehicle(yaml, sections, driverCarIdx, out OptionalValue<string> vehicleId, out OptionalValue<string> vehicleDisplayName);
+        OptionalValue<string> sessionType = ResolveSessionType(yaml, sections, sessionNum);
+
         return new IracingSessionInfo(
             First(sections, "WeekendInfo", "TrackID"),
             First(sections, "WeekendInfo", "TrackDisplayName", "TrackName"),
-            First(sections, "DriverInfo", "CarPath"),
-            First(sections, "DriverInfo", "CarScreenName", "CarPath"),
-            First(sections, "SessionInfo", "SessionType"));
+            vehicleId,
+            vehicleDisplayName,
+            sessionType);
+    }
+
+    private static void ResolveVehicle(
+        string yaml,
+        Dictionary<string, Dictionary<string, string>> sections,
+        int? driverCarIdx,
+        out OptionalValue<string> vehicleId,
+        out OptionalValue<string> vehicleDisplayName)
+    {
+        if (driverCarIdx is not int carIdx)
+        {
+            vehicleId = First(sections, "DriverInfo", "CarPath");
+            vehicleDisplayName = First(sections, "DriverInfo", "CarScreenName", "CarPath");
+            return;
+        }
+
+        if (TryFindListEntry(yaml, "Drivers", "CarIdx", carIdx.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> driver))
+        {
+            vehicleId = First(driver, "CarPath");
+            vehicleDisplayName = First(driver, "CarScreenName", "CarPath");
+            return;
+        }
+
+        vehicleId = OptionalValue<string>.Unavailable();
+        vehicleDisplayName = OptionalValue<string>.Unavailable();
+    }
+
+    private static OptionalValue<string> ResolveSessionType(
+        string yaml,
+        Dictionary<string, Dictionary<string, string>> sections,
+        int? sessionNum)
+    {
+        if (sessionNum is not int num)
+        {
+            return First(sections, "SessionInfo", "SessionType");
+        }
+
+        if (TryFindListEntry(yaml, "Sessions", "SessionNum", num.ToString(CultureInfo.InvariantCulture), out Dictionary<string, string> session))
+        {
+            return First(session, "SessionType");
+        }
+
+        return OptionalValue<string>.Unavailable();
     }
 
     private static OptionalValue<string> First(
@@ -32,6 +79,11 @@ public static class IracingSessionInfoParser
             return OptionalValue<string>.Unavailable();
         }
 
+        return First(values, keys);
+    }
+
+    private static OptionalValue<string> First(Dictionary<string, string> values, params string[] keys)
+    {
         foreach (string key in keys)
         {
             if (values.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value))
@@ -41,6 +93,112 @@ public static class IracingSessionInfoParser
         }
 
         return OptionalValue<string>.Unavailable();
+    }
+
+    private static bool TryFindListEntry(
+        string yaml,
+        string listName,
+        string matchKey,
+        string matchValue,
+        out Dictionary<string, string> entry)
+    {
+        foreach (Dictionary<string, string> item in ParseList(yaml, listName))
+        {
+            if (item.TryGetValue(matchKey, out string? value) &&
+                string.Equals(value, matchValue, StringComparison.Ordinal))
+            {
+                entry = item;
+                return true;
+            }
+        }
+
+        entry = new Dictionary<string, string>(StringComparer.Ordinal);
+        return false;
+    }
+
+    private static List<Dictionary<string, string>> ParseList(string yaml, string listName)
+    {
+        List<Dictionary<string, string>> items = [];
+        bool inList = false;
+        int listIndent = -1;
+        Dictionary<string, string>? current = null;
+
+        foreach (string raw in yaml.Split('\n'))
+        {
+            string line = raw.TrimEnd('\r');
+            if (IsIgnorable(line))
+            {
+                continue;
+            }
+
+            if (TryReadTopLevelSection(line, out _))
+            {
+                inList = false;
+                current = null;
+                continue;
+            }
+
+            if (TryReadListHeader(line, listName, out int headerIndent))
+            {
+                inList = true;
+                listIndent = headerIndent;
+                current = null;
+                continue;
+            }
+
+            if (!inList)
+            {
+                continue;
+            }
+
+            string trimmed = line.TrimStart(' ', '\t');
+            bool dashItem = trimmed.StartsWith('-');
+            if (!dashItem && Indent(line) <= listIndent)
+            {
+                inList = false;
+                current = null;
+                continue;
+            }
+
+            if (dashItem)
+            {
+                current = new Dictionary<string, string>(StringComparer.Ordinal);
+                items.Add(current);
+                TryCaptureFirstKey(current, line);
+                continue;
+            }
+
+            if (current is not null)
+            {
+                TryCaptureFirstKey(current, line);
+            }
+        }
+
+        return items;
+    }
+
+    private static bool TryReadListHeader(string line, string listName, out int indent)
+    {
+        indent = Indent(line);
+        string trimmed = line.Trim();
+        int colon = trimmed.IndexOf(':');
+        if (colon <= 0 || !string.IsNullOrWhiteSpace(trimmed[(colon + 1)..]))
+        {
+            return false;
+        }
+
+        return string.Equals(trimmed[..colon].Trim(), listName, StringComparison.Ordinal);
+    }
+
+    private static int Indent(string line)
+    {
+        int count = 0;
+        while (count < line.Length && line[count] is ' ' or '\t')
+        {
+            count++;
+        }
+
+        return count;
     }
 
     private static Dictionary<string, Dictionary<string, string>> ParseSections(string yaml)

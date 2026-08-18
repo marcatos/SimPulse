@@ -9,7 +9,8 @@ internal static class IracingSessionMapper
         IracingSessionInfo info,
         TimestampInstant startedAt,
         OptionalValue<TimestampInstant> endedAt,
-        IReadOnlyList<RaceEvent> events)
+        IReadOnlyList<RaceEvent> events,
+        IReadOnlyList<Lap>? laps = null)
     {
         return new SimulatorSession(
             sessionId,
@@ -19,7 +20,7 @@ internal static class IracingSessionMapper
             MapSessionType(info.SessionType),
             startedAt,
             endedAt,
-            Array.Empty<Lap>(),
+            laps is null ? Array.Empty<Lap>() : laps.ToArray(),
             events.ToArray());
     }
 
