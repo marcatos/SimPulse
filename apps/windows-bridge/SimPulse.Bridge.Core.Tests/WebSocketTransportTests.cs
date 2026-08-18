@@ -70,6 +70,68 @@ public sealed class WebSocketTransportTests
     }
 
     [Fact]
+    public async Task Garbage_hello_payload_does_not_disconnect()
+    {
+        int port = GetFreeTcpPort();
+        using ILoggerFactory factory = LoggerFactory.Create(_ => { });
+        ClientSessionHub hub = new(factory.CreateLogger<ClientSessionHub>());
+        HttpListenerWebSocketTransport transport = new(
+            "127.0.0.1",
+            port,
+            hub,
+            new SystemClock(),
+            factory.CreateLogger<HttpListenerWebSocketTransport>());
+
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
+        Task run = transport.RunAsync((_, _) => Task.CompletedTask, cts.Token);
+
+        using ClientWebSocket client = await ConnectWithRetryAsync(
+            new Uri($"ws://127.0.0.1:{port}/ws/"),
+            cts.Token);
+
+        const string garbageHello = """
+            {"protocolVersion":1,"type":"hello","messageId":"bad","sentAtUtc":"2026-08-18T08:00:00Z","payload":123}
+            """;
+        await SendTextAsync(client, garbageHello, cts.Token);
+
+        string unknown = EnvelopeCodec.Serialize("not.a.real.type", new { }, DateTimeOffset.UtcNow);
+        await SendTextAsync(client, unknown, cts.Token);
+
+        await Task.Delay(200, cts.Token);
+        Assert.Equal(WebSocketState.Open, client.State);
+
+        await cts.CancelAsync();
+        await DrainAsync(run);
+    }
+
+    [Fact]
+    public async Task Accepts_second_client_after_first_closes()
+    {
+        int port = GetFreeTcpPort();
+        using ILoggerFactory factory = LoggerFactory.Create(_ => { });
+        ClientSessionHub hub = new(factory.CreateLogger<ClientSessionHub>());
+        HttpListenerWebSocketTransport transport = new(
+            "127.0.0.1",
+            port,
+            hub,
+            new SystemClock(),
+            factory.CreateLogger<HttpListenerWebSocketTransport>());
+
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
+        Task run = transport.RunAsync((_, _) => Task.CompletedTask, cts.Token);
+        Uri uri = new($"ws://127.0.0.1:{port}/ws/");
+
+        using ClientWebSocket first = await ConnectWithRetryAsync(uri, cts.Token);
+        await first.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", cts.Token);
+
+        using ClientWebSocket second = await ConnectWithRetryAsync(uri, cts.Token);
+        Assert.Equal(WebSocketState.Open, second.State);
+
+        await cts.CancelAsync();
+        await DrainAsync(run);
+    }
+
+    [Fact]
     public async Task Closes_websocket_when_transport_stops()
     {
         int port = GetFreeTcpPort();
