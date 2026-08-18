@@ -50,7 +50,7 @@ Not implemented in Phase 0.
 
 ## HealthKit usage
 
-Read/write workout sessions of a sim-racing activity type (exact `HKWorkoutActivityType` TBD on the Mac; likely `other` or a fitting sport type with a documented rationale). Request only HR and active energy plus workout types required. Usage strings must be accurate.
+Read/write workout sessions as `HKWorkoutActivityType.other` named Sim Racing (`com.marcatos.SimPulse.activity` metadata). There is no honest HealthKit sport type for sim racing. Request only HR, active energy, and workout types. Usage strings must be accurate. Never log raw HR or energy values.
 
 ## Windows Bridge communication
 

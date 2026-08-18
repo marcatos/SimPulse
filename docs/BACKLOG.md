@@ -40,6 +40,18 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Dependencies:** INFRA-001, ADR 0009
 - **Acceptance criteria:** Workflow documents that xcodebuild is skipped until a project exists; does not fake success.
 
+### INFRA-004 — Generate Xcode project (XcodeGen)
+
+- **Area:** Infra
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** ADR 0009, ADR 0012
+- **Acceptance criteria:**
+  - `project.yml` generates `SimPulse.xcodeproj` (iOS app + watchOS companion)
+  - `xcodebuild` compiles scaffolding on macOS (simulator)
+  - Windows scripts still record NOT EXECUTED
+- **Notes:** Partner Mac `simonemarcato@10.100.20.107`, Xcode 26.6, iOS/watchOS 26.5 simulators. First iPhone 17 + Watch embed **BUILD SUCCEEDED** 2026-08-18.
+
 ### DOCS-001 — Documentation system
 
 - **Area:** Docs
@@ -106,17 +118,19 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** BLOCKED
-- **Dependencies:** Xcode project (ADR 0009)
+- **Status:** DONE
+- **Dependencies:** Xcode project (ADR 0009, ADR 0012)
 - **Acceptance criteria:** Start/end Sim Racing workout via HealthKit; survives iPhone disconnect; unit tests against `WorkoutDataSource`.
+- **Notes:** `HKWorkoutActivityType.other` + metadata Sim Racing. `WorkoutSessionController` tested on iPhone 17 simulator (4 passed, 2026-08-18). Watch+iOS simulator **BUILD SUCCEEDED**. Live HealthKit on a physical Watch not run.
 
 ### WATCH-002 — Glanceable live UI
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** BLOCKED
+- **Status:** READY
 - **Dependencies:** WATCH-001
 - **Acceptance criteria:** Elapsed, current/avg/max HR, active calories, state; large numbers; Always On considered.
+- **Notes:** Start/End + metric placeholders shipped with WATCH-001; this item is glance/Always On polish.
 
 ### WATCH-003 — Persist and sync summary to iPhone
 

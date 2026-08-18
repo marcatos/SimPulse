@@ -27,9 +27,9 @@ Synthetic biometric fixtures live in `tests/fixtures/biometric/` so analytics ca
 
 ## Apple
 
-Abstract HealthKit behind `WorkoutDataSource`. Test business logic with `MockWorkoutDataSource`. Do not wrap every Apple API — only the boundaries needed for meaningful tests.
+Abstract HealthKit behind `WorkoutDataSource`. Test the use case with a recording fake (`apps/ios/SimPulseTests`). Do not wrap every Apple API — only the boundaries needed for meaningful tests.
 
-Until Xcode exists, Apple tests are **NOT EXECUTED**. Do not fabricate pass results.
+On a Mac: `./scripts/test-ios.sh` runs `xcodebuild test` for scheme `SimPulse` (iPhone 17 simulator). Windows still records **NOT EXECUTED**.
 
 ## Running tests
 
