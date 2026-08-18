@@ -69,20 +69,39 @@ public sealed class BridgeRuntimeTests
     }
 
     [Fact]
-    public async Task IRacing_stub_is_unavailable()
+    public async Task IRacing_adapter_unavailable_when_memory_closed()
     {
-        IRacingAdapter adapter = new();
+        IRacingAdapter adapter = new(new FakeIracingSharedMemory(open: false), new SystemClock());
         Assert.False(await adapter.IsAvailableAsync(CancellationToken.None));
     }
 
     [Fact]
     public async Task Unavailable_adapter_stops_when_cancelled()
     {
-        IRacingAdapter adapter = new();
+        IRacingAdapter adapter = new(new FakeIracingSharedMemory(open: false), new SystemClock());
         using ILoggerFactory factory = LoggerFactory.Create(_ => { });
         BridgeRuntime runtime = new(adapter, factory.CreateLogger<BridgeRuntime>());
         using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(100));
         await runtime.RunAsync(cts.Token);
+    }
+
+    [Fact]
+    public async Task Runtime_subscribes_when_unavailable_at_startup()
+    {
+        SessionId sessionId = SessionId.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        TimestampInstant at = new(DateTimeOffset.Parse("2026-08-18T11:00:00Z"), ClockSource.Utc);
+        RaceEvent start = RaceEvent.Create(sessionId, RaceEventType.SessionStart, at);
+        ScriptedSimulatorAdapter adapter = new(
+            available: false,
+            new NormalizedSimulatorUpdate(SimulatorIds.IRacing, sessionId, at, start, null, null));
+        ListLogger<BridgeRuntime> logger = new();
+
+        BridgeRuntime runtime = new(adapter, logger, clock: new FixedClock(at.Value));
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(1));
+        await runtime.RunAsync(cts.Token);
+
+        Assert.True(adapter.SubscribeCalled);
+        Assert.Equal(1, logger.Entries.Count(e => e.Level == LogLevel.Information && e.Message.Contains("Race event", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -118,22 +137,32 @@ public sealed class BridgeRuntimeTests
 internal sealed class ScriptedSimulatorAdapter : ISimulatorAdapter
 {
     private readonly NormalizedSimulatorUpdate[] _updates;
+    private readonly bool _available;
 
     public ScriptedSimulatorAdapter(params NormalizedSimulatorUpdate[] updates)
+        : this(true, updates)
     {
+    }
+
+    public ScriptedSimulatorAdapter(bool available, params NormalizedSimulatorUpdate[] updates)
+    {
+        _available = available;
         _updates = updates;
     }
 
     public string SimulatorId => SimulatorIds.IRacing;
 
+    public bool SubscribeCalled { get; private set; }
+
     public Task<bool> IsAvailableAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult(true);
+        return Task.FromResult(_available);
     }
 
     public async IAsyncEnumerable<NormalizedSimulatorUpdate> SubscribeAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        SubscribeCalled = true;
         foreach (NormalizedSimulatorUpdate update in _updates)
         {
             cancellationToken.ThrowIfCancellationRequested();

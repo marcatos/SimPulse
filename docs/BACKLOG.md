@@ -27,9 +27,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Infra
 - **Priority:** P0
-- **Status:** READY
+- **Status:** DONE
 - **Dependencies:** INFRA-001
 - **Acceptance criteria:** GitHub Actions runs `dotnet test` on Windows and Ubuntu; artifacts (if any) use `retention-days: 7`.
+- **Notes:** `.github/workflows/ci.yml` matrix runs `dotnet test SimPulse.sln` on `windows-latest` and `ubuntu-latest`; test-result artifacts use `retention-days: 7`. PR #1 checks green 2026-08-18 (Actions runs 32127173207, 32127216936).
 
 ### INFRA-003 — Apple CI placeholder
 
@@ -95,7 +96,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Analytics
 - **Priority:** P1
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ANALYTICS-001, ADR 0004
 - **Acceptance criteria:** Functions take a correlated timeline; refuse to join when offset unknown.
 
@@ -213,9 +214,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ADR 0006
 - **Acceptance criteria:** Detect sim, parse session YAML subset (track, car, session type); no GPL deps; copyright notice if headers vendored.
+- **Notes:** First-party `IIracingSharedMemory` + YAML subset parser. Tests use `FakeIracingSharedMemory` and synthetic `tests/fixtures/iracing/session-info-sample.yaml`. Live path opens `Local\IRSDKMemMapFileName` (no throw if missing). No IRSDKSharper. See `docs/handoffs/BRIDGE-003.md`.
 
 ### BRIDGE-004 — Session and lap lifecycle
 
@@ -224,7 +226,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-002 or BRIDGE-003
 - **Acceptance criteria:** SESSION_START/END, LAP_START/COMPLETE from normalized ticks; idempotent.
-- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap ticks are still BRIDGE-003.
+- **Notes:** `SessionLifecycleTracker` is wired in `BridgeRuntime` for log/broadcast dedupe. Live mmap session ticks come from BRIDGE-003.
 
 ### BRIDGE-005 — WebSocket server
 
@@ -243,6 +245,18 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
 - **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` is invoked once at Bridge host start today; after success, expiry, or 5-attempt lockout the window stays closed until **process restart** (or future tray action in BRIDGE-007). Reconnect trust is DeviceId-only — client-asserted, cleartext, no per-device secret, no TLS; see SECURITY.md and KI-006. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
+
+### BUG-001 — Pre-merge iRacing mmap review fixes
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-003
+- **Acceptance criteria:**
+  - BridgeRuntime enters SubscribeAsync when `IsAvailableAsync` is false so mmap can appear after startup
+  - IRSDK session YAML decoded as Windows-1252 / Latin1
+  - KI-002 / BRIDGE-003 handoff document first-DriverInfo car and sessionInfoUpdate follow-up
+- **Notes:** Whole-branch Important findings for `feat/iracing-mmap-hr-windows`. Should-fix done: shared `IracingHeaderReader` offsets; Debug on repeated TryOpen. Session YAML Latin1; runtime always subscribes. Player car / `sessionInfoUpdate` / ANALYTICS-003 wiring left as KI-002 follow-ups.
 
 ### BRIDGE-007 — Tray / background UX
 

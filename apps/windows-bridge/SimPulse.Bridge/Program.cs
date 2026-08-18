@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 
 using SimPulse.Bridge;
 using SimPulse.Bridge.Core.Adapters;
+using SimPulse.Bridge.Core.Adapters.Iracing;
 using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
 
@@ -26,7 +27,9 @@ builder.Services.AddSingleton<ITrustedDeviceStore>(CreateTrustedDeviceStore);
 builder.Services.AddSingleton<IPairingPinGenerator, PairingPinGenerator>();
 builder.Services.AddSingleton<PairingCoordinator>();
 builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
-builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
+builder.Services.AddSingleton<IIracingSharedMemory>(sp =>
+    new WindowsIracingSharedMemory(sp.GetRequiredService<ILogger<WindowsIracingSharedMemory>>()));
+builder.Services.AddSingleton<ISimulatorAdapter>(sp =>
 {
     string? fixturePath = Environment.GetEnvironmentVariable("SIMPULSE_FIXTURE_PATH");
     if (!string.IsNullOrWhiteSpace(fixturePath))
@@ -34,7 +37,10 @@ builder.Services.AddSingleton<ISimulatorAdapter>(_ =>
         return new FixtureSimulatorAdapter(fixturePath);
     }
 
-    return new IRacingAdapter();
+    return new IRacingAdapter(
+        sp.GetRequiredService<IIracingSharedMemory>(),
+        sp.GetRequiredService<IClock>(),
+        sp.GetRequiredService<ILogger<IRacingAdapter>>());
 });
 builder.Services.AddSingleton<IBridgeTransport>(sp =>
 {
