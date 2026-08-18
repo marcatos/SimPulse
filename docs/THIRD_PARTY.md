@@ -23,7 +23,7 @@ No NuGet packages for iRacing, JSON extras, or mDNS are included in Phase 0.
 
 ## iRacing SDK
 
-The official iRacing telemetry headers (`irsdk_defines.h` and related) are copyright iRacing.com Motorsport Simulations, LLC, with a BSD-style redistribution notice. A **minimal constant subset** (map name, connected status bit, session-info header offsets) is vendored in `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSdkConstants.cs` with the required copyright notice. No IRSDKSharper (GPL) or other iRacing wrapper packages.
+The official iRacing telemetry headers (`irsdk_defines.h` and related) are copyright iRacing.com Motorsport Simulations, LLC, with a BSD-style redistribution notice. A **minimal constant subset** (map name, `IRSDKDataValidEvent`, connected status bit, session-info header offsets, `varBuf` / `varHeader` sizes and offsets, `irsdk_int` / `irsdk_double`) is vendored in `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSdkConstants.cs` with the required copyright notice. No IRSDKSharper (GPL) or other iRacing wrapper packages.
 
 ## Apple frameworks (planned)
 

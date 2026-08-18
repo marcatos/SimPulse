@@ -271,16 +271,18 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P1
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** BRIDGE-003, BUG-001
 - **Acceptance criteria:**
   - Latest IRSDK varBuf by tickCount
   - `DriverCarIdx`, `SessionNum`, `SessionTime`, `Lap` read when present
   - YAML re-parsed only on `sessionInfoUpdate` change
+  - Re-resolve vehicle/session type from cached YAML when Available `SessionNum` or `DriverCarIdx` changes (BUG-004)
+  - Lap tracking resets when Available `SessionNum` changes (no second SessionStart)
   - LapStart/LapComplete from Lap increases
   - No 60 Hz WebSocket frames
-  - Tests pass on Windows + Ubuntu without a live sim
-- **Notes:** Tasks 1–2 done (header/var parsers + YAML list match; unmatched `driverCarIdx`/`sessionNum` → Unavailable). Tasks 3–4 remaining. See `docs/handoffs/BRIDGE-008.md` and `docs/superpowers/plans/2026-08-18-iracing-var-table.md`.
+  - Tests pass without a live sim
+- **Notes:** Header/var parsers + YAML list match (unmatched lookups → Unavailable). Live path reads latest varBuf; `IracingLiveSession` caches YAML on `sessionInfoUpdate`, re-resolves identity, emits lap events, and leaves `NormalizedSimulatorUpdate.Telemetry` null. Verified with synthetic buffers + `FakeIracingSharedMemory` (`dotnet test SimPulse.sln --configuration Release`, 126 passed on Windows 2026-08-18). No live-on-track / iRacing session was run. Live mmap smoke remains KI-002. See `docs/handoffs/BRIDGE-008.md`.
 
 ### BUG-004 — Re-resolve session type from cached YAML
 

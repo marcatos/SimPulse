@@ -21,12 +21,13 @@ Do not hide defects because they are outside the current task.
 
 ## KI-002 — Live iRacing still requires a running sim + memmap
 
-- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge probes `Local\IRSDKMemMapFileName`. If the map is missing at process start (iRacing closed, memmap disabled, or non-Windows), `IsAvailableAsync` is false but `BridgeRuntime` still enters `SubscribeAsync`. The adapter polls `TryOpen` and starts the session when the mmap appears. No live YAML until the official map is present and `irsdk_stConnected` is set.
+- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge probes `Local\IRSDKMemMapFileName`. If the map is missing at process start (iRacing closed, memmap disabled, or non-Windows), `IsAvailableAsync` is false but `BridgeRuntime` still enters `SubscribeAsync`. The adapter polls `TryOpen` and starts the session when the mmap appears. No live YAML or variable-table telemetry until the official map is present and `irsdk_stConnected` is set.
 - **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
-- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (Bridge may already be running).
-- **Suspected cause:** Live session YAML is read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
-- **Note:** Live YAML still needs the official mmap (this KI). When telemetry is present, `SessionType`/`Vehicle` come from YAML `Sessions`/`Drivers` matched by Available `SessionNum`/`DriverCarIdx`. YAML is re-tokenized only when `SessionInfoUpdate` changes; identity changes re-run `Parse` on the cached YAML string (BUG-004). ANALYTICS-003 `RaceReportBuilder` is not wired in the Bridge.
-- **Related:** ADR 0006, BRIDGE-003, BUG-001
+- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (`irsdkEnableMem=1`; Bridge may already be running).
+- **Suspected cause:** Live bytes are read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
+- **Done in adapters (BRIDGE-008, not live-verified):** player car (`DriverCarIdx`), `SessionNum`, `SessionTime`, and `sessionInfoUpdate` YAML cache. Available identity changes re-run `Parse` on the cached YAML (BUG-004). Lap tracking resets on Available `SessionNum`. Latest `varBuf` by tickCount. `IRSDKDataValidEvent` wait is best-effort (missing/timeout → false, caller still reads, then poll idle). Trusted clients still get race-events only — no 60 Hz WebSocket telemetry frames.
+- **Remaining:** live smoke with a real sim + mmap (`irsdkEnableMem=1`). ANALYTICS-003 `RaceReportBuilder` peak-event wiring stays out of scope.
+- **Related:** ADR 0006, BRIDGE-003, BRIDGE-008, BUG-001, BUG-004
 
 ## KI-003 — Transport is still cleartext (tray pairing UX shipped)
 
@@ -68,4 +69,4 @@ Do not hide defects because they are outside the current task.
 ## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
 
 - **Status:** No known defects introduced.
-- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap session ticks are produced by BRIDGE-003.
+- **Note:** `SessionLifecycleTracker` is wired into `BridgeRuntime` and dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)` before race-event logging and trusted-client broadcast. Live iRacing mmap session/lap ticks are produced by BRIDGE-003 / BRIDGE-008.
