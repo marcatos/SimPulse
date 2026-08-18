@@ -4,4 +4,7 @@ import Foundation
 protocol WatchWorkoutSession: Sendable {
     func startSimRacing() async throws
     func endSimRacing() async throws
+    func companionReachabilityDidChange(_ reachable: Bool)
 }
+
+extension WorkoutSessionController: WatchWorkoutSession {}

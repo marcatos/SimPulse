@@ -4,7 +4,7 @@ Do not hide defects because they are outside the current task.
 
 | ID | Date | Component | Severity | Status |
 | --- | --- | --- | --- | --- |
-| KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Open |
+| KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Closed |
 | KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Open |
 | KI-003 | 2026-08-18 | Protocol | Low | Open (TLS remaining) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
@@ -13,11 +13,9 @@ Do not hide defects because they are outside the current task.
 
 ## KI-001 — Apple project not generated
 
-- **Symptoms:** No `.xcodeproj` / `.xcworkspace`. Swift sources cannot be built here.
-- **Reproduction:** Run `scripts/build-ios.sh` or look for Xcode on the Windows bootstrap machine.
-- **Workaround:** Develop domain/analytics/protocol on .NET; treat Swift as a specification.
-- **Suspected cause:** No macOS/Xcode in the current environment (by design for Phase 0).
-- **Related:** ADR 0009, INFRA-003, WATCH-001, IOS-001
+- **Status:** Closed 2026-08-18. XcodeGen `SimPulse.xcodeproj` exists; iOS 26.5 + watchOS 26.5 simulators installed on `simpulse-mac`. First compile and WATCH-001 unit tests succeeded. Remaining Apple work is WATCH-002 / WATCH-003 / IOS-001, not missing toolchain.
+- **Symptoms (historical):** No `.xcodeproj` on Windows; missing simulator runtimes on the Mac.
+- **Related:** ADR 0009, ADR 0012, INFRA-003, INFRA-004, WATCH-001
 
 ## KI-002 — Live iRacing still requires a running sim + memmap
 

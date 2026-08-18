@@ -30,18 +30,19 @@ Copy `.env.example` to `.env` only if you need local overrides. Never commit `.e
 
 ## Apple development
 
-Apple project generation is pending a macOS/Xcode environment. Swift sources under `apps/ios` and `apps/watchos` are specifications, not a buildable Xcode project.
-
-When a Mac is available:
+XcodeGen spec is `project.yml` ([ADR 0012](adr/0012-xcodegen-apple-project.md)). Generate on a Mac:
 
 ```sh
+export PATH="/opt/homebrew/bin:/opt/homebrew/Cellar/xcodegen/2.46.0/bin:$PATH"
+xcodegen generate
 ./scripts/build-ios.sh
 ./scripts/test-ios.sh
 ./scripts/build-watch.sh
-./scripts/archive-ios.sh
 ```
 
-Those scripts must fail clearly until an `.xcodeproj` / `.xcworkspace` exists. Do not hand-author project.pbxproj unless a later ADR supersedes [ADR 0009](adr/0009-apple-project-generation.md).
+Do not hand-edit `project.pbxproj` for routine source changes. On Windows those scripts record **NOT EXECUTED**. Archive still needs a Development Team (`scripts/archive-ios.sh`).
+
+Build Mac (2026-08-18): `simonemarcato@10.100.20.107` (`ssh simpulse-mac`), macOS 26.6.2, Xcode 26.6. Apple ID for this user: marcato.simone@gmail.com.
 
 Expected future path: Windows workstation → git → CI → self-hosted Mac mini → TestFlight.
 

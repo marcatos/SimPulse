@@ -41,5 +41,5 @@ jobs:
 
       - name: Record Apple verification as not executed
         run: |
-          echo "NOT EXECUTED: no Xcode project in this repository (ADR 0009)."
-          echo "A future macOS runner / Mac mini will invoke scripts/build-ios.sh and scripts/test-ios.sh."
+          echo "NOT EXECUTED: no macOS GitHub-hosted runner in this workflow."
+          echo "SimPulse.xcodeproj is generated via XcodeGen (ADR 0012). Run scripts/build-ios.sh on a Mac."

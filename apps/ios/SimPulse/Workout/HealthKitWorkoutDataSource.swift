@@ -16,7 +16,3 @@ final class HealthKitWorkoutDataSource: WorkoutDataSource, @unchecked Sendable {
     }
 }
 #endif
-
-enum WorkoutSourceError: Error {
-    case notAvailableOnThisPlatform
-}
