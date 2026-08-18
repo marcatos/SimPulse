@@ -160,7 +160,98 @@ public sealed class PairingCoordinatorTests
     }
 
     [Fact]
-    public void BeginPairingWindow_logs_pin_once_at_information()
+    public async Task Pairing_request_before_window_is_rejected()
+    {
+        PairingHarness harness = CreateHarness(beginWindow: false);
+        FakeClientConnection connection = new() { DeviceId = "phone-1" };
+
+        await harness.Coordinator.HandleAsync(connection, PairingEnvelope("phone-1", FixedPin), CancellationToken.None);
+
+        Assert.False(connection.IsTrusted);
+        Assert.False(await harness.Store.IsTrustedAsync("phone-1", CancellationToken.None));
+        AssertReject(connection, "phone-1", PairingCoordinator.WindowClosedReason);
+    }
+
+    [Fact]
+    public async Task Expired_pairing_window_rejects_even_with_correct_pin()
+    {
+        MutableClock clock = new(TrustedAt);
+        PairingHarness harness = CreateHarness(clock, beginWindow: true);
+        FakeClientConnection connection = new() { DeviceId = "phone-1" };
+
+        clock.UtcNow = TrustedAt.Add(PairingCoordinator.WindowDuration).AddSeconds(1);
+        await harness.Coordinator.HandleAsync(connection, PairingEnvelope("phone-1", FixedPin), CancellationToken.None);
+
+        Assert.False(connection.IsTrusted);
+        AssertReject(connection, "phone-1", PairingCoordinator.WindowClosedReason);
+    }
+
+    [Fact]
+    public async Task Five_wrong_pins_lock_window_against_correct_pin()
+    {
+        PairingHarness harness = CreateHarness();
+        for (int i = 0; i < PairingCoordinator.MaxFailedAttempts; i++)
+        {
+            FakeClientConnection failed = new() { DeviceId = $"phone-bad-{i}" };
+            await harness.Coordinator.HandleAsync(
+                failed,
+                PairingEnvelope(failed.DeviceId!, "000000"),
+                CancellationToken.None);
+            AssertReject(failed, failed.DeviceId!, PairingCoordinator.InvalidPinReason);
+        }
+
+        FakeClientConnection locked = new() { DeviceId = "phone-late" };
+        await harness.Coordinator.HandleAsync(
+            locked,
+            PairingEnvelope("phone-late", FixedPin),
+            CancellationToken.None);
+
+        Assert.False(locked.IsTrusted);
+        Assert.False(await harness.Store.IsTrustedAsync("phone-late", CancellationToken.None));
+        AssertReject(locked, "phone-late", PairingCoordinator.TooManyAttemptsReason);
+    }
+
+    [Fact]
+    public async Task Successful_pair_closes_window_so_same_pin_requires_new_window()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection first = new() { DeviceId = "phone-1" };
+        await harness.Coordinator.HandleAsync(first, PairingEnvelope("phone-1", FixedPin), CancellationToken.None);
+        Assert.True(first.IsTrusted);
+
+        FakeClientConnection second = new() { DeviceId = "phone-2" };
+        await harness.Coordinator.HandleAsync(second, PairingEnvelope("phone-2", FixedPin), CancellationToken.None);
+
+        Assert.False(second.IsTrusted);
+        AssertReject(second, "phone-2", PairingCoordinator.WindowClosedReason);
+
+        harness.Coordinator.BeginPairingWindow();
+        FakeClientConnection third = new() { DeviceId = "phone-3" };
+        await harness.Coordinator.HandleAsync(third, PairingEnvelope("phone-3", FixedPin), CancellationToken.None);
+        Assert.True(third.IsTrusted);
+        Assert.True(await harness.Store.IsTrustedAsync("phone-3", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Malformed_pairing_payload_does_not_throw()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection connection = new();
+        const string json = """
+            {"protocolVersion":1,"type":"pairing.request","messageId":"bad","sentAtUtc":"2026-08-18T08:00:00Z","payload":123}
+            """;
+
+        await harness.Coordinator.HandleAsync(
+            connection,
+            EnvelopeCodec.Deserialize(json),
+            CancellationToken.None);
+
+        Assert.False(connection.IsTrusted);
+        Assert.Empty(connection.Sent);
+    }
+
+    [Fact]
+    public void BeginPairingWindow_logs_pin_each_time_window_opens()
     {
         ListLogger<PairingCoordinator> logger = new();
         PairingCoordinator coordinator = new(
@@ -176,8 +267,8 @@ public sealed class PairingCoordinatorTests
             .Where(e => e.Level == LogLevel.Information && e.Message.Contains(FixedPin, StringComparison.Ordinal))
             .Select(e => e.Message)
             .ToList();
-        Assert.Single(pinLogs);
-        Assert.Contains("Pairing window opened", pinLogs[0], StringComparison.Ordinal);
+        Assert.Equal(2, pinLogs.Count);
+        Assert.All(pinLogs, message => Assert.Contains("Pairing window opened", message, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -218,16 +309,35 @@ public sealed class PairingCoordinatorTests
         }
     }
 
-    private static PairingHarness CreateHarness()
+    private static PairingHarness CreateHarness(bool beginWindow = true)
+    {
+        return CreateHarness(new FixedClock(TrustedAt), beginWindow);
+    }
+
+    private static PairingHarness CreateHarness(IClock clock, bool beginWindow)
     {
         InMemoryTrustedDeviceStore store = new();
         PairingCoordinator coordinator = new(
             store,
-            new FixedClock(TrustedAt),
+            clock,
             new FixedPinGenerator(FixedPin),
             NullLogger<PairingCoordinator>.Instance);
-        coordinator.BeginPairingWindow();
+        if (beginWindow)
+        {
+            coordinator.BeginPairingWindow();
+        }
+
         return new PairingHarness(coordinator, store);
+    }
+
+    private static void AssertReject(FakeClientConnection connection, string deviceId, string reason)
+    {
+        Assert.Single(connection.Sent);
+        MessageEnvelope sent = EnvelopeCodec.Deserialize(connection.Sent[0]);
+        Assert.Equal(MessageTypes.PairingReject, sent.Type);
+        Assert.True(EnvelopeCodec.TryReadPayload(sent, out PairingRejectMessage? reject));
+        Assert.Equal(deviceId, reject!.DeviceId);
+        Assert.Equal(reason, reject.Reason);
     }
 
     private static MessageEnvelope PairingEnvelope(string deviceId, string pin)
@@ -248,6 +358,16 @@ internal sealed class FixedClock : IClock
     }
 
     public DateTimeOffset UtcNow { get; }
+}
+
+internal sealed class MutableClock : IClock
+{
+    public MutableClock(DateTimeOffset utcNow)
+    {
+        UtcNow = utcNow;
+    }
+
+    public DateTimeOffset UtcNow { get; set; }
 }
 
 internal sealed class FixedPinGenerator : IPairingPinGenerator

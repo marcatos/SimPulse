@@ -11,13 +11,21 @@ namespace SimPulse.Bridge.Core.Application;
 public sealed class PairingCoordinator
 {
     public const string InvalidPinReason = "invalid_pin";
+    public const string WindowClosedReason = "pairing_window_closed";
+    public const string TooManyAttemptsReason = "too_many_attempts";
+    public const int MaxFailedAttempts = 5;
+    public static readonly TimeSpan WindowDuration = TimeSpan.FromMinutes(5);
 
     private readonly ITrustedDeviceStore _store;
     private readonly IClock _clock;
+    private readonly IPairingPinGenerator _pinGenerator;
     private readonly ILogger<PairingCoordinator> _logger;
-    private readonly string _pin;
     private readonly ConcurrentDictionary<IClientConnection, byte> _connections = new();
-    private int _pinLogged;
+    private readonly object _windowLock = new();
+    private string? _pin;
+    private DateTimeOffset? _windowExpiresAt;
+    private int _failedAttempts;
+    private bool _locked;
 
     public PairingCoordinator(
         ITrustedDeviceStore store,
@@ -27,20 +35,31 @@ public sealed class PairingCoordinator
     {
         _store = store;
         _clock = clock;
+        _pinGenerator = pinGenerator;
         _logger = logger;
-        _pin = pinGenerator.Generate();
     }
 
     public void BeginPairingWindow()
     {
-        if (Interlocked.Exchange(ref _pinLogged, 1) == 1)
+        Stopwatch started = Stopwatch.StartNew();
+        string pin;
+        DateTimeOffset expiresAt;
+        lock (_windowLock)
         {
-            return;
+            pin = _pinGenerator.Generate();
+            _pin = pin;
+            expiresAt = _clock.UtcNow.Add(WindowDuration);
+            _windowExpiresAt = expiresAt;
+            _failedAttempts = 0;
+            _locked = false;
         }
 
         _logger.LogInformation(
-            "Pairing window opened. Pin={Pin} Component={Component}",
-            _pin,
+            "Pairing window opened. Pin={Pin} ExpiresAtUtc={ExpiresAtUtc} MaxFailedAttempts={MaxFailedAttempts} ElapsedMs={ElapsedMs} Component={Component}",
+            pin,
+            expiresAt,
+            MaxFailedAttempts,
+            started.ElapsedMilliseconds,
             "PairingCoordinator");
     }
 
@@ -139,18 +158,83 @@ public sealed class PairingCoordinator
         }
 
         connection.DeviceId = request.DeviceId;
-        if (!string.Equals(_pin, request.Pin, StringComparison.Ordinal))
+        if (!TryConsumePairingPin(request.Pin, out string? rejectReason))
         {
-            await SendAsync(connection, MessageTypes.PairingReject, new PairingRejectMessage(request.DeviceId, InvalidPinReason), cancellationToken);
-            _logger.LogInformation("Pairing rejected. Reason={Reason}", InvalidPinReason);
+            await SendAsync(
+                connection,
+                MessageTypes.PairingReject,
+                new PairingRejectMessage(request.DeviceId, rejectReason!),
+                cancellationToken);
+            _logger.LogInformation("Pairing rejected. Reason={Reason}", rejectReason);
             return;
         }
 
         DateTimeOffset trustedAt = _clock.UtcNow;
         await _store.TrustAsync(request.DeviceId, trustedAt, cancellationToken);
         connection.IsTrusted = true;
-        await SendAsync(connection, MessageTypes.PairingAccept, new PairingAcceptMessage(request.DeviceId, trustedAt), cancellationToken);
+        await SendAsync(
+            connection,
+            MessageTypes.PairingAccept,
+            new PairingAcceptMessage(request.DeviceId, trustedAt),
+            cancellationToken);
         _logger.LogInformation("Pairing accepted. Trusted={Trusted}", connection.IsTrusted);
+    }
+
+    private bool TryConsumePairingPin(string pin, out string? rejectReason)
+    {
+        lock (_windowLock)
+        {
+            PairingWindowState state = EvaluateWindowUnlocked();
+            if (state == PairingWindowState.Closed)
+            {
+                rejectReason = WindowClosedReason;
+                return false;
+            }
+
+            if (state == PairingWindowState.Locked)
+            {
+                rejectReason = TooManyAttemptsReason;
+                return false;
+            }
+
+            if (!string.Equals(_pin, pin, StringComparison.Ordinal))
+            {
+                _failedAttempts++;
+                if (_failedAttempts >= MaxFailedAttempts)
+                {
+                    _locked = true;
+                    _logger.LogInformation(
+                        "Pairing window locked after failed attempts. FailedAttempts={FailedAttempts} MaxFailedAttempts={MaxFailedAttempts}",
+                        _failedAttempts,
+                        MaxFailedAttempts);
+                }
+
+                rejectReason = InvalidPinReason;
+                return false;
+            }
+
+            CloseWindowUnlocked();
+            rejectReason = null;
+            return true;
+        }
+    }
+
+    private PairingWindowState EvaluateWindowUnlocked()
+    {
+        if (_pin is null || _windowExpiresAt is null || _clock.UtcNow >= _windowExpiresAt.Value)
+        {
+            return PairingWindowState.Closed;
+        }
+
+        return _locked ? PairingWindowState.Locked : PairingWindowState.Open;
+    }
+
+    private void CloseWindowUnlocked()
+    {
+        _pin = null;
+        _windowExpiresAt = null;
+        _failedAttempts = 0;
+        _locked = false;
     }
 
     private void UntrustLiveConnections(string deviceId)
@@ -172,5 +256,12 @@ public sealed class PairingCoordinator
     {
         string json = EnvelopeCodec.Serialize(type, payload, _clock.UtcNow);
         return connection.SendAsync(json, cancellationToken);
+    }
+
+    private enum PairingWindowState
+    {
+        Open,
+        Closed,
+        Locked
     }
 }
