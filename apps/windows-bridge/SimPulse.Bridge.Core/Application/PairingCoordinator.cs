@@ -51,7 +51,7 @@ public sealed class PairingCoordinator
     {
         Stopwatch started = Stopwatch.StartNew();
         _connections.TryAdd(connection, 0);
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Pairing handle starting. Type={Type} HasDeviceId={HasDeviceId} Component={Component}",
             envelope.Type,
             connection.DeviceId is not null,
@@ -59,7 +59,7 @@ public sealed class PairingCoordinator
 
         await DispatchAsync(connection, envelope, cancellationToken);
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Pairing handle finished. Type={Type} Trusted={Trusted} ElapsedMs={ElapsedMs}",
             envelope.Type,
             connection.IsTrusted,
@@ -105,7 +105,13 @@ public sealed class PairingCoordinator
 
         connection.DeviceId = hello.DeviceId;
         connection.IsTrusted = await _store.IsTrustedAsync(hello.DeviceId, cancellationToken);
-        _logger.LogInformation("Hello trust evaluated. Trusted={Trusted}", connection.IsTrusted);
+        if (connection.IsTrusted)
+        {
+            _logger.LogInformation("Hello trust evaluated. Trusted={Trusted}", connection.IsTrusted);
+            return;
+        }
+
+        _logger.LogDebug("Hello trust evaluated. Trusted={Trusted}", connection.IsTrusted);
     }
 
     private async Task HandlePairingRequestAsync(

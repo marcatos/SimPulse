@@ -69,6 +69,49 @@ public sealed class PairingCoordinatorTests
     }
 
     [Fact]
+    public async Task Unknown_hello_leaves_connection_untrusted()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection connection = new();
+        HelloMessage hello = new("SimPulse", "phone", "phone-unknown");
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(
+            EnvelopeCodec.Serialize(MessageTypes.Hello, hello, TrustedAt, "hello-unknown"));
+
+        await harness.Coordinator.HandleAsync(connection, envelope, CancellationToken.None);
+
+        Assert.Equal("phone-unknown", connection.DeviceId);
+        Assert.False(connection.IsTrusted);
+        Assert.False(await harness.Store.IsTrustedAsync("phone-unknown", CancellationToken.None));
+        Assert.Empty(connection.Sent);
+    }
+
+    [Fact]
+    public async Task Non_pairing_messages_do_not_log_information()
+    {
+        ListLogger<PairingCoordinator> logger = new();
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            new FixedClock(TrustedAt),
+            new FixedPinGenerator(FixedPin),
+            logger);
+        coordinator.BeginPairingWindow();
+        logger.Entries.Clear();
+
+        HeartbeatMessage heartbeat = new("conn-1");
+        MessageEnvelope heartbeatEnvelope = EnvelopeCodec.Deserialize(
+            EnvelopeCodec.Serialize(MessageTypes.Heartbeat, heartbeat, TrustedAt, "hb-1"));
+        TimeSyncRequestMessage timeSync = new(TrustedAt);
+        MessageEnvelope timeSyncEnvelope = EnvelopeCodec.Deserialize(
+            EnvelopeCodec.Serialize(MessageTypes.TimeSyncRequest, timeSync, TrustedAt, "ts-1"));
+
+        await coordinator.HandleAsync(new FakeClientConnection(), heartbeatEnvelope, CancellationToken.None);
+        await coordinator.HandleAsync(new FakeClientConnection(), timeSyncEnvelope, CancellationToken.None);
+
+        Assert.DoesNotContain(logger.Entries, e => e.Level == LogLevel.Information);
+        Assert.Contains(logger.Entries, e => e.Level == LogLevel.Debug && e.Message.Contains("Pairing handle", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Revoke_blocks_trust_and_broadcast_to_that_device()
     {
         PairingHarness harness = CreateHarness();
