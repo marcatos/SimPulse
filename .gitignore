@@ -1,0 +1,88 @@
+# Build
+**/bin/
+**/obj/
+**/out/
+**/dist/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+artifacts/
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nuget.props
+*.nuget.targets
+
+# Apple / Xcode (when generated)
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.app
+*.xcarchive
+Pods/
+.swiftpm/
+.build/
+
+# Secrets and local config
+.env
+.env.local
+.env.*.local
+*.pfx
+*.p12
+*.cer
+*.mobileprovision
+*.provisionprofile
+AuthKey_*.p8
+*.jks
+*.keystore
+secrets/
+pairing-store.json
+trusted-devices.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# Test / coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+coverage.xml
+
+# Python tooling (if added later)
+.venv/
+__pycache__/
+*.pyc
+
+# Node (if added later)
+node_modules/

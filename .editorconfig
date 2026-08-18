@@ -1,0 +1,40 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.{csproj,props,targets,xml}]
+indent_size = 2
+
+[*.swift]
+indent_size = 4
+
+[*.ps1]
+end_of_line = crlf
+indent_size = 4
+
+[*.{cmd,bat,sln}]
+end_of_line = crlf
+
+[*.sh]
+end_of_line = lf
+
+[*.{cs,csx}]
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
