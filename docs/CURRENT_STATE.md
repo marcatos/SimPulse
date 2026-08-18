@@ -19,6 +19,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - INFRA-004: XcodeGen `project.yml` → `SimPulse.xcodeproj` (iOS + embedded Watch).
 - WATCH-001: `WorkoutSessionController` start/end; companion unreachability does not stop recording; HealthKit Watch adapter (`HKWorkoutActivityType.other`, metadata Sim Racing). Merged PR #5.
 - WATCH-002: glanceable Watch UI — large HR, elapsed, Idle/Recording; Always On hides Start/End. Merged [PR #6](https://github.com/marcatos/SimPulse/pull/6). Simulator screenshots in `docs/screenshots/watchos/`.
+- DOCS-002: public GitHub README (product story, honest status, Watch screenshots). Merged [PR #7](https://github.com/marcatos/SimPulse/pull/7).
 - GitHub Actions CI (INFRA-002 DONE). Apple CI placeholder (INFRA-003 DONE).
 
 ## Partially completed features
@@ -30,7 +31,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Active work
 
-- DOCS-002 public README on branch `docs/public-readme` (not merged).
+- None.
 
 ## Blocked work
 

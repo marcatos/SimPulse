@@ -64,7 +64,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Docs
 - **Priority:** P1
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** WATCH-002 screenshots
 - **Acceptance criteria:** Root README is visitor-facing: product story, honest status, screenshots, layout, Windows/macOS getting started, privacy, license. No LAN IPs, Apple IDs, or secrets.
 
