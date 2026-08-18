@@ -239,10 +239,11 @@ internal sealed class IracingLiveSession
             OptionalValue<TimeSpan>.Unavailable(),
             OptionalValue<int>.Unavailable()));
         _logger.LogInformation(
-            "iRacing lap event. SessionId={SessionId} Type={EventType} LapNumber={LapNumber}",
+            "iRacing lap event. SessionId={SessionId} Type={EventType} LapNumber={LapNumber} SessionNum={SessionNum}",
             _sessionId,
             ev.Type,
-            lapNumber);
+            lapNumber,
+            _observedSessionNum);
     }
 
     private void CompleteLap(int lapNumber, TimestampInstant at, List<RaceEvent> emitted)
@@ -260,22 +261,25 @@ internal sealed class IracingLiveSession
         }
 
         _logger.LogInformation(
-            "iRacing lap event. SessionId={SessionId} Type={EventType} LapNumber={LapNumber}",
+            "iRacing lap event. SessionId={SessionId} Type={EventType} LapNumber={LapNumber} SessionNum={SessionNum}",
             _sessionId,
             ev.Type,
-            lapNumber);
+            lapNumber,
+            _observedSessionNum);
     }
 
     private RaceEvent LapEvent(RaceEventType type, int lapNumber, TimestampInstant at)
     {
-        return RaceEvent.Create(
-            _sessionId,
-            type,
-            at,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["lapNumber"] = lapNumber.ToString(CultureInfo.InvariantCulture)
-            });
+        Dictionary<string, string> attributes = new(StringComparer.Ordinal)
+        {
+            ["lapNumber"] = lapNumber.ToString(CultureInfo.InvariantCulture)
+        };
+        if (_observedSessionNum is int sessionNum)
+        {
+            attributes["sessionNum"] = sessionNum.ToString(CultureInfo.InvariantCulture);
+        }
+
+        return RaceEvent.Create(_sessionId, type, at, attributes);
     }
 
     private void RebuildSnapshot()

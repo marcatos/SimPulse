@@ -179,8 +179,14 @@ public sealed class IRacingAdapterTelemetryTests
 
         List<RaceEvent> events = updates.Where(u => u.RaceEvent is not null).Select(u => u.RaceEvent!).ToList();
         Assert.Equal(1, events.Count(e => e.Type == RaceEventType.SessionStart));
-        Assert.Contains(events, e => e.Type == RaceEventType.LapStart && e.Attributes["lapNumber"] == "2");
-        Assert.Contains(events, e => e.Type == RaceEventType.LapStart && e.Attributes["lapNumber"] == "1");
+        Assert.Contains(events, e =>
+            e.Type == RaceEventType.LapStart &&
+            e.Attributes["lapNumber"] == "2" &&
+            e.Attributes["sessionNum"] == "0");
+        Assert.Contains(events, e =>
+            e.Type == RaceEventType.LapStart &&
+            e.Attributes["lapNumber"] == "1" &&
+            e.Attributes["sessionNum"] == "1");
         Assert.Equal(
             new[] { RaceEventType.SessionStart, RaceEventType.LapStart, RaceEventType.LapStart },
             events.Select(e => e.Type).Take(3));
