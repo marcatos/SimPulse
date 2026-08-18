@@ -2,41 +2,36 @@
 
 ## Task
 
-BRIDGE-007 — Tray / background UX (Task 1 of 3: IPairingUx + TrayPairingPresenter).
+BRIDGE-007 — Tray / background UX (Task 2 of 3: Windows NotifyIcon pairing adapter).
 
 ## Goal
 
-Reopen a pairing PIN window without process restart via a Core pairing UX port and presenter. Tray WinForms adapter is out of scope for Task 1.
+Compile a host-only WinForms `NotifyIcon` pairing UX without putting `System.Windows.Forms` in Core, and without breaking Ubuntu `dotnet test SimPulse.sln`.
 
 ## Status
 
-IN_PROGRESS (Task 1 complete; do not mark BRIDGE-007 DONE)
+IN_PROGRESS (Task 2 complete; do not mark BRIDGE-007 DONE)
 
 ## Files changed
 
-- `apps/windows-bridge/SimPulse.Bridge.Core/Ports/Ports.cs` — `IPairingUx`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Application/PairingWindowInfo.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Application/PairingCoordinator.cs` — `BeginPairingWindow` returns `PairingWindowInfo`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Application/TrayPairingPresenter.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/ConsolePairingUx.cs`
-- `apps/windows-bridge/SimPulse.Bridge/Worker.cs` — first window + `OnWindowOpened`
-- `apps/windows-bridge/SimPulse.Bridge/Program.cs` — Console UX + presenter DI
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/FakePairingUx.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/TrayPairingPresenterTests.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/ConsolePairingUxTests.cs`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Application/TrayPairingUxText.cs` — menu labels + PIN balloon/tooltip text (no WinForms)
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/TrayPairingUxTextTests.cs`
+- `apps/windows-bridge/SimPulse.Bridge/Tray/NotifyIconPairingUx.cs` — `#if WINDOWS_TRAY` NotifyIcon adapter
+- `apps/windows-bridge/SimPulse.Bridge/SimPulse.Bridge.csproj` — Windows `net8.0-windows` + `UseWindowsForms` + `WINDOWS_TRAY`; Linux stays `net8.0`
 - `docs/BACKLOG.md`, `docs/CURRENT_STATE.md`, `docs/KNOWN_ISSUES.md`, this handoff
 
 ## Decisions made
 
-- `BeginPairingWindow` returns `PairingWindowInfo` so the presenter can `ShowPin` without duplicating PIN generation.
-- Worker keeps the first `BeginPairingWindow` and calls `OnWindowOpened`. Presenter handles **Pair new device** via `PairNewDeviceRequested`.
-- Coordinator keeps the existing PIN Information log. `ConsolePairingUx.ShowPin` also logs the PIN (console-only host). Worker uses Console UX now; tray will replace it, not stack with it.
-- No WinForms in Core or Core.Tests.
+- SDK 8.0.424 rejects `UseWindowsForms` on `net8.0` (NETSDK1136). Host TFM is `net8.0-windows` on Windows only so Ubuntu CI can still build `net8.0` without WinForms types.
+- Adapter is not registered in `Program.cs` (Task 3). Exit injects `IHostApplicationLifetime` and disposes the icon on `ApplicationStopping`.
+- PIN display text lives in Core so Ubuntu tests cover balloon/tooltip content; NotifyIcon itself is not unit-tested.
 
 ## Tests executed
 
-- Focused pairing + presenter + console UX tests — 20 passed
-- `dotnet test SimPulse.sln --configuration Release` — 78 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 56)
+- Focused `TrayPairingUxTextTests` — 3 passed
+- Host Release build on Windows — 0 warnings, 0 errors (`net8.0-windows`)
+- `dotnet test SimPulse.sln --configuration Release` — 81 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 59)
+- `dotnet build SimPulse.sln --configuration Release` — 0 warnings, 0 errors
 
 ## Tests passing
 
@@ -48,13 +43,13 @@ None.
 
 ## Remaining work
 
-- Task 2–3: tray adapter, hide console, balloon PIN
+- Task 3: register NotifyIcon vs Console UX, STA message loop / WinExe, DEVELOPMENT/.env docs, mark BRIDGE-007 ACs
 - Do not mark BRIDGE-007 DONE until tray ACs are met
 
 ## Risks
 
-Console host still has no user-facing **Pair new device** control; only the presenter API can reopen a window.
+Without Task 3 wiring, the adapter never runs. NotifyIcon still needs an STA message loop (`Application.Run`) when the Worker is MTA.
 
 ## Suggested next action
 
-Implement the WinForms tray adapter that raises `PairNewDeviceRequested` and shows the PIN (Tasks 2–3).
+Task 3: wire `Program.cs` (Windows interactive → NotifyIcon; else Console), hide console via WinExe on Windows, document how to run tray vs console.

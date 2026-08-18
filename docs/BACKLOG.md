@@ -265,7 +265,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** IN_PROGRESS
 - **Dependencies:** BRIDGE-001
 - **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart (today restart is required after the initial window closes — see KI-003).
-- **Notes:** Task 1 (Core `IPairingUx` + `TrayPairingPresenter` + `ConsolePairingUx`) in progress. Tray WinForms adapter is Task 2–3. See `docs/handoffs/BRIDGE-007.md`.
+- **Notes:** Task 1 (Core `IPairingUx` + `TrayPairingPresenter` + `ConsolePairingUx`) complete. Task 2 added Windows-only `NotifyIconPairingUx` (not registered in `Program.cs` yet). Task 3 wires tray vs console, WinExe, and docs ACs. See `docs/handoffs/BRIDGE-007.md`.
 
 ## Dependency edges (do not parallelize these pairs)
 
