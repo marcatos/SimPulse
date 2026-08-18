@@ -36,8 +36,21 @@ public static class EnvelopeCodec
 
     public static bool TryReadPayload<TPayload>(MessageEnvelope envelope, out TPayload? payload)
     {
-        payload = envelope.Payload.Deserialize<TPayload>(Options);
-        return payload is not null;
+        try
+        {
+            payload = envelope.Payload.Deserialize<TPayload>(Options);
+            return payload is not null;
+        }
+        catch (JsonException)
+        {
+            payload = default;
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            payload = default;
+            return false;
+        }
     }
 
     public static bool IsKnownType(string type)
