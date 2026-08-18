@@ -1,3 +1,6 @@
+#if WINDOWS_TRAY
+using System.Diagnostics;
+#endif
 using Microsoft.Extensions.Logging;
 
 using SimPulse.Bridge;
@@ -24,6 +27,16 @@ builder.Logging.AddSimpleConsole(options =>
     options.SingleLine = true;
 });
 builder.Logging.SetMinimumLevel(logLevel);
+
+string? fileLogDirectory = null;
+if (FileLogPath.IsEnabled(Environment.GetEnvironmentVariable(FileLogPath.EnabledEnv)))
+{
+    fileLogDirectory = FileLogPath.ResolveDirectory(
+        Environment.GetEnvironmentVariable(FileLogPath.DirectoryEnv),
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+    builder.Logging.AddProvider(new SimpleFileLoggerProvider(fileLogDirectory, new SystemClock(), logLevel));
+}
 
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ITrustedDeviceStore>(CreateTrustedDeviceStore);
@@ -64,38 +77,63 @@ builder.Services.AddSingleton<BridgeRuntime>();
 builder.Services.AddHostedService<Worker>();
 
 IHost host = builder.Build();
-StartTrayMessageLoopIfNeeded(host);
+ILogger startupLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
+if (fileLogDirectory is not null)
+{
+    startupLogger.LogInformation(
+        "File logging enabled. Directory={Directory} Component={Component}",
+        fileLogDirectory,
+        "Program");
+}
+
+StartPairingUx(host, startupLogger);
 host.Run();
 
 static void RegisterPairingUx(IServiceCollection services)
 {
-    if (!ShouldUseTray())
-    {
-        services.AddSingleton<IPairingUx, ConsolePairingUx>();
-        return;
-    }
-
 #if WINDOWS_TRAY
-    services.AddSingleton<TrayPairingUxHolder>();
+    services.AddSingleton<PairingUxHolder>();
     services.AddSingleton<IPairingUx>(sp =>
-        sp.GetRequiredService<TrayPairingUxHolder>().Instance
-        ?? throw new InvalidOperationException("Tray pairing UX was not started."));
+        sp.GetRequiredService<PairingUxHolder>().Instance
+        ?? throw new InvalidOperationException("Pairing UX was not started."));
+#else
+    services.AddSingleton<IPairingUx, ConsolePairingUx>();
 #endif
 }
 
-static void StartTrayMessageLoopIfNeeded(IHost host)
+static void StartPairingUx(IHost host, ILogger logger)
 {
-    ILogger logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
     if (!ShouldUseTray())
     {
+#if WINDOWS_TRAY
+        host.Services.GetRequiredService<PairingUxHolder>().Instance =
+            ActivatorUtilities.CreateInstance<ConsolePairingUx>(host.Services);
+#endif
         logger.LogInformation("Pairing UX is console. Component={Component}", "Program");
         return;
     }
 
 #if WINDOWS_TRAY
-    TrayPairingUxHolder holder = host.Services.GetRequiredService<TrayPairingUxHolder>();
-    holder.Instance = TrayMessageLoop.Start(host);
-    logger.LogInformation("Pairing UX is Windows tray. Component={Component}", "Program");
+    PairingUxHolder holder = host.Services.GetRequiredService<PairingUxHolder>();
+    Stopwatch started = Stopwatch.StartNew();
+    TrayStartAttempt attempt = TrayMessageLoop.TryStart(host, TrayStartupPolicy.ReadyTimeout);
+    if (TrayStartupPolicy.ShouldFallBackToConsole(attempt.Outcome))
+    {
+        logger.LogError(
+            attempt.Exception,
+            "Tray pairing UX failed ({Outcome}); falling back to console. ElapsedMs={ElapsedMs} Component={Component}",
+            attempt.Outcome,
+            started.ElapsedMilliseconds,
+            "Program");
+        holder.Instance = ActivatorUtilities.CreateInstance<ConsolePairingUx>(host.Services);
+        return;
+    }
+
+    holder.Instance = attempt.Ux;
+    logger.LogInformation(
+        "Pairing UX is Windows tray. ElapsedMs={ElapsedMs} Component={Component}",
+        started.ElapsedMilliseconds,
+        "Program");
 #endif
 }
 

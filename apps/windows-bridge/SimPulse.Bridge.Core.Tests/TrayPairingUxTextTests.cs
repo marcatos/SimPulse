@@ -10,6 +10,7 @@ public sealed class TrayPairingUxTextTests
     public void Menu_labels_match_required_tray_commands()
     {
         Assert.Equal("SimPulse Bridge", TrayPairingUxText.IconText);
+        Assert.Equal("Show current PIN", TrayPairingUxText.ShowCurrentPin);
         Assert.Equal("Pair new device", TrayPairingUxText.PairNewDevice);
         Assert.Equal("Exit", TrayPairingUxText.Exit);
     }

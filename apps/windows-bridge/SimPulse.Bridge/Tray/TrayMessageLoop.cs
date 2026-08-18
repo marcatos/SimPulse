@@ -5,31 +5,52 @@ using System.Windows.Forms;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using SimPulse.Bridge.Core.Application;
+using SimPulse.Bridge.Core.Ports;
+
 namespace SimPulse.Bridge.Tray;
 
-internal sealed class TrayPairingUxHolder
+internal sealed class PairingUxHolder
 {
-    public NotifyIconPairingUx? Instance { get; set; }
+    public IPairingUx? Instance { get; set; }
 }
+
+internal readonly record struct TrayStartAttempt(
+    NotifyIconPairingUx? Ux,
+    TrayStartupOutcome Outcome,
+    Exception? Exception);
 
 internal static class TrayMessageLoop
 {
     private const string Component = "TrayMessageLoop";
 
-    public static NotifyIconPairingUx Start(IHost host)
+    public static TrayStartAttempt TryStart(IHost host, TimeSpan timeout)
     {
-        TaskCompletionSource<NotifyIconPairingUx> ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        Thread thread = new(() => Run(host, ready))
+        TrayStartGate gate = new();
+        Thread thread = new(() => Run(host, gate))
         {
             Name = "SimPulse.Bridge.Tray",
             IsBackground = true,
         };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        return ready.Task.GetAwaiter().GetResult();
+
+        TrayStartupOutcome outcome = TrayStartupPolicy.WaitForReady(gate.Ready.Task, timeout);
+        if (outcome == TrayStartupOutcome.TimedOut && gate.Ready.Task.IsCompletedSuccessfully)
+        {
+            outcome = TrayStartupOutcome.Ready;
+        }
+
+        if (outcome != TrayStartupOutcome.Ready)
+        {
+            Interlocked.Exchange(ref gate.Claimed, 1);
+            return new TrayStartAttempt(null, outcome, gate.Ready.Task.Exception?.GetBaseException());
+        }
+
+        return new TrayStartAttempt(gate.Ready.Task.GetAwaiter().GetResult(), outcome, null);
     }
 
-    private static void Run(IHost host, TaskCompletionSource<NotifyIconPairingUx> ready)
+    private static void Run(IHost host, TrayStartGate gate)
     {
         Stopwatch started = Stopwatch.StartNew();
         ILogger logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(Component);
@@ -45,7 +66,17 @@ internal static class TrayMessageLoop
             NotifyIconPairingUx ux = new(
                 lifetime,
                 host.Services.GetRequiredService<ILogger<NotifyIconPairingUx>>());
-            ready.SetResult(ux);
+            if (Interlocked.CompareExchange(ref gate.Claimed, 1, 0) != 0)
+            {
+                ux.Dispose();
+                logger.LogWarning(
+                    "Tray UX created after timeout and was discarded. ElapsedMs={ElapsedMs} Component={Component}",
+                    started.ElapsedMilliseconds,
+                    Component);
+                return;
+            }
+
+            gate.Ready.SetResult(ux);
             logger.LogInformation(
                 "Tray STA message loop starting. ElapsedMs={ElapsedMs} Component={Component}",
                 started.ElapsedMilliseconds,
@@ -63,7 +94,8 @@ internal static class TrayMessageLoop
                 "Tray STA message loop failed. ElapsedMs={ElapsedMs} Component={Component}",
                 started.ElapsedMilliseconds,
                 Component);
-            ready.TrySetException(ex);
+            Interlocked.Exchange(ref gate.Claimed, 1);
+            gate.Ready.TrySetException(ex);
         }
     }
 
@@ -73,6 +105,12 @@ internal static class TrayMessageLoop
         {
             Application.Exit();
         }
+    }
+
+    private sealed class TrayStartGate
+    {
+        public int Claimed;
+        public readonly TaskCompletionSource<NotifyIconPairingUx> Ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 }
 #endif

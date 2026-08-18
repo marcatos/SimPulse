@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using SimPulse.Bridge.Core.Adapters;
@@ -30,7 +31,7 @@ public sealed class TrayPairingPresenterTests
         Assert.True(firstDevice.IsTrusted);
 
         FakePairingUx ux = new();
-        _ = new TrayPairingPresenter(coordinator, ux);
+        _ = new TrayPairingPresenter(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
         ux.RaisePairNewDevice();
 
         Assert.NotNull(ux.LastPin);
@@ -56,13 +57,61 @@ public sealed class TrayPairingPresenterTests
             new SequencePinGenerator(FirstPin),
             NullLogger<PairingCoordinator>.Instance);
         FakePairingUx ux = new();
-        TrayPairingPresenter presenter = new(coordinator, ux);
+        TrayPairingPresenter presenter = new(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
         DateTimeOffset expiresAt = TrustedAt.Add(PairingCoordinator.WindowDuration);
 
         presenter.OnWindowOpened(FirstPin, expiresAt);
 
         Assert.Equal(FirstPin, ux.LastPin);
         Assert.Equal(expiresAt, ux.LastExpiresAtUtc);
+        Assert.Equal(1, ux.ShowPinCount);
+    }
+
+    [Fact]
+    public void Show_current_pin_redisplays_last_pin_without_opening_a_new_window()
+    {
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            new FixedClock(TrustedAt),
+            new SequencePinGenerator(FirstPin, SecondPin),
+            NullLogger<PairingCoordinator>.Instance);
+        FakePairingUx ux = new();
+        TrayPairingPresenter presenter = new(coordinator, ux, NullLogger<TrayPairingPresenter>.Instance);
+        PairingWindowInfo firstWindow = coordinator.BeginPairingWindow();
+        presenter.OnWindowOpened(firstWindow.Pin, firstWindow.ExpiresAtUtc);
+
+        ux.RaiseShowCurrentPin();
+
+        Assert.Equal(FirstPin, ux.LastRedisplayedPin);
+        Assert.Equal(1, ux.ShowPinCount);
+        Assert.Equal(1, ux.RedisplayCount);
+        Assert.Equal(FirstPin, ux.LastPin);
+
+        ux.RaisePairNewDevice();
+
+        Assert.Equal(SecondPin, ux.LastPin);
+        Assert.Equal(2, ux.ShowPinCount);
+    }
+
+    [Fact]
+    public void Pair_new_device_logs_error_and_does_not_throw_when_window_open_fails()
+    {
+        PairingCoordinator coordinator = new(
+            new InMemoryTrustedDeviceStore(),
+            new FixedClock(TrustedAt),
+            new ThrowingPinGenerator(),
+            NullLogger<PairingCoordinator>.Instance);
+        FakePairingUx ux = new();
+        ListLogger<TrayPairingPresenter> logger = new();
+        _ = new TrayPairingPresenter(coordinator, ux, logger);
+
+        ux.RaisePairNewDevice();
+
+        Assert.Null(ux.LastPin);
+        Assert.Contains(
+            logger.Entries,
+            e => e.Level == LogLevel.Error
+                && e.Message.Contains("Pair new device", StringComparison.Ordinal));
     }
 
     private static MessageEnvelope PairingEnvelope(string deviceId, string pin)
@@ -83,4 +132,9 @@ internal sealed class SequencePinGenerator : IPairingPinGenerator
     }
 
     public string Generate() => _pins.Dequeue();
+}
+
+internal sealed class ThrowingPinGenerator : IPairingPinGenerator
+{
+    public string Generate() => throw new InvalidOperationException("pin generation failed");
 }

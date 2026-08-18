@@ -23,6 +23,8 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
     private readonly ContextMenuStrip _menu;
     private readonly NotifyIcon _icon;
     private readonly CancellationTokenRegistration _stoppingRegistration;
+    private string? _lastPin;
+    private DateTimeOffset? _lastExpiresAtUtc;
     private int _disposed;
 
     public NotifyIconPairingUx(IHostApplicationLifetime lifetime, ILogger<NotifyIconPairingUx> logger)
@@ -34,8 +36,6 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         _menu = CreateMenu();
         _icon = CreateIcon();
         _syncContext = SynchronizationContext.Current;
-        _icon.BalloonTipClosed += RestoreIconText;
-        _icon.BalloonTipClicked += RestoreIconText;
         _stoppingRegistration = lifetime.ApplicationStopping.Register(Dispose);
         _logger.LogInformation(
             "NotifyIcon pairing UX ready. ElapsedMs={ElapsedMs} Component={Component}",
@@ -45,9 +45,13 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
 
     public event Action? PairNewDeviceRequested;
 
+    public event Action? ShowCurrentPinRequested;
+
     public void ShowPin(string pin, DateTimeOffset expiresAtUtc)
     {
         Stopwatch step = Stopwatch.StartNew();
+        _lastPin = pin;
+        _lastExpiresAtUtc = expiresAtUtc;
         string text = TrayPairingUxText.FormatPinDisplay(pin, expiresAtUtc);
         RunOnUi(() => ShowBalloon(text, PinBalloonMs, updateTooltip: true));
         _logger.LogInformation(
@@ -65,6 +69,23 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         _logger.LogInformation(
             "{Message} ElapsedMs={ElapsedMs} Component={Component}",
             message,
+            step.ElapsedMilliseconds,
+            Component);
+    }
+
+    public void RedisplayLastPin()
+    {
+        if (_lastPin is null || _lastExpiresAtUtc is null)
+        {
+            ShowStatus("No pairing PIN is available.");
+            return;
+        }
+
+        Stopwatch step = Stopwatch.StartNew();
+        string text = TrayPairingUxText.FormatPinDisplay(_lastPin, _lastExpiresAtUtc.Value);
+        RunOnUi(() => ShowBalloon(text, PinBalloonMs, updateTooltip: true));
+        _logger.LogInformation(
+            "Current pairing PIN redisplayed. ElapsedMs={ElapsedMs} Component={Component}",
             step.ElapsedMilliseconds,
             Component);
     }
@@ -88,6 +109,7 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
     private ContextMenuStrip CreateMenu()
     {
         ContextMenuStrip menu = new();
+        menu.Items.Add(TrayPairingUxText.ShowCurrentPin, image: null, OnShowCurrentPin);
         menu.Items.Add(TrayPairingUxText.PairNewDevice, image: null, OnPairNewDevice);
         menu.Items.Add(TrayPairingUxText.Exit, image: null, OnExit);
         return menu;
@@ -119,15 +141,30 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         _icon.ShowBalloonTip(timeoutMs);
     }
 
-    private void RestoreIconText(object? sender, EventArgs e)
+    private void OnShowCurrentPin(object? sender, EventArgs e)
     {
-        _icon.Text = TrayPairingUxText.IconText;
+        try
+        {
+            _logger.LogInformation("Show current PIN requested. Component={Component}", Component);
+            ShowCurrentPinRequested?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Show current PIN menu handler failed. Component={Component}", Component);
+        }
     }
 
     private void OnPairNewDevice(object? sender, EventArgs e)
     {
-        _logger.LogInformation("Pair new device requested. Component={Component}", Component);
-        PairNewDeviceRequested?.Invoke();
+        try
+        {
+            _logger.LogInformation("Pair new device requested. Component={Component}", Component);
+            PairNewDeviceRequested?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Pair new device menu handler failed. Component={Component}", Component);
+        }
     }
 
     private void OnExit(object? sender, EventArgs e)
@@ -138,8 +175,6 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
 
     private void DisposeIcon()
     {
-        _icon.BalloonTipClosed -= RestoreIconText;
-        _icon.BalloonTipClicked -= RestoreIconText;
         _icon.Visible = false;
         _icon.Dispose();
         _menu.Dispose();

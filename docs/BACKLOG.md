@@ -265,7 +265,21 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-001
 - **Acceptance criteria:** User can run Bridge without a console window; pairing PIN visible; **Pair new device** calls `BeginPairingWindow()` so a new PIN window opens without process restart.
-- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. See `docs/handoffs/BRIDGE-007.md` and `docs/DEVELOPMENT.md`.
+- **Notes:** Windows interactive host registers `NotifyIconPairingUx` on an STA `Application.Run` thread and builds as `WinExe` (Linux stays `net8.0` / `Exe`). `SIMPULSE_BRIDGE_TRAY=0` or non-interactive uses `ConsolePairingUx` only. **Show current PIN** redisplays the last PIN. Tray startup failure falls back to console. See `docs/handoffs/BRIDGE-007.md`, `docs/handoffs/BUG-002.md`, and `docs/DEVELOPMENT.md`.
+
+### BUG-002 — Pre-merge tray UX review fixes
+
+- **Area:** Bridge
+- **Priority:** P0
+- **Status:** DONE
+- **Dependencies:** BRIDGE-007
+- **Acceptance criteria:**
+  - WinExe writes rolling/simple MEL file logs under `%LOCALAPPDATA%\SimPulse\logs` (or user-profile equivalent); PIN is not logged in extra places; env-configurable
+  - STA/NotifyIcon failure or 5s ready timeout falls back to console UX (or continues) and logs ERROR; process stays alive
+  - Pair new device menu/presenter exceptions are caught and logged ERROR (no ThreadExceptionDialog)
+  - **Show current PIN** redisplays the last PIN without `BeginPairingWindow`; last PIN stored on `ShowPin`; tooltip keeps PIN after balloon close
+  - Core tests cover presenter/mode/file-log path without WinForms; `dotnet test SimPulse.sln --configuration Release` passes
+- **Notes:** Whole-branch Important findings for `feat/bridge-007-tray`. MEL daily file logs; 5s tray ready timeout + console fallback; presenter/menu catch on Pair new device; **Show current PIN** via `RedisplayLastPin`. See `docs/handoffs/BUG-002.md`.
 
 ## Dependency edges (do not parallelize these pairs)
 

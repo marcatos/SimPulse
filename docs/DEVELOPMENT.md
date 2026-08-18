@@ -51,7 +51,9 @@ Expected future path: Windows workstation → git → CI → self-hosted Mac min
 
 ## Windows Bridge tray vs console
 
-On Windows the Bridge host builds as `WinExe` (no console window). A notification-area icon shows the pairing PIN in a balloon. **Pair new device** calls `BeginPairingWindow()` so a new PIN opens without restarting the process.
+On Windows the Bridge host builds as `WinExe` (no console window). A notification-area icon shows the pairing PIN in a balloon. **Show current PIN** redisplays the last PIN (tooltip/balloon) without opening a new pairing window. **Pair new device** calls `BeginPairingWindow()` so a new PIN opens without restarting the process. The PIN stays in the tray tooltip until a later PIN or process exit.
+
+If the tray STA/`NotifyIcon` fails or does not become ready within 5 seconds, Bridge logs ERROR and continues with `ConsolePairingUx` instead of exiting.
 
 | Goal | How |
 | --- | --- |
@@ -62,7 +64,7 @@ On Windows the Bridge host builds as `WinExe` (no console window). A notificatio
 
 `SIMPULSE_BRIDGE_CONSOLE=1` documents intent to debug with a console. It does **not** change `OutputType` (MSBuild cannot read that env at build time). Pass `--property:OutputType=Exe` (or set `OutputType` to `Exe` in the project while debugging).
 
-With `WinExe`, `AddSimpleConsole` still writes to the process stdout handle; that is hidden unless a debugger is attached or you override `OutputType`. Use `SIMPULSE_LOG_LEVEL` for verbosity.
+With `WinExe`, the console is hidden. File logs are written under `%LOCALAPPDATA%\SimPulse\logs` (or the user-profile equivalent). Override with `SIMPULSE_LOG_DIR`; disable with `SIMPULSE_LOG_FILE=0`. Use `SIMPULSE_LOG_LEVEL` for verbosity.
 
 ## Logging
 
@@ -70,7 +72,7 @@ Use `Microsoft.Extensions.Logging` with levels Trace/Debug/Information/Warning/E
 
 Default level: Information (`SIMPULSE_LOG_LEVEL`).
 
-Every long-running process logs start, major steps with durations, and a finish summary. Never log raw HR/energy payloads or pairing secrets. PIN is logged at Information once when a pairing window opens (and the tray balloon may show it).
+Every long-running process logs start, major steps with durations, and a finish summary. Never log raw HR/energy payloads or pairing secrets. PIN is logged at Information once when a pairing window opens (and the tray balloon may show it). **Show current PIN** redisplays that PIN without logging it again.
 
 ## Tests without hardware
 

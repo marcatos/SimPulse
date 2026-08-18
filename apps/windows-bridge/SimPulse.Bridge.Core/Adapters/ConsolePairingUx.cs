@@ -7,6 +7,8 @@ namespace SimPulse.Bridge.Core.Adapters;
 public sealed class ConsolePairingUx : IPairingUx
 {
     private readonly ILogger<ConsolePairingUx> _logger;
+    private string? _lastPin;
+    private DateTimeOffset? _lastExpiresAtUtc;
 
     public ConsolePairingUx(ILogger<ConsolePairingUx> logger)
     {
@@ -15,8 +17,12 @@ public sealed class ConsolePairingUx : IPairingUx
 
     public event Action? PairNewDeviceRequested;
 
+    public event Action? ShowCurrentPinRequested;
+
     public void ShowPin(string pin, DateTimeOffset expiresAtUtc)
     {
+        _lastPin = pin;
+        _lastExpiresAtUtc = expiresAtUtc;
         _logger.LogInformation(
             "Pairing PIN is visible in tray/console. Pin={Pin} ExpiresAtUtc={ExpiresAtUtc} Component={Component}",
             pin,
@@ -29,8 +35,27 @@ public sealed class ConsolePairingUx : IPairingUx
         _logger.LogInformation("{Message} Component={Component}", message, "ConsolePairingUx");
     }
 
+    public void RedisplayLastPin()
+    {
+        if (_lastPin is null || _lastExpiresAtUtc is null)
+        {
+            ShowStatus("No pairing PIN is available.");
+            return;
+        }
+
+        _logger.LogInformation(
+            "Current pairing PIN redisplayed. ExpiresAtUtc={ExpiresAtUtc} Component={Component}",
+            _lastExpiresAtUtc,
+            "ConsolePairingUx");
+    }
+
     public void RequestPairNewDevice()
     {
         PairNewDeviceRequested?.Invoke();
+    }
+
+    public void RequestShowCurrentPin()
+    {
+        ShowCurrentPinRequested?.Invoke();
     }
 }

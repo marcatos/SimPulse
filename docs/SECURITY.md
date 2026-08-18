@@ -15,7 +15,7 @@
 
 ## Pairing window lifecycle (Phase 0)
 
-`BeginPairingWindow()` is called when the Bridge host starts (`Worker.ExecuteAsync`) and again when the tray **Pair new device** command fires (`TrayPairingPresenter`). After a successful pair, 5-minute expiry, or 5-attempt lockout, the current window closes until the next explicit open. A process restart is not required.
+`BeginPairingWindow()` is called when the Bridge host starts (`Worker.ExecuteAsync`) and again when the tray **Pair new device** command fires (`TrayPairingPresenter`). **Show current PIN** redisplays the last PIN without calling `BeginPairingWindow` and without invalidating it. After a successful pair, 5-minute expiry, or 5-attempt lockout, the current window closes until the next explicit open. A process restart is not required.
 
 ## Reconnect trust (Phase 0)
 

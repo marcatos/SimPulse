@@ -50,4 +50,24 @@ public sealed class ConsolePairingUxTests
 
         Assert.True(raised);
     }
+
+    [Fact]
+    public void RedisplayLastPin_does_not_log_pin()
+    {
+        ListLogger<ConsolePairingUx> logger = new();
+        ConsolePairingUx ux = new(logger);
+        ux.ShowPin("123456", ExpiresAt);
+        logger.Entries.Clear();
+
+        ux.RedisplayLastPin();
+
+        Assert.Contains(
+            logger.Entries,
+            e => e.Level == LogLevel.Information
+                && e.Message.Contains("redisplayed", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            logger.Entries,
+            e => e.Message.Contains("123456", StringComparison.Ordinal)
+                || e.Message.Contains("Pin=", StringComparison.Ordinal));
+    }
 }

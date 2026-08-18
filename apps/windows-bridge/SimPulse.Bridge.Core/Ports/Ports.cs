@@ -48,5 +48,9 @@ public interface IPairingUx
 
     void ShowStatus(string message);
 
+    void RedisplayLastPin();
+
     event Action? PairNewDeviceRequested;
+
+    event Action? ShowCurrentPinRequested;
 }
