@@ -1,0 +1,14 @@
+{
+  "startedAtUtc": "2026-08-18T10:00:00Z",
+  "heartRate": [
+    { "offsetMs": 0, "bpm": 95 },
+    { "offsetMs": 30000, "bpm": 118 },
+    { "offsetMs": 60000, "bpm": 132 },
+    { "offsetMs": 90000, "bpm": 142 },
+    { "offsetMs": 120000, "bpm": 128 }
+  ],
+  "energy": [
+    { "offsetMs": 0, "activeKilocalories": 0.2 },
+    { "offsetMs": 180000, "activeKilocalories": 18.5 }
+  ]
+}

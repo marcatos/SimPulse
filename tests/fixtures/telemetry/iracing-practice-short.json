@@ -1,0 +1,25 @@
+{
+  "simulatorId": "iracing",
+  "displayName": "iRacing",
+  "track": {
+    "id": "okayama",
+    "displayName": "Okayama International Circuit",
+    "layout": "Full"
+  },
+  "vehicle": {
+    "id": "mx5-cup",
+    "displayName": "Mazda MX-5 Cup",
+    "class": "MX-5"
+  },
+  "sessionType": "Practice",
+  "startedAtUtc": "2026-08-18T10:00:00Z",
+  "ticks": [
+    { "offsetMs": 0, "kind": "SessionStart" },
+    { "offsetMs": 0, "kind": "LapStart", "lapNumber": 1 },
+    { "offsetMs": 1000, "kind": "Telemetry", "speedMps": 22.4, "lapDistPct": 0.02, "gear": 2, "throttlePercent": 40 },
+    { "offsetMs": 90000, "kind": "LapComplete", "lapNumber": 1, "lapTimeMs": 90000, "position": 12 },
+    { "offsetMs": 90000, "kind": "LapStart", "lapNumber": 2 },
+    { "offsetMs": 180000, "kind": "LapComplete", "lapNumber": 2, "lapTimeMs": 90000, "position": 11 },
+    { "offsetMs": 180000, "kind": "SessionEnd" }
+  ]
+}

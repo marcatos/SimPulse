@@ -1,0 +1,40 @@
+using SimPulse.Bridge.Core.Ports;
+
+namespace SimPulse.Bridge.Core.Adapters;
+
+public sealed class SystemClock : IClock
+{
+    public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+}
+
+public sealed class InMemoryTrustedDeviceStore : ITrustedDeviceStore
+{
+    private readonly Dictionary<string, TrustedDevice> _devices = new(StringComparer.Ordinal);
+
+    public Task<IReadOnlyList<TrustedDevice>> ListAsync(CancellationToken cancellationToken)
+    {
+        return Task.FromResult<IReadOnlyList<TrustedDevice>>(_devices.Values.ToArray());
+    }
+
+    public Task TrustAsync(string deviceId, DateTimeOffset trustedAtUtc, CancellationToken cancellationToken)
+    {
+        _devices[deviceId] = new TrustedDevice(deviceId, trustedAtUtc, Revoked: false);
+        return Task.CompletedTask;
+    }
+
+    public Task RevokeAsync(string deviceId, CancellationToken cancellationToken)
+    {
+        if (_devices.TryGetValue(deviceId, out TrustedDevice? existing))
+        {
+            _devices[deviceId] = existing with { Revoked = true };
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> IsTrustedAsync(string deviceId, CancellationToken cancellationToken)
+    {
+        bool trusted = _devices.TryGetValue(deviceId, out TrustedDevice? device) && !device.Revoked;
+        return Task.FromResult(trusted);
+    }
+}

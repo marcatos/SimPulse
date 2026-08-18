@@ -1,0 +1,11 @@
+{
+  "protocolVersion": 1,
+  "type": "hello",
+  "messageId": "fixture-hello-1",
+  "sentAtUtc": "2026-08-18T08:00:00Z",
+  "payload": {
+    "product": "SimPulse",
+    "role": "bridge",
+    "deviceId": "pc-fixture-1"
+  }
+}

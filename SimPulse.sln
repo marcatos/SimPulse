@@ -1,0 +1,97 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{9B5149DE-56A4-4861-9C1D-6471BAD7FA5E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain-model", "domain-model", "{557F1DA7-A051-4BFD-959C-83407F037821}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Domain", "packages\domain-model\SimPulse.Domain\SimPulse.Domain.csproj", "{309D2515-BCED-4224-91CA-E2B32708F462}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Domain.Tests", "packages\domain-model\SimPulse.Domain.Tests\SimPulse.Domain.Tests.csproj", "{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protocol", "protocol", "{9A7B352B-8360-4B9D-821F-F642B6E0A7C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Protocol", "packages\protocol\SimPulse.Protocol\SimPulse.Protocol.csproj", "{874039A2-5978-4156-9FC7-CBB15170BF24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Protocol.Tests", "packages\protocol\SimPulse.Protocol.Tests\SimPulse.Protocol.Tests.csproj", "{91D92CD7-9CA9-4FBA-BF98-42887259E8B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "analytics", "analytics", "{83C5019C-AE2F-4A19-A3B8-AC3B7A89A59A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Analytics", "packages\analytics\SimPulse.Analytics\SimPulse.Analytics.csproj", "{603B782F-375F-4342-B24F-0BAC8C48F6D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Analytics.Tests", "packages\analytics\SimPulse.Analytics.Tests\SimPulse.Analytics.Tests.csproj", "{ED169453-29AB-4995-A882-2EBE5BE6F0BD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{8D07DA04-7E4E-4A09-9251-4DF1B0F18264}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "windows-bridge", "windows-bridge", "{830FE1E9-F18F-4EB7-8ACF-E977B28955B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Bridge.Core", "apps\windows-bridge\SimPulse.Bridge.Core\SimPulse.Bridge.Core.csproj", "{55F58929-12E7-4405-84A1-E12284FCA91D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Bridge.Core.Tests", "apps\windows-bridge\SimPulse.Bridge.Core.Tests\SimPulse.Bridge.Core.Tests.csproj", "{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimPulse.Bridge", "apps\windows-bridge\SimPulse.Bridge\SimPulse.Bridge.csproj", "{4F131DD2-4C44-4D6A-8A15-C7589C1427FA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{309D2515-BCED-4224-91CA-E2B32708F462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{309D2515-BCED-4224-91CA-E2B32708F462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{309D2515-BCED-4224-91CA-E2B32708F462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{309D2515-BCED-4224-91CA-E2B32708F462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{874039A2-5978-4156-9FC7-CBB15170BF24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{874039A2-5978-4156-9FC7-CBB15170BF24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{874039A2-5978-4156-9FC7-CBB15170BF24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{874039A2-5978-4156-9FC7-CBB15170BF24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91D92CD7-9CA9-4FBA-BF98-42887259E8B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91D92CD7-9CA9-4FBA-BF98-42887259E8B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91D92CD7-9CA9-4FBA-BF98-42887259E8B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91D92CD7-9CA9-4FBA-BF98-42887259E8B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{603B782F-375F-4342-B24F-0BAC8C48F6D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{603B782F-375F-4342-B24F-0BAC8C48F6D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{603B782F-375F-4342-B24F-0BAC8C48F6D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{603B782F-375F-4342-B24F-0BAC8C48F6D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED169453-29AB-4995-A882-2EBE5BE6F0BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED169453-29AB-4995-A882-2EBE5BE6F0BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED169453-29AB-4995-A882-2EBE5BE6F0BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED169453-29AB-4995-A882-2EBE5BE6F0BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55F58929-12E7-4405-84A1-E12284FCA91D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55F58929-12E7-4405-84A1-E12284FCA91D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55F58929-12E7-4405-84A1-E12284FCA91D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55F58929-12E7-4405-84A1-E12284FCA91D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F131DD2-4C44-4D6A-8A15-C7589C1427FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F131DD2-4C44-4D6A-8A15-C7589C1427FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F131DD2-4C44-4D6A-8A15-C7589C1427FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F131DD2-4C44-4D6A-8A15-C7589C1427FA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{557F1DA7-A051-4BFD-959C-83407F037821} = {9B5149DE-56A4-4861-9C1D-6471BAD7FA5E}
+		{309D2515-BCED-4224-91CA-E2B32708F462} = {557F1DA7-A051-4BFD-959C-83407F037821}
+		{2A6CFBBC-B4D3-42FF-AB63-A1612728B2BE} = {557F1DA7-A051-4BFD-959C-83407F037821}
+		{9A7B352B-8360-4B9D-821F-F642B6E0A7C4} = {9B5149DE-56A4-4861-9C1D-6471BAD7FA5E}
+		{874039A2-5978-4156-9FC7-CBB15170BF24} = {9A7B352B-8360-4B9D-821F-F642B6E0A7C4}
+		{91D92CD7-9CA9-4FBA-BF98-42887259E8B8} = {9A7B352B-8360-4B9D-821F-F642B6E0A7C4}
+		{83C5019C-AE2F-4A19-A3B8-AC3B7A89A59A} = {9B5149DE-56A4-4861-9C1D-6471BAD7FA5E}
+		{603B782F-375F-4342-B24F-0BAC8C48F6D0} = {83C5019C-AE2F-4A19-A3B8-AC3B7A89A59A}
+		{ED169453-29AB-4995-A882-2EBE5BE6F0BD} = {83C5019C-AE2F-4A19-A3B8-AC3B7A89A59A}
+		{830FE1E9-F18F-4EB7-8ACF-E977B28955B8} = {8D07DA04-7E4E-4A09-9251-4DF1B0F18264}
+		{55F58929-12E7-4405-84A1-E12284FCA91D} = {830FE1E9-F18F-4EB7-8ACF-E977B28955B8}
+		{1EE223E8-3F29-4BAD-B2FD-EC7EF09FBDCE} = {830FE1E9-F18F-4EB7-8ACF-E977B28955B8}
+		{4F131DD2-4C44-4D6A-8A15-C7589C1427FA} = {830FE1E9-F18F-4EB7-8ACF-E977B28955B8}
+	EndGlobalSection
+EndGlobal

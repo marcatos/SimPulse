@@ -1,0 +1,71 @@
+namespace SimPulse.Protocol.Tests;
+
+public sealed class EnvelopeCodecTests
+{
+    [Fact]
+    public void Round_trips_hello_payload()
+    {
+        DateTimeOffset sent = DateTimeOffset.Parse("2026-08-18T08:00:00Z");
+        HelloMessage hello = new("SimPulse", "bridge", "pc-1");
+
+        string json = EnvelopeCodec.Serialize(MessageTypes.Hello, hello, sent, "msg1");
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+
+        Assert.Equal(1, envelope.ProtocolVersion);
+        Assert.Equal(MessageTypes.Hello, envelope.Type);
+        Assert.Equal("msg1", envelope.MessageId);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out HelloMessage? restored));
+        Assert.Equal("pc-1", restored!.DeviceId);
+    }
+
+    [Fact]
+    public void Ignores_unknown_json_fields()
+    {
+        const string json = """
+            {
+              "protocolVersion": 1,
+              "type": "hello",
+              "messageId": "abc",
+              "sentAtUtc": "2026-08-18T08:00:00Z",
+              "payload": { "product": "SimPulse", "role": "bridge", "deviceId": "pc-1" },
+              "futureField": { "nested": true }
+            }
+            """;
+
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+        Assert.Equal("hello", envelope.Type);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out HelloMessage? hello));
+        Assert.Equal("bridge", hello!.Role);
+    }
+
+    [Fact]
+    public void Unknown_message_type_is_not_treated_as_known()
+    {
+        Assert.False(EnvelopeCodec.IsKnownType("simulator.understeer-magic"));
+    }
+
+    [Fact]
+    public void Older_protocol_version_is_rejected()
+    {
+        Assert.Equal(ProtocolCompatibility.Rejected, ProtocolCompatibilityRules.Classify(0));
+        Assert.Equal(ProtocolCompatibility.Compatible, ProtocolCompatibilityRules.Classify(1));
+        Assert.Equal(ProtocolCompatibility.UnknownNewer, ProtocolCompatibilityRules.Classify(2));
+    }
+}
+
+public sealed class TimeSyncCalculatorTests
+{
+    [Fact]
+    public void Estimates_offset_from_four_timestamps()
+    {
+        DateTimeOffset t1 = DateTimeOffset.Parse("2026-08-18T08:00:00.000Z");
+        DateTimeOffset t2 = DateTimeOffset.Parse("2026-08-18T08:00:00.120Z");
+        DateTimeOffset t3 = DateTimeOffset.Parse("2026-08-18T08:00:00.121Z");
+        DateTimeOffset t4 = DateTimeOffset.Parse("2026-08-18T08:00:00.040Z");
+
+        TimeSyncEstimate estimate = TimeSyncCalculator.Estimate(t1, t2, t3, t4);
+
+        Assert.Equal(TimeSpan.FromMilliseconds(100.5), estimate.Offset);
+        Assert.True(estimate.RoundTrip >= TimeSpan.Zero);
+    }
+}
