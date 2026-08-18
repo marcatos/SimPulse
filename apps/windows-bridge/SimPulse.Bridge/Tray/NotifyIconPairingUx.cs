@@ -55,8 +55,7 @@ public sealed class NotifyIconPairingUx : IPairingUx, IDisposable
         string text = TrayPairingUxText.FormatPinDisplay(pin, expiresAtUtc);
         RunOnUi(() => ShowBalloon(text, PinBalloonMs, updateTooltip: true));
         _logger.LogInformation(
-            "Pairing PIN is visible in tray/console. Pin={Pin} ExpiresAtUtc={ExpiresAtUtc} ElapsedMs={ElapsedMs} Component={Component}",
-            pin,
+            "Pairing PIN is visible in tray/console. ExpiresAtUtc={ExpiresAtUtc} ElapsedMs={ElapsedMs} Component={Component}",
             expiresAtUtc,
             step.ElapsedMilliseconds,
             Component);

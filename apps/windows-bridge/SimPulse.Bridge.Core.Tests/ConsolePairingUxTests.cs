@@ -9,7 +9,7 @@ public sealed class ConsolePairingUxTests
     private static readonly DateTimeOffset ExpiresAt = DateTimeOffset.Parse("2026-08-18T10:05:00Z");
 
     [Fact]
-    public void ShowPin_logs_pin_and_expiry_at_information()
+    public void ShowPin_logs_visibility_without_pin()
     {
         ListLogger<ConsolePairingUx> logger = new();
         ConsolePairingUx ux = new(logger);
@@ -19,9 +19,12 @@ public sealed class ConsolePairingUxTests
         Assert.Contains(
             logger.Entries,
             e => e.Level == LogLevel.Information
-                && e.Message.Contains("123456", StringComparison.Ordinal)
                 && e.Message.Contains("ExpiresAtUtc", StringComparison.Ordinal)
                 && e.Message.Contains("Pairing PIN is visible", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            logger.Entries,
+            e => e.Message.Contains("123456", StringComparison.Ordinal)
+                || e.Message.Contains("Pin=", StringComparison.Ordinal));
     }
 
     [Fact]

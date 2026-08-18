@@ -24,8 +24,7 @@ public sealed class ConsolePairingUx : IPairingUx
         _lastPin = pin;
         _lastExpiresAtUtc = expiresAtUtc;
         _logger.LogInformation(
-            "Pairing PIN is visible in tray/console. Pin={Pin} ExpiresAtUtc={ExpiresAtUtc} Component={Component}",
-            pin,
+            "Pairing PIN is visible in tray/console. ExpiresAtUtc={ExpiresAtUtc} Component={Component}",
             expiresAtUtc,
             "ConsolePairingUx");
     }
