@@ -14,6 +14,11 @@ struct WorkoutSnapshot: Sendable, Equatable {
     var isRunning: Bool
 }
 
+enum WorkoutSourceError: Error, Equatable {
+    case notAvailableOnThisPlatform
+    case healthDataUnavailable
+}
+
 /// Boundary that lets domain logic run without HealthKit on Windows or in unit tests.
 protocol WorkoutDataSource: Sendable {
     func start() async throws

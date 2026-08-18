@@ -31,11 +31,29 @@ targets:
         embed: true
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - SimPulseTests
+  SimPulseTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: apps/ios/SimPulseTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.marcatos.SimPulse.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/SimPulse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SimPulse"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: SimPulse
   SimPulseWatch:
     type: application
     platform: watchOS
     sources:
       - path: apps/watchos/SimPulseWatch
+      - path: apps/ios/SimPulse/Workout
+        excludes:
+          - HealthKitWorkoutDataSource.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.marcatos.SimPulse.watchkitapp
@@ -46,5 +64,6 @@ targets:
         INFOPLIST_KEY_NSHealthUpdateUsageDescription: SimPulse Watch writes the Sim Racing workout to Health on this Apple Watch.
         WKApplication: YES
         TARGETED_DEVICE_FAMILY: "4"
+        CODE_SIGN_ENTITLEMENTS: apps/watchos/SimPulseWatch/SimPulseWatch.entitlements
     scheme:
       gatherCoverageData: false
