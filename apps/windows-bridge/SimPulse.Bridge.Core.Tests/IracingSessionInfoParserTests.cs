@@ -33,4 +33,34 @@ public sealed class IracingSessionInfoParserTests
         Assert.Equal(DataPresence.Unavailable, info.VehicleId.Presence);
         Assert.Equal(DataPresence.Unavailable, info.SessionType.Presence);
     }
+
+    [Fact]
+    public void Resolves_player_car_and_session_from_yaml_lists()
+    {
+        string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));
+
+        IracingSessionInfo info = IracingSessionInfoParser.Parse(yaml, driverCarIdx: 3, sessionNum: 1);
+
+        Assert.True(info.VehicleId.TryGet(out string? vehicleId));
+        Assert.Equal("mazda mx-5 cup", vehicleId);
+        Assert.True(info.VehicleDisplayName.TryGet(out string? vehicleName));
+        Assert.Equal("Mazda MX-5 Cup", vehicleName);
+        Assert.True(info.SessionType.TryGet(out string? sessionType));
+        Assert.Equal("Race", sessionType);
+    }
+
+    [Fact]
+    public void Default_parse_uses_first_driver_and_session()
+    {
+        string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));
+
+        IracingSessionInfo info = IracingSessionInfoParser.Parse(yaml);
+
+        Assert.True(info.VehicleId.TryGet(out string? vehicleId));
+        Assert.Equal("othercar", vehicleId);
+        Assert.True(info.VehicleDisplayName.TryGet(out string? vehicleName));
+        Assert.Equal("Other Car", vehicleName);
+        Assert.True(info.SessionType.TryGet(out string? sessionType));
+        Assert.Equal("Practice", sessionType);
+    }
 }

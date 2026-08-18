@@ -1,0 +1,24 @@
+# Synthetic IRSDK-shaped session info with two cars and two session types.
+# Original fixture — not copied from a copyrighted telemetry pack.
+WeekendInfo:
+  TrackName: okayama international
+  TrackID: 166
+  TrackDisplayName: Okayama International Raceway
+  TrackConfigName: Full Course
+DriverInfo:
+  DriverCarIdx: 3
+  Drivers:
+    - CarIdx: 0
+      UserName: Spectator
+      CarPath: othercar
+      CarScreenName: Other Car
+    - CarIdx: 3
+      UserName: Test Driver
+      CarPath: mazda mx-5 cup
+      CarScreenName: Mazda MX-5 Cup
+SessionInfo:
+  Sessions:
+    - SessionNum: 0
+      SessionType: Practice
+    - SessionNum: 1
+      SessionType: Race
