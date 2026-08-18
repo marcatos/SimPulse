@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using SimPulse.Bridge.Core.Ports;
+using SimPulse.Domain;
 
 namespace SimPulse.Bridge.Core.Adapters.Iracing;
 
@@ -12,6 +13,7 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
 {
     private readonly ILogger<WindowsIracingSharedMemory> _logger;
     private MemoryMappedFile? _map;
+    private byte[] _scratch = [];
     private bool _opened;
 
     public WindowsIracingSharedMemory(ILogger<WindowsIracingSharedMemory>? logger = null)
@@ -91,18 +93,23 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         try
         {
             using MemoryMappedViewAccessor accessor = _map.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
-            if (!TryReadHeader(accessor, out _, out int infoLen, out int infoOffset, out bool connected))
+            if (!TryCopy(accessor, out ReadOnlySpan<byte> buffer))
             {
                 return false;
             }
 
-            string? yaml = connected ? TryReadYaml(accessor, infoOffset, infoLen) : null;
-            snapshot = new IracingMemorySnapshot(yaml, connected);
+            if (!IracingMemorySnapshotReader.TryRead(buffer, out snapshot))
+            {
+                return false;
+            }
+
             _logger.LogDebug(
-                "iRacing mmap snapshot read in {ElapsedMs} ms. Connected={Connected} YamlLength={YamlLength}",
+                "iRacing mmap snapshot read in {ElapsedMs} ms. Connected={Connected} YamlLength={YamlLength} SessionInfoUpdate={SessionInfoUpdate} TelemetryPresent={TelemetryPresent}",
                 started.ElapsedMilliseconds,
-                connected,
-                yaml?.Length ?? 0);
+                snapshot.Connected,
+                snapshot.SessionYaml?.Length ?? 0,
+                snapshot.SessionInfoUpdate,
+                snapshot.Telemetry.SessionTime.Presence == DataPresence.Available);
             return true;
         }
         catch (Exception ex)
@@ -116,42 +123,56 @@ public sealed class WindowsIracingSharedMemory : IIracingSharedMemory, IDisposab
         }
     }
 
+    public bool WaitForUpdate(TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested || !OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!EventWaitHandle.TryOpenExisting(IracingSdkConstants.DataValidEventName, out EventWaitHandle? handle))
+            {
+                return false;
+            }
+
+            using (handle)
+            {
+                int waitMs = timeout <= TimeSpan.Zero ? 0 : (int)Math.Clamp(timeout.TotalMilliseconds, 0, int.MaxValue);
+                int index = WaitHandle.WaitAny([handle, cancellationToken.WaitHandle], waitMs);
+                return index == 0;
+            }
+        }
+        catch (Exception ex) when (IsUnavailable(ex))
+        {
+            return false;
+        }
+    }
+
     public void Dispose()
     {
         Close();
     }
 
-    private static bool TryReadHeader(
-        MemoryMappedViewAccessor accessor,
-        out int status,
-        out int infoLen,
-        out int infoOffset,
-        out bool connected)
+    private bool TryCopy(MemoryMappedViewAccessor accessor, out ReadOnlySpan<byte> buffer)
     {
-        status = 0;
-        infoLen = 0;
-        infoOffset = 0;
-        connected = false;
-        if (accessor.Capacity < IracingSdkConstants.HeaderMinSize)
+        long capacity = accessor.Capacity;
+        if (capacity < IracingSdkConstants.HeaderMinSize)
         {
+            buffer = default;
             return false;
         }
 
-        byte[] header = new byte[IracingSdkConstants.HeaderMinSize];
-        accessor.ReadArray(0, header, 0, header.Length);
-        return IracingHeaderReader.TryReadHeader(header, out status, out infoLen, out infoOffset, out connected);
-    }
-
-    private static string? TryReadYaml(MemoryMappedViewAccessor accessor, int infoOffset, int infoLen)
-    {
-        if (infoLen <= 0 || infoOffset < 0 || infoOffset + (long)infoLen > accessor.Capacity)
+        int length = capacity > int.MaxValue ? int.MaxValue : (int)capacity;
+        if (_scratch.Length < length)
         {
-            return null;
+            _scratch = new byte[length];
         }
 
-        byte[] yamlBytes = new byte[infoLen];
-        accessor.ReadArray(infoOffset, yamlBytes, 0, infoLen);
-        return IracingHeaderReader.DecodeYaml(yamlBytes);
+        accessor.ReadArray(0, _scratch, 0, length);
+        buffer = _scratch.AsSpan(0, length);
+        return true;
     }
 
     private static bool IsUnavailable(Exception ex)

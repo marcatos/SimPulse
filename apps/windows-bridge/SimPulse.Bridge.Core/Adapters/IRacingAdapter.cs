@@ -51,11 +51,12 @@ public sealed class IRacingAdapter : ISimulatorAdapter
     {
         Stopwatch total = Stopwatch.StartNew();
         _logger.LogInformation("iRacing subscribe starting. Component={Component}", nameof(IRacingAdapter));
-        StreamState state = new();
+        int updates = 0;
         try
         {
-            await foreach (NormalizedSimulatorUpdate update in ReadLoopAsync(state, total, cancellationToken))
+            await foreach (NormalizedSimulatorUpdate update in ReadLoopAsync(total, cancellationToken))
             {
+                updates++;
                 yield return update;
             }
         }
@@ -64,16 +65,16 @@ public sealed class IRacingAdapter : ISimulatorAdapter
             _memory.Close();
             _logger.LogInformation(
                 "iRacing subscribe ended. Updates={Updates} ElapsedMs={ElapsedMs}",
-                state.Updates,
+                updates,
                 total.ElapsedMilliseconds);
         }
     }
 
     private async IAsyncEnumerable<NormalizedSimulatorUpdate> ReadLoopAsync(
-        StreamState state,
         Stopwatch total,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        IracingLiveSession live = new(_clock, _logger);
         while (!cancellationToken.IsCancellationRequested)
         {
             if (!EnsureOpen())
@@ -86,13 +87,17 @@ public sealed class IRacingAdapter : ISimulatorAdapter
                 continue;
             }
 
+            bool signaled = WaitForData(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                yield break;
+            }
+
             if (!_memory.TryReadSnapshot(out IracingMemorySnapshot memory) || !memory.Connected)
             {
-                if (state.Snapshot is { } live)
+                if (live.EndIfLive() is { } ended)
                 {
-                    state.Updates++;
-                    yield return CreateSessionEnd(state.SessionId, live, state.Events);
-                    state.Reset();
+                    yield return ended;
                     _memory.Close();
                     _logger.LogInformation(
                         "iRacing subscribe waiting to reconnect. ElapsedMs={ElapsedMs}",
@@ -109,7 +114,7 @@ public sealed class IRacingAdapter : ISimulatorAdapter
 
             if (string.IsNullOrWhiteSpace(memory.SessionYaml))
             {
-                if (!await IdleAsync(cancellationToken))
+                if (!signaled && !await IdleAsync(cancellationToken))
                 {
                     yield break;
                 }
@@ -117,69 +122,28 @@ public sealed class IRacingAdapter : ISimulatorAdapter
                 continue;
             }
 
-            state.Updates++;
-            yield return ApplyYaml(memory.SessionYaml, state, total);
+            foreach (NormalizedSimulatorUpdate update in live.Apply(memory))
+            {
+                yield return update;
+            }
 
-            if (!await IdleAsync(cancellationToken))
+            if (!signaled && !await IdleAsync(cancellationToken))
             {
                 yield break;
             }
         }
     }
 
-    private NormalizedSimulatorUpdate ApplyYaml(string yaml, StreamState state, Stopwatch total)
+    private bool WaitForData(CancellationToken cancellationToken)
     {
-        Stopwatch parse = Stopwatch.StartNew();
-        IracingSessionInfo info = IracingSessionInfoParser.Parse(yaml);
-        TimestampInstant at = TimestampInstant.UtcNow(_clock.UtcNow);
-        _logger.LogDebug(
-            "iRacing session YAML parsed in {ElapsedMs} ms. YamlLength={YamlLength}",
-            parse.ElapsedMilliseconds,
-            yaml.Length);
-
-        if (state.Snapshot is null)
+        try
         {
-            state.SessionId = SessionId.New();
-            RaceEvent start = RaceEvent.Create(state.SessionId, RaceEventType.SessionStart, at);
-            state.Events.Add(start);
-            state.Snapshot = IracingSessionMapper.ToSnapshot(
-                state.SessionId,
-                info,
-                at,
-                OptionalValue<TimestampInstant>.Unknown(),
-                state.Events);
-            _logger.LogInformation(
-                "iRacing session started. SessionId={SessionId} YamlLength={YamlLength} ElapsedMs={ElapsedMs}",
-                state.SessionId,
-                yaml.Length,
-                total.ElapsedMilliseconds);
-            return new NormalizedSimulatorUpdate(SimulatorId, state.SessionId, at, start, null, state.Snapshot);
+            return _memory.WaitForUpdate(_pollInterval, cancellationToken);
         }
-
-        state.Snapshot = IracingSessionMapper.ToSnapshot(
-            state.SessionId,
-            info,
-            state.Snapshot.StartedAt,
-            OptionalValue<TimestampInstant>.Unknown(),
-            state.Events);
-        return new NormalizedSimulatorUpdate(SimulatorId, state.SessionId, at, null, null, state.Snapshot);
-    }
-
-    private NormalizedSimulatorUpdate CreateSessionEnd(
-        SessionId sessionId,
-        SimulatorSession snapshot,
-        List<RaceEvent> events)
-    {
-        TimestampInstant at = TimestampInstant.UtcNow(_clock.UtcNow);
-        RaceEvent end = RaceEvent.Create(sessionId, RaceEventType.SessionEnd, at);
-        events.Add(end);
-        SimulatorSession closed = snapshot with
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            EndedAt = OptionalValue<TimestampInstant>.Available(at),
-            Events = events.ToArray()
-        };
-        _logger.LogInformation("iRacing session ended. SessionId={SessionId}", sessionId);
-        return new NormalizedSimulatorUpdate(SimulatorId, sessionId, at, end, null, closed);
+            return false;
+        }
     }
 
     private bool EnsureOpen()
@@ -205,24 +169,6 @@ public sealed class IRacingAdapter : ISimulatorAdapter
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return false;
-        }
-    }
-
-    private sealed class StreamState
-    {
-        public int Updates { get; set; }
-
-        public SessionId SessionId { get; set; }
-
-        public SimulatorSession? Snapshot { get; set; }
-
-        public List<RaceEvent> Events { get; } = [];
-
-        public void Reset()
-        {
-            SessionId = default;
-            Snapshot = null;
-            Events.Clear();
         }
     }
 }

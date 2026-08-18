@@ -54,4 +54,9 @@ internal sealed class FakeIracingSharedMemory : IIracingSharedMemory
         snapshot = default;
         return false;
     }
+
+    public bool WaitForUpdate(TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        return !cancellationToken.IsCancellationRequested;
+    }
 }

@@ -1,54 +1,53 @@
 Task
-BRIDGE-008 — iRacing variable table (Task 2: YAML player car + SessionNum)
+BRIDGE-008 — iRacing variable table (Task 3: snapshot telemetry + adapter)
 
 Goal
-Resolve vehicle and session type from `Drivers:` / `Sessions:` list entries when `driverCarIdx` / `sessionNum` are supplied. Keep first-entry Parse behavior when those args are unset.
+Read player car, session type, simulator session time, and lap events from IRSDK telemetry; re-parse YAML only when `SessionInfoUpdate` changes. No 60 Hz WebSocket frames.
 
 Status
-IN_PROGRESS (Tasks 1–2 complete, including unmatched-lookup Unavailable; Tasks 3–4 remaining)
+IN_PROGRESS (Tasks 1–3 complete; Task 4 docs + KI-002 remaining)
 
 Files changed
-- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSdkConstants.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingHeaderReader.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingVarTableReader.cs` (create)
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/IracingVarTableReaderTests.cs` (create)
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/IracingHeaderReaderTests.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSessionInfoParser.cs`
-- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/IracingSessionInfoParserTests.cs`
-- `tests/fixtures/iracing/session-info-two-drivers.yaml` (create)
-- `docs/BACKLOG.md`
-- `docs/CURRENT_STATE.md`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Ports/IracingPorts.cs` — `IracingTelemetryValues`, 4-field snapshot + 2-arg ctor, `WaitForUpdate`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingMemorySnapshotReader.cs` (create)
+- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingLiveSession.cs` (create)
+- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/WindowsIracingSharedMemory.cs`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/Iracing/IracingSessionMapper.cs` — attach `Laps`
+- `apps/windows-bridge/SimPulse.Bridge.Core/Adapters/IRacingAdapter.cs` — wait/read loop only
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/FakeIracingSharedMemory.cs`
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/IRacingAdapterTelemetryTests.cs` (create)
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/IracingMemorySnapshotReaderTests.cs` (create)
+- `apps/windows-bridge/SimPulse.Bridge.Core.Tests/WindowsIracingSharedMemoryTests.cs`
 - `docs/handoffs/BRIDGE-008.md`
 
 Decisions made
-- Follow the plan table for official `irsdk_header` / `irsdk_varHeader` offsets.
-- Keep `HeaderMinSize = 24` so existing YAML-only `TryReadHeader` tests pass.
-- `HeaderLayoutMinSize = 112` for var-capable headers (`IRSDK_MAX_BUFS` * 16-byte `varBuf` after the 48-byte prefix).
-- Latest buffer is the `varBuf[i]` with the highest `tickCount` among `numBuf` clamped 1..4.
-- Reject layout/var-header reads when any offset/length is outside the span.
-- `Parse(yaml, driverCarIdx, sessionNum)` optional args; default path still first `DriverInfo`/`SessionInfo` keys.
-- List matching uses `CarIdx` / `SessionNum` ordinal string compare with invariant `ToString`.
-- Parser stayed under 300 lines; list parsing was not extracted.
-- When `driverCarIdx` / `sessionNum` are set and no list row matches, vehicle and/or session type are `Unavailable` (no first-entry fallback). Unset args still use first-entry keys. One-arg match/miss is independent.
+- 2-arg `IracingMemorySnapshot(yaml, Connected)` stays compiling (`SessionInfoUpdate=0`, telemetry Unknown). Named `Connected:` requires PascalCase ctor params.
+- Missing var names → `Unknown`, no throw.
+- Windows waits on `Local\IRSDKDataValidEvent`; missing/timeout → false, caller still reads, then poll idle.
+- Fake `WaitForUpdate` returns true immediately so `pollInterval: Zero` tests stay fast.
+- YAML re-parsed only when `SessionInfoUpdate` changes; same update + different yaml text keeps cached vehicle.
+- Player car / session type from `Parse(yaml, DriverCarIdx, SessionNum)` when those optionals are Available.
+- SessionStart/SessionEnd stay `ClockSource.Utc`. Lap timestamps use `ClockSource.SimulatorSession` when SessionTime Available: `sessionStartUtc + TimeSpan.FromSeconds(sessionTime)`.
+- Lap increase: first observed Lap → LapStart only; later increase → LapComplete previous (≥1) then LapStart. Attributes `lapNumber`. Attached to snapshot `Laps`.
+- `NormalizedSimulatorUpdate.Telemetry` stays null (no WebSocket telemetry frames).
+- Apply logic lives in `IracingLiveSession` so `IRacingAdapter.cs` stays ≤300 lines.
 
 Tests executed
-- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingVarTableReaderTests --configuration Release` (RED: types missing; GREEN after implement)
-- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingSessionInfoParserTests --configuration Release` (RED: first-car `othercar`; GREEN after list match)
-- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IracingSessionInfoParserTests --configuration Release` (RED: unmatched 99/99 still Available; GREEN after Unavailable)
+- `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IRacingAdapterTelemetryTests|IracingMemorySnapshotReaderTests --configuration Release` (RED: types missing; GREEN after implement)
 - `dotnet test SimPulse.sln --configuration Release`
 
 Tests passing
-114 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 92). Apple/Xcode NOT EXECUTED.
+123 passed, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 101). Apple/Xcode NOT EXECUTED.
 
 Known failures
 None.
 
 Remaining work
-- Task 3: Snapshot telemetry + adapter
-- Task 4: Docs + KI-002
+- Task 4: Docs + KI-002 (BACKLOG DONE, CURRENT_STATE, KNOWN_ISSUES, THIRD_PARTY, handoff ACs)
 
 Risks
-- Live sim still required for KI-002 end-to-end; CI uses synthetic buffers only.
+- Live sim still required for KI-002 end-to-end; CI uses Fake + synthetic buffers.
+- `DataValidEvent` wait is best-effort; missing event falls back to poll interval.
 
 Suggested next action
-Task 3: snapshot telemetry + adapter (player car, session time, laps, YAML cache).
+Task 4: mark BRIDGE-008 done in docs; update KI-002 for player car / SessionNum / SessionTime / sessionInfoUpdate / lap events.
