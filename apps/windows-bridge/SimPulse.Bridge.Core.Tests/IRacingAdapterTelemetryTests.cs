@@ -125,6 +125,65 @@ public sealed class IRacingAdapterTelemetryTests
     }
 
     [Fact]
+    public async Task Session_num_change_resets_lap_tracking_without_second_session_start()
+    {
+        string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));
+        FakeIracingSharedMemory memory = new(
+            open: true,
+            [
+                Snapshot(yaml, update: 1, Telemetry(sessionNum: 0, driverCarIdx: 3, lap: 2)),
+                Snapshot(yaml, update: 1, Telemetry(sessionNum: 1, driverCarIdx: 3, lap: 1))
+            ]);
+        IRacingAdapter adapter = new(memory, new SystemClock(), pollInterval: TimeSpan.Zero);
+
+        List<NormalizedSimulatorUpdate> updates = await CollectUntilAsync(
+            adapter,
+            static list =>
+                list.Exists(u =>
+                    u.RaceEvent?.Type == RaceEventType.LapStart &&
+                    u.RaceEvent.Attributes["lapNumber"] == "2") &&
+                list.Exists(u =>
+                    u.RaceEvent?.Type == RaceEventType.LapStart &&
+                    u.RaceEvent.Attributes["lapNumber"] == "1"));
+
+        List<RaceEvent> events = updates.Where(u => u.RaceEvent is not null).Select(u => u.RaceEvent!).ToList();
+        Assert.Equal(1, events.Count(e => e.Type == RaceEventType.SessionStart));
+        Assert.Contains(events, e => e.Type == RaceEventType.LapStart && e.Attributes["lapNumber"] == "2");
+        Assert.Contains(events, e => e.Type == RaceEventType.LapStart && e.Attributes["lapNumber"] == "1");
+        Assert.Equal(
+            new[] { RaceEventType.SessionStart, RaceEventType.LapStart, RaceEventType.LapStart },
+            events.Select(e => e.Type).Take(3));
+        SimulatorSession race = updates.Last(u => u.RaceEvent?.Type == RaceEventType.LapStart).SessionSnapshot!;
+        Lap raceLap = Assert.Single(race.Laps);
+        Assert.Equal(1, raceLap.LapNumber);
+    }
+
+    [Fact]
+    public async Task Unknown_session_num_does_not_reset_lap_tracking()
+    {
+        string yaml = File.ReadAllText(FixturePathHelper.FixturePath("iracing", "session-info-two-drivers.yaml"));
+        FakeIracingSharedMemory memory = new(
+            open: true,
+            [
+                Snapshot(yaml, update: 1, Telemetry(sessionNum: 0, driverCarIdx: 3, lap: 2)),
+                Snapshot(yaml, update: 1, Telemetry(driverCarIdx: 3, lap: 1))
+            ]);
+        IRacingAdapter adapter = new(memory, new SystemClock(), pollInterval: TimeSpan.Zero);
+
+        List<NormalizedSimulatorUpdate> updates = await CollectUntilAsync(
+            adapter,
+            static list => list.Count(u => u.SessionSnapshot is not null) >= 2);
+
+        Assert.Equal(1, updates.Count(u => u.RaceEvent?.Type == RaceEventType.SessionStart));
+        Assert.Contains(updates, u =>
+            u.RaceEvent?.Type == RaceEventType.LapStart &&
+            u.RaceEvent.Attributes["lapNumber"] == "2");
+        Assert.DoesNotContain(updates, u =>
+            u.RaceEvent?.Type == RaceEventType.LapStart &&
+            u.RaceEvent.Attributes["lapNumber"] == "1");
+    }
+
+    [Fact]
     public void Fake_wait_for_update_returns_true_immediately()
     {
         FakeIracingSharedMemory memory = new(open: true, yaml: "WeekendInfo:\n");

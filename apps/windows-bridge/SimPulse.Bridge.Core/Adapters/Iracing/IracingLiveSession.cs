@@ -21,6 +21,7 @@ internal sealed class IracingLiveSession
     private IracingSessionInfo? _info;
     private SimulatorSession? _snapshot;
     private int? _observedLap;
+    private int? _observedSessionNum;
 
     public IracingLiveSession(IClock clock, ILogger? logger = null)
     {
@@ -41,6 +42,7 @@ internal sealed class IracingLiveSession
             RefreshInfoIfNeeded(memory);
         }
 
+        ResetLapsIfSessionChanged(memory);
         AppendLapEvents(memory, emitted);
         RebuildSnapshot();
         _logger.LogDebug(
@@ -128,6 +130,35 @@ internal sealed class IracingLiveSession
         int? carIdx = memory.Telemetry.DriverCarIdx.TryGet(out int idx) ? idx : null;
         int? sessionNum = memory.Telemetry.SessionNum.TryGet(out int num) ? num : null;
         return IracingSessionInfoParser.Parse(memory.SessionYaml ?? "", carIdx, sessionNum);
+    }
+
+    private void ResetLapsIfSessionChanged(IracingMemorySnapshot memory)
+    {
+        if (!memory.Telemetry.SessionNum.TryGet(out int sessionNum))
+        {
+            return;
+        }
+
+        if (_observedSessionNum is null)
+        {
+            _observedSessionNum = sessionNum;
+            return;
+        }
+
+        if (sessionNum == _observedSessionNum.Value)
+        {
+            return;
+        }
+
+        int previous = _observedSessionNum.Value;
+        _observedSessionNum = sessionNum;
+        _observedLap = null;
+        _laps.Clear();
+        _logger.LogInformation(
+            "iRacing session num changed; lap tracking reset. SessionId={SessionId} PreviousSessionNum={PreviousSessionNum} SessionNum={SessionNum}",
+            _sessionId,
+            previous,
+            sessionNum);
     }
 
     private void AppendLapEvents(IracingMemorySnapshot memory, List<RaceEvent> emitted)
@@ -249,6 +280,7 @@ internal sealed class IracingLiveSession
         _info = null;
         _snapshot = null;
         _observedLap = null;
+        _observedSessionNum = null;
         _events.Clear();
         _laps.Clear();
     }

@@ -31,6 +31,7 @@ Decisions made
 - Lap increase: first observed Lap → LapStart only; later increase → LapComplete previous (≥1) then LapStart. Attributes `lapNumber`. Attached to snapshot `Laps`.
 - `NormalizedSimulatorUpdate.Telemetry` stays null (no WebSocket telemetry frames).
 - Apply logic lives in `IracingLiveSession` so `IRacingAdapter.cs` stays ≤300 lines.
+- Available `SessionNum` change clears `_observedLap`/`_laps` (practice→race LapStart); Unknown does not reset; no second SessionStart.
 
 Tests executed
 - `dotnet test apps/windows-bridge/SimPulse.Bridge.Core.Tests --filter IRacingAdapterTelemetryTests|IracingMemorySnapshotReaderTests --configuration Release` (RED: types missing; GREEN after implement)
