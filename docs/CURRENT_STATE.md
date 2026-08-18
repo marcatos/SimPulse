@@ -14,7 +14,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
-- C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, non-medical wording).
+- C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, HeartRateWindows lap/event averages gated by timeline offset, non-medical wording).
 - Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, gated PIN pairing (CSPRNG, 5-minute window, 5-attempt lockout) + trusted-device store (in-memory or JSON file), structured logging, `SessionLifecycleTracker` wired in `BridgeRuntime` for session/lap race-event dedupe, loopback WebSocket listen/accept (`HttpListener` on `/ws/`), race-event envelopes broadcast to trusted clients (no biometrics).
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions CI (INFRA-002 DONE): `.github/workflows/ci.yml` runs `dotnet test SimPulse.sln` on `windows-latest` and `ubuntu-latest`; test-result artifacts use `retention-days: 7`. PR #1 checks green 2026-08-18.
@@ -50,7 +50,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **54 passed**, 0 failed (Domain 6, Analytics 6, Protocol 7, Bridge.Core 35) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **57 passed**, 0 failed (Domain 6, Analytics 9, Protocol 7, Bridge.Core 35) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1, 2026-08-18) | **pass** (Actions runs 32127173207, 32127216936) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
@@ -64,8 +64,7 @@ Monorepo. Hexagonal Bridge (`ISimulatorAdapter`). JSON protocol v1 (LAN, pairing
 Windows (no Mac required):
 
 1. BRIDGE-003 iRacing mmap (wire `SessionLifecycleTracker` on normalized ticks)
-2. ANALYTICS-003 HR by lap and event windows
-3. BRIDGE-007 tray / pairing PIN UX
+2. BRIDGE-007 tray / pairing PIN UX
 
 Mac (unblocks Watch/iOS):
 

@@ -96,7 +96,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Analytics
 - **Priority:** P1
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** ANALYTICS-001, ADR 0004
 - **Acceptance criteria:** Functions take a correlated timeline; refuse to join when offset unknown.
 

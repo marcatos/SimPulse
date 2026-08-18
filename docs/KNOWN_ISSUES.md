@@ -54,6 +54,11 @@ Do not hide defects because they are outside the current task.
 - **Symptoms:** Free/Premium/Pro gates exist as functions; StoreKit is absent; UI does not enforce limits.
 - **Related:** ADR 0008, IOS-010
 
+## ANALYTICS-003 — HeartRateWindows (2026-08-18)
+
+- **Status:** No known defects introduced.
+- **Note:** `HeartRateWindows` averages workout HR in simulator-aligned lap/event windows using `workoutTime = simulatorTime + offset`. Returns `Unavailable` when offset is unknown, lap lacks `CompletedAt`, or no samples fall in the window — intentional per ADR 0004.
+
 ## ANALYTICS-002 — RaceReport (2026-08-18)
 
 - **Status:** No known defects introduced.
