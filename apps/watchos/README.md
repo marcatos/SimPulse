@@ -1,7 +1,7 @@
 # watchOS app (SimPulse Watch)
 
-Apple project generation pending macOS/Xcode environment.
+Generated with the iOS app via `project.yml` ([ADR 0012](../../docs/adr/0012-xcodegen-apple-project.md)). The Watch records a Sim Racing workout without a permanent iPhone connection. UI stays glanceable; HealthKit capture outranks chrome.
 
-The Watch must record a Sim Racing workout without a permanent iPhone connection. UI stays glanceable; reliability of HealthKit capture outranks chrome.
-
-See [ADR 0009](../../docs/adr/0009-apple-project-generation.md).
+```sh
+./scripts/build-watch.sh
+```

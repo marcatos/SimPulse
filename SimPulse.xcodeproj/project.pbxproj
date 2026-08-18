@@ -1,0 +1,473 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		58EE5FBDC71F27B6984B1F11 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D782CE6F3D852B9B4B43766 /* WorkoutView.swift */; };
+		852F151E66985EED67C4D27C /* SimPulseWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06094841993DED4724DE6E80 /* SimPulseWatchApp.swift */; };
+		993934C0863E89506B439A12 /* WatchWorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A1DD43C28EECED599FA284 /* WatchWorkoutSession.swift */; };
+		A147C2F20F705DAA0877ABDF /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F4EC300A3D352327D7615E /* SessionListView.swift */; };
+		ACF10CC7E4F051A1AFDED10A /* WorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8DCEA81964064B7A41B1C69 /* WorkoutDataSource.swift */; };
+		B0243FC3A45E17850C4D9093 /* CapabilityGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14C1B9513D9D888AB4437B44 /* CapabilityGate.swift */; };
+		B20B7484C3C75AAFC7C1D7DE /* SimPulseWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = D61787B41BE58979F30245A0 /* SimPulseWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CF46C07A897C3BEA9DC6351E /* SimPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */; };
+		D12D5AA1F4E917F8B7A811AB /* HealthKitWorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CCC3DE03FFAAAFA2CE0BD40 /* HealthKitWorkoutDataSource.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5CA490006F3BC5D4B33FDBDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F408E32F398361287EF46F3E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0DA17D9387762C9107A27DAF;
+			remoteInfo = SimPulseWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		85E50294EF0EE609CE924651 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B20B7484C3C75AAFC7C1D7DE /* SimPulseWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		05F4EC300A3D352327D7615E /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		06094841993DED4724DE6E80 /* SimPulseWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimPulseWatchApp.swift; sourceTree = "<group>"; };
+		14C1B9513D9D888AB4437B44 /* CapabilityGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapabilityGate.swift; sourceTree = "<group>"; };
+		2ED5A6D389591338FD81DC97 /* SimPulse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SimPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CCC3DE03FFAAAFA2CE0BD40 /* HealthKitWorkoutDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitWorkoutDataSource.swift; sourceTree = "<group>"; };
+		9D782CE6F3D852B9B4B43766 /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
+		A8DCEA81964064B7A41B1C69 /* WorkoutDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDataSource.swift; sourceTree = "<group>"; };
+		C9A1DD43C28EECED599FA284 /* WatchWorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutSession.swift; sourceTree = "<group>"; };
+		D61787B41BE58979F30245A0 /* SimPulseWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimPulseWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimPulseApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		5A111214185E07A103578F5B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2ED5A6D389591338FD81DC97 /* SimPulse.app */,
+				D61787B41BE58979F30245A0 /* SimPulseWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6E3EC819E13496FAF8AF7799 /* SimPulseWatch */ = {
+			isa = PBXGroup;
+			children = (
+				06094841993DED4724DE6E80 /* SimPulseWatchApp.swift */,
+				C9A1DD43C28EECED599FA284 /* WatchWorkoutSession.swift */,
+				9D782CE6F3D852B9B4B43766 /* WorkoutView.swift */,
+			);
+			path = SimPulseWatch;
+			sourceTree = "<group>";
+		};
+		78D40978FF503AEA9F7A70C0 /* SimPulse */ = {
+			isa = PBXGroup;
+			children = (
+				B731647A4094F1A5F388F904 /* Entitlements */,
+				E5AAF89DF61A1D672BF308C3 /* Workout */,
+				05F4EC300A3D352327D7615E /* SessionListView.swift */,
+				F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */,
+			);
+			path = SimPulse;
+			sourceTree = "<group>";
+		};
+		91CE37C4510ABA4DEB557FF5 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				78D40978FF503AEA9F7A70C0 /* SimPulse */,
+			);
+			path = ios;
+			sourceTree = "<group>";
+		};
+		9F689233779AE069F84EA7B3 /* watchos */ = {
+			isa = PBXGroup;
+			children = (
+				6E3EC819E13496FAF8AF7799 /* SimPulseWatch */,
+			);
+			path = watchos;
+			sourceTree = "<group>";
+		};
+		AD0E5C46694CA74309486EE0 /* apps */ = {
+			isa = PBXGroup;
+			children = (
+				91CE37C4510ABA4DEB557FF5 /* ios */,
+				9F689233779AE069F84EA7B3 /* watchos */,
+			);
+			path = apps;
+			sourceTree = "<group>";
+		};
+		B731647A4094F1A5F388F904 /* Entitlements */ = {
+			isa = PBXGroup;
+			children = (
+				14C1B9513D9D888AB4437B44 /* CapabilityGate.swift */,
+			);
+			path = Entitlements;
+			sourceTree = "<group>";
+		};
+		E010CE5F68AB8349981DE44B = {
+			isa = PBXGroup;
+			children = (
+				AD0E5C46694CA74309486EE0 /* apps */,
+				5A111214185E07A103578F5B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E5AAF89DF61A1D672BF308C3 /* Workout */ = {
+			isa = PBXGroup;
+			children = (
+				7CCC3DE03FFAAAFA2CE0BD40 /* HealthKitWorkoutDataSource.swift */,
+				A8DCEA81964064B7A41B1C69 /* WorkoutDataSource.swift */,
+			);
+			path = Workout;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0DA17D9387762C9107A27DAF /* SimPulseWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 552A6BC0A859D949137FD5E1 /* Build configuration list for PBXNativeTarget "SimPulseWatch" */;
+			buildPhases = (
+				4DDDA13BD522266397C69188 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimPulseWatch;
+			packageProductDependencies = (
+			);
+			productName = SimPulseWatch;
+			productReference = D61787B41BE58979F30245A0 /* SimPulseWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		1379A941F5E8C016EE10855A /* SimPulse */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 51967848F324C5E0329AAABB /* Build configuration list for PBXNativeTarget "SimPulse" */;
+			buildPhases = (
+				49999B80B55CBF213CF9C5E0 /* Sources */,
+				85E50294EF0EE609CE924651 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BF765854DB75354601F066E3 /* PBXTargetDependency */,
+			);
+			name = SimPulse;
+			packageProductDependencies = (
+			);
+			productName = SimPulse;
+			productReference = 2ED5A6D389591338FD81DC97 /* SimPulse.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F408E32F398361287EF46F3E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = DD8423A310C5D333B528E587 /* Build configuration list for PBXProject "SimPulse" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E010CE5F68AB8349981DE44B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5A111214185E07A103578F5B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1379A941F5E8C016EE10855A /* SimPulse */,
+				0DA17D9387762C9107A27DAF /* SimPulseWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		49999B80B55CBF213CF9C5E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0243FC3A45E17850C4D9093 /* CapabilityGate.swift in Sources */,
+				D12D5AA1F4E917F8B7A811AB /* HealthKitWorkoutDataSource.swift in Sources */,
+				A147C2F20F705DAA0877ABDF /* SessionListView.swift in Sources */,
+				CF46C07A897C3BEA9DC6351E /* SimPulseApp.swift in Sources */,
+				ACF10CC7E4F051A1AFDED10A /* WorkoutDataSource.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4DDDA13BD522266397C69188 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				852F151E66985EED67C4D27C /* SimPulseWatchApp.swift in Sources */,
+				993934C0863E89506B439A12 /* WatchWorkoutSession.swift in Sources */,
+				58EE5FBDC71F27B6984B1F11 /* WorkoutView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BF765854DB75354601F066E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0DA17D9387762C9107A27DAF /* SimPulseWatch */;
+			targetProxy = 5CA490006F3BC5D4B33FDBDF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0AB2CE7DF08427080EFC659D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_CFBundleDisplayName = SimPulse;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SimPulse reads heart rate and energy from Apple Watch workouts you start in the app. Not a medical device.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SimPulse saves Sim Racing workouts to Health so they stay on this iPhone.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcatos.SimPulse;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2D0097D5F689936DDB7F8382 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = SimPulse;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SimPulse Watch records heart rate during a Sim Racing workout. Not a medical device.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SimPulse Watch writes the Sim Racing workout to Health on this Apple Watch.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.marcatos.SimPulse;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcatos.SimPulse.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WKApplication = YES;
+			};
+			name = Release;
+		};
+		3CA11BA165122A12BF6ECA09 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = SimPulse;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SimPulse Watch records heart rate during a Sim Racing workout. Not a medical device.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SimPulse Watch writes the Sim Racing workout to Health on this Apple Watch.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.marcatos.SimPulse;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcatos.SimPulse.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WKApplication = YES;
+			};
+			name = Debug;
+		};
+		57D75EFF2B085C868AA44B4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		7FAB48ED697CC8CEF204096F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_CFBundleDisplayName = SimPulse;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SimPulse reads heart rate and energy from Apple Watch workouts you start in the app. Not a medical device.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SimPulse saves Sim Racing workouts to Health so they stay on this iPhone.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcatos.SimPulse;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E37B49F43A35309F3B591162 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		51967848F324C5E0329AAABB /* Build configuration list for PBXNativeTarget "SimPulse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0AB2CE7DF08427080EFC659D /* Debug */,
+				7FAB48ED697CC8CEF204096F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		552A6BC0A859D949137FD5E1 /* Build configuration list for PBXNativeTarget "SimPulseWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3CA11BA165122A12BF6ECA09 /* Debug */,
+				2D0097D5F689936DDB7F8382 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DD8423A310C5D333B528E587 /* Build configuration list for PBXProject "SimPulse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E37B49F43A35309F3B591162 /* Debug */,
+				57D75EFF2B085C868AA44B4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F408E32F398361287EF46F3E /* Project object */;
+}
