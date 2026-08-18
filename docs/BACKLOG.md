@@ -221,7 +221,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Bridge
 - **Priority:** P0
-- **Status:** BACKLOG
+- **Status:** DONE
 - **Dependencies:** BRIDGE-002 or BRIDGE-003
 - **Acceptance criteria:** SESSION_START/END, LAP_START/COMPLETE from normalized ticks; idempotent.
 

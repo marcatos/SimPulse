@@ -40,3 +40,8 @@ Do not hide defects because they are outside the current task.
 
 - **Status:** No known defects introduced.
 - **Note:** `RaceReport` and `RaceReportBuilder.FromDriverSession` use `DataPresence` / `OptionalValue<T>` for missing fields (simulator metadata, positions, peak-HR event association). `PeakHeartRateAssociatedEvent` remains `Unavailable` when `TimelineOffset` is not available — intentional per ADR 0004, not a defect.
+
+## BRIDGE-004 — Session lifecycle tracker (2026-08-18)
+
+- **Status:** No known defects introduced.
+- **Note:** `SessionLifecycleTracker` dedupes by `(SessionId, RaceEventType, lapNumber attribute or empty)`. Standalone until BRIDGE-003 wires normalized ticks through `BridgeRuntime`.

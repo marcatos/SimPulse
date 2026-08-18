@@ -15,7 +15,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
 - Documentation system (`docs/*`, ADRs 0001–0009, AGENTS.md, privacy/security, backlog).
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, non-medical wording).
-- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, in-memory trusted-device store, structured logging.
+- Windows Bridge worker + Core library: fixture replay adapter, iRacing stub, in-memory trusted-device store, structured logging, idempotent `SessionLifecycleTracker` for session/lap race events.
 - Apple Swift source scaffolding without an Xcode project (ADR 0009).
 - GitHub Actions workflow for .NET on Windows and Ubuntu; Apple job records NOT EXECUTED.
 
@@ -28,7 +28,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Active work
 
-- None after ANALYTICS-002. Claim a BACKLOG id before starting.
+- None after BRIDGE-004. Claim a BACKLOG id before starting.
 
 ## Blocked work
 
@@ -49,7 +49,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **22 passed**, 0 failed (Domain 6, Analytics 6, Protocol 5, Bridge.Core 5) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.301 | **26 passed**, 0 failed (Domain 6, Analytics 6, Protocol 5, Bridge.Core 9) |
 | xcodebuild iOS | n/a | NOT EXECUTED |
 | xcodebuild watchOS | n/a | NOT EXECUTED |
 
@@ -63,7 +63,7 @@ Windows (no Mac required):
 
 1. PROTO-001 remaining freeze extras if needed, then BRIDGE-005 WebSocket
 2. BRIDGE-006 pairing store on disk
-3. BRIDGE-003 iRacing mmap (own reader, BSD header notice)
+3. BRIDGE-003 iRacing mmap (wire `SessionLifecycleTracker` on normalized ticks)
 4. ANALYTICS-003 HR by lap and event windows
 
 Mac (unblocks Watch/iOS):
