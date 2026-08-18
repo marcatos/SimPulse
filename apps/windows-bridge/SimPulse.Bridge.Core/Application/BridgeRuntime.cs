@@ -46,11 +46,8 @@ public sealed class BridgeRuntime
         if (!available)
         {
             _logger.LogWarning(
-                "No simulator source available. Fixture path unset and iRacing mmap not open. ElapsedMs={ElapsedMs}",
+                "No simulator source available yet. Subscribing so the adapter can detect it later. ElapsedMs={ElapsedMs}",
                 total.ElapsedMilliseconds);
-            await WaitUntilCancelled(cancellationToken);
-            _logger.LogInformation("Bridge runtime idle-stop after {ElapsedMs} ms", total.ElapsedMilliseconds);
-            return;
         }
 
         int updates = 0;
@@ -114,16 +111,5 @@ public sealed class BridgeRuntime
             raceEvent.SimulatorSessionId,
             raceEvent.Type,
             started.ElapsedMilliseconds);
-    }
-
-    private static async Task WaitUntilCancelled(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
     }
 }

@@ -4,8 +4,8 @@ namespace SimPulse.Bridge.Core.Tests;
 
 internal sealed class FakeIracingSharedMemory : IIracingSharedMemory
 {
-    private readonly bool _canOpen;
-    private readonly IracingMemorySnapshot? _repeating;
+    private bool _canOpen;
+    private IracingMemorySnapshot? _repeating;
     private readonly Queue<IracingMemorySnapshot>? _sequence;
 
     public FakeIracingSharedMemory(bool open, string? yaml = null, bool connected = true)
@@ -21,6 +21,12 @@ internal sealed class FakeIracingSharedMemory : IIracingSharedMemory
     {
         _canOpen = open;
         _sequence = new Queue<IracingMemorySnapshot>(sequence);
+    }
+
+    public void BecomeAvailable(string yaml, bool connected = true)
+    {
+        _canOpen = true;
+        _repeating = new IracingMemorySnapshot(yaml, connected);
     }
 
     public bool TryOpen()
