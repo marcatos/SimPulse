@@ -35,3 +35,8 @@ Do not hide defects because they are outside the current task.
 
 - **Symptoms:** Free/Premium/Pro gates exist as functions; StoreKit is absent; UI does not enforce limits.
 - **Related:** ADR 0008, IOS-010
+
+## ANALYTICS-002 — RaceReport (2026-08-18)
+
+- **Status:** No known defects introduced.
+- **Note:** `RaceReport` and `RaceReportBuilder.FromDriverSession` use `DataPresence` / `OptionalValue<T>` for missing fields (simulator metadata, positions, peak-HR event association). `PeakHeartRateAssociatedEvent` remains `Unavailable` when `TimelineOffset` is not available — intentional per ADR 0004, not a defect.
