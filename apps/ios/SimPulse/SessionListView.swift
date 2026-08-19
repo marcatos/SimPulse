@@ -44,15 +44,10 @@ struct SessionListView: View {
                             .padding(.vertical, 2)
                         }
                     }
-                    .navigationDestination(for: String.self) { id in
-                        SessionDetailView(
-                            model: SessionDetailViewModel(
-                                sessionId: id,
-                                repository: model.sessionsRepository
-                            )
-                        )
-                    }
                 }
+            }
+            .navigationDestination(for: String.self) { id in
+                SessionDetailView(sessionId: id, repository: model.sessionsRepository)
             }
             .navigationTitle("Sessions")
             .task {

@@ -2,7 +2,13 @@ import Charts
 import SwiftUI
 
 struct SessionDetailView: View {
-    @ObservedObject var model: SessionDetailViewModel
+    @StateObject private var model: SessionDetailViewModel
+
+    init(sessionId: String, repository: SessionRepository) {
+        _model = StateObject(
+            wrappedValue: SessionDetailViewModel(sessionId: sessionId, repository: repository)
+        )
+    }
 
     var body: some View {
         Group {
@@ -69,12 +75,7 @@ struct SessionDetailView: View {
 
 #Preview("Mock detail") {
     NavigationStack {
-        SessionDetailView(
-            model: SessionDetailViewModel(
-                sessionId: "mock-1",
-                repository: MockSessionRepository()
-            )
-        )
+        SessionDetailView(sessionId: "mock-1", repository: MockSessionRepository())
     }
 }
 
@@ -103,8 +104,6 @@ struct SessionDetailView: View {
         detailsById: ["empty-hr": emptyDetail]
     )
     return NavigationStack {
-        SessionDetailView(
-            model: SessionDetailViewModel(sessionId: "empty-hr", repository: repo)
-        )
+        SessionDetailView(sessionId: "empty-hr", repository: repo)
     }
 }
