@@ -73,6 +73,8 @@ The Bridge listens on `wss://127.0.0.1:8742/ws/` by default. On first TLS startu
 
 At Information level, startup logs include `TlsEnabled=true` and `TlsCertSha256=<fingerprint>`. The fingerprint is lowercase SHA-256 of the certificate DER, without colons. Clients must pin this exact value and reject a mismatch; the future IOS-005 pairing client will implement that client-side check.
 
+After pairing, clients must persist `pairing.accept.reconnectToken` in secure credential storage (iOS Keychain for IOS-005) and send it as `hello.reconnectToken` on every reconnect; clients without a token must pair again.
+
 TLS is enabled when `SIMPULSE_BRIDGE_TLS` is unset, empty, `1`, or any value except the explicit cleartext values `0`, `false`, and `off` (case-insensitive). Cleartext is for local diagnostics only:
 
 ```powershell

@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
+using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
 
 namespace SimPulse.Bridge.Core.Adapters;
@@ -39,13 +40,21 @@ public sealed class JsonFileTrustedDeviceStore : ITrustedDeviceStore
         }
     }
 
-    public Task TrustAsync(string deviceId, DateTimeOffset trustedAtUtc, CancellationToken cancellationToken)
+    public Task TrustAsync(
+        string deviceId,
+        DateTimeOffset trustedAtUtc,
+        string reconnectTokenSha256,
+        CancellationToken cancellationToken)
     {
         return MutateAsync(
             devices =>
             {
                 devices.RemoveAll(d => string.Equals(d.DeviceId, deviceId, StringComparison.Ordinal));
-                devices.Add(new TrustedDevice(deviceId, trustedAtUtc, Revoked: false));
+                devices.Add(new TrustedDevice(
+                    deviceId,
+                    trustedAtUtc,
+                    Revoked: false,
+                    reconnectTokenSha256));
             },
             "Trust",
             cancellationToken);
@@ -66,10 +75,17 @@ public sealed class JsonFileTrustedDeviceStore : ITrustedDeviceStore
             cancellationToken);
     }
 
-    public async Task<bool> IsTrustedAsync(string deviceId, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizeReconnectAsync(
+        string deviceId,
+        string? reconnectTokenHex,
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<TrustedDevice> devices = await ListAsync(cancellationToken);
-        return devices.Any(d => string.Equals(d.DeviceId, deviceId, StringComparison.Ordinal) && !d.Revoked);
+        TrustedDevice? device = devices.FirstOrDefault(
+            d => string.Equals(d.DeviceId, deviceId, StringComparison.Ordinal));
+        return device is not null
+            && !device.Revoked
+            && ReconnectToken.MatchesStoredHash(device.ReconnectTokenSha256, reconnectTokenHex);
     }
 
     private async Task MutateAsync(

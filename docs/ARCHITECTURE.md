@@ -67,7 +67,7 @@ See [ADR 0003](adr/0003-bridge-protocol.md).
 | --- | --- | --- |
 | HealthKit | Authoritative workout samples | On-device, Apple-managed |
 | SwiftData (planned) | SimPulse session metadata, correlation, reports | iPhone app container |
-| Bridge trusted-device file | Paired device IDs, not biometrics | User-selected local path |
+| Bridge trusted-device file | Paired device IDs plus SHA-256 of the per-device reconnect token; no biometrics, no plaintext token | User-selected local path |
 | Bridge does not store HR samples | — | — |
 
 See [ADR 0002](adr/0002-ios-storage.md).

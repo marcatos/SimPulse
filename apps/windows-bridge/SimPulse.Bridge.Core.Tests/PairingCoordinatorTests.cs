@@ -23,7 +23,7 @@ public sealed class PairingCoordinatorTests
         await harness.Coordinator.HandleAsync(connection, request, CancellationToken.None);
 
         Assert.False(connection.IsTrusted);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync("phone-1", null, CancellationToken.None));
         Assert.Single(connection.Sent);
         MessageEnvelope sent = EnvelopeCodec.Deserialize(connection.Sent[0]);
         Assert.Equal(MessageTypes.PairingReject, sent.Type);
@@ -42,30 +42,79 @@ public sealed class PairingCoordinatorTests
         await harness.Coordinator.HandleAsync(connection, request, CancellationToken.None);
 
         Assert.True(connection.IsTrusted);
-        Assert.True(await harness.Store.IsTrustedAsync("phone-1", CancellationToken.None));
         Assert.Single(connection.Sent);
         MessageEnvelope sent = EnvelopeCodec.Deserialize(connection.Sent[0]);
         Assert.Equal(MessageTypes.PairingAccept, sent.Type);
         Assert.True(EnvelopeCodec.TryReadPayload(sent, out PairingAcceptMessage? accept));
         Assert.Equal("phone-1", accept!.DeviceId);
         Assert.Equal(TrustedAt, accept.TrustedAtUtc);
+        Assert.Equal(64, accept.ReconnectToken.Length);
+        Assert.Equal(accept.ReconnectToken, accept.ReconnectToken.ToLowerInvariant());
+        Assert.True(await harness.Store.AuthorizeReconnectAsync(
+            "phone-1",
+            accept.ReconnectToken,
+            CancellationToken.None));
+        TrustedDevice stored = Assert.Single(await harness.Store.ListAsync(CancellationToken.None));
+        Assert.NotEqual(accept.ReconnectToken, stored.ReconnectTokenSha256);
+        Assert.Equal(64, stored.ReconnectTokenSha256!.Length);
     }
 
     [Fact]
-    public async Task Already_trusted_hello_sets_trusted_without_pin()
+    public async Task Hello_with_reconnect_token_sets_trusted_without_pin()
     {
         PairingHarness harness = CreateHarness();
-        await harness.Store.TrustAsync("phone-known", TrustedAt, CancellationToken.None);
-        FakeClientConnection connection = new();
+        FakeClientConnection paired = new() { DeviceId = "phone-known" };
+        await harness.Coordinator.HandleAsync(paired, PairingEnvelope("phone-known", FixedPin), CancellationToken.None);
+        Assert.True(EnvelopeCodec.TryReadPayload(
+            EnvelopeCodec.Deserialize(paired.Sent[0]),
+            out PairingAcceptMessage? accept));
+        string token = accept!.ReconnectToken;
+        Assert.Equal(64, token.Length);
+
+        FakeClientConnection reconnection = new();
+        HelloMessage hello = new("SimPulse", "phone", "phone-known", token);
+        await harness.Coordinator.HandleAsync(
+            reconnection,
+            EnvelopeCodec.Deserialize(EnvelopeCodec.Serialize(MessageTypes.Hello, hello, TrustedAt, "hello-1")),
+            CancellationToken.None);
+
+        Assert.True(reconnection.IsTrusted);
+        Assert.Empty(reconnection.Sent);
+    }
+
+    [Fact]
+    public async Task Hello_device_id_only_does_not_trust_after_pair()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection paired = new() { DeviceId = "phone-known" };
+        await harness.Coordinator.HandleAsync(paired, PairingEnvelope("phone-known", FixedPin), CancellationToken.None);
+
+        FakeClientConnection reconnection = new();
         HelloMessage hello = new("SimPulse", "phone", "phone-known");
-        MessageEnvelope envelope = EnvelopeCodec.Deserialize(
-            EnvelopeCodec.Serialize(MessageTypes.Hello, hello, TrustedAt, "hello-1"));
+        await harness.Coordinator.HandleAsync(
+            reconnection,
+            EnvelopeCodec.Deserialize(EnvelopeCodec.Serialize(MessageTypes.Hello, hello, TrustedAt, "hello-2")),
+            CancellationToken.None);
 
-        await harness.Coordinator.HandleAsync(connection, envelope, CancellationToken.None);
+        Assert.False(reconnection.IsTrusted);
+    }
 
-        Assert.Equal("phone-known", connection.DeviceId);
-        Assert.True(connection.IsTrusted);
-        Assert.Empty(connection.Sent);
+    [Fact]
+    public async Task Hello_wrong_token_does_not_trust()
+    {
+        PairingHarness harness = CreateHarness();
+        FakeClientConnection paired = new() { DeviceId = "phone-known" };
+        await harness.Coordinator.HandleAsync(paired, PairingEnvelope("phone-known", FixedPin), CancellationToken.None);
+
+        string wrongToken = ReconnectToken.ToHex(Enumerable.Repeat((byte)0x44, 32).ToArray());
+        FakeClientConnection reconnection = new();
+        HelloMessage hello = new("SimPulse", "phone", "phone-known", wrongToken);
+        await harness.Coordinator.HandleAsync(
+            reconnection,
+            EnvelopeCodec.Deserialize(EnvelopeCodec.Serialize(MessageTypes.Hello, hello, TrustedAt, "hello-3")),
+            CancellationToken.None);
+
+        Assert.False(reconnection.IsTrusted);
     }
 
     [Fact]
@@ -81,7 +130,7 @@ public sealed class PairingCoordinatorTests
 
         Assert.Equal("phone-unknown", connection.DeviceId);
         Assert.False(connection.IsTrusted);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-unknown", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync("phone-unknown", null, CancellationToken.None));
         Assert.Empty(connection.Sent);
     }
 
@@ -124,12 +173,18 @@ public sealed class PairingCoordinatorTests
             connection,
             PairingEnvelope("phone-1", FixedPin),
             CancellationToken.None);
+        Assert.True(EnvelopeCodec.TryReadPayload(
+            EnvelopeCodec.Deserialize(connection.Sent[0]),
+            out PairingAcceptMessage? accept));
         connection.Sent.Clear();
 
         await harness.Coordinator.RevokeAsync("phone-1", CancellationToken.None);
 
         Assert.False(connection.IsTrusted);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync(
+            "phone-1",
+            accept!.ReconnectToken,
+            CancellationToken.None));
 
         await hub.BroadcastToTrustedAsync("{\"type\":\"simulator.race-event\"}", CancellationToken.None);
         Assert.Empty(connection.Sent);
@@ -147,6 +202,9 @@ public sealed class PairingCoordinatorTests
             CancellationToken.None);
         Assert.True(harness.Coordinator.IsRegistered(connection));
         Assert.True(connection.IsTrusted);
+        Assert.True(EnvelopeCodec.TryReadPayload(
+            EnvelopeCodec.Deserialize(connection.Sent[0]),
+            out PairingAcceptMessage? accept));
         connection.Sent.Clear();
 
         harness.Coordinator.Unregister(connection);
@@ -156,7 +214,10 @@ public sealed class PairingCoordinatorTests
 
         Assert.True(connection.IsTrusted);
         Assert.Empty(connection.Sent);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-gone", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync(
+            "phone-gone",
+            accept!.ReconnectToken,
+            CancellationToken.None));
     }
 
     [Fact]
@@ -168,7 +229,7 @@ public sealed class PairingCoordinatorTests
         await harness.Coordinator.HandleAsync(connection, PairingEnvelope("phone-1", FixedPin), CancellationToken.None);
 
         Assert.False(connection.IsTrusted);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync("phone-1", null, CancellationToken.None));
         AssertReject(connection, "phone-1", PairingCoordinator.WindowClosedReason);
     }
 
@@ -207,7 +268,7 @@ public sealed class PairingCoordinatorTests
             CancellationToken.None);
 
         Assert.False(locked.IsTrusted);
-        Assert.False(await harness.Store.IsTrustedAsync("phone-late", CancellationToken.None));
+        Assert.False(await harness.Store.AuthorizeReconnectAsync("phone-late", null, CancellationToken.None));
         AssertReject(locked, "phone-late", PairingCoordinator.TooManyAttemptsReason);
     }
 
@@ -229,7 +290,13 @@ public sealed class PairingCoordinatorTests
         FakeClientConnection third = new() { DeviceId = "phone-3" };
         await harness.Coordinator.HandleAsync(third, PairingEnvelope("phone-3", FixedPin), CancellationToken.None);
         Assert.True(third.IsTrusted);
-        Assert.True(await harness.Store.IsTrustedAsync("phone-3", CancellationToken.None));
+        Assert.True(EnvelopeCodec.TryReadPayload(
+            EnvelopeCodec.Deserialize(third.Sent[0]),
+            out PairingAcceptMessage? accept));
+        Assert.True(await harness.Store.AuthorizeReconnectAsync(
+            "phone-3",
+            accept!.ReconnectToken,
+            CancellationToken.None));
     }
 
     [Fact]
@@ -283,10 +350,14 @@ public sealed class PairingCoordinatorTests
         coordinator.BeginPairingWindow();
         logger.Entries.Clear();
 
+        FakeClientConnection accepted = new() { DeviceId = "phone-ok" };
         await coordinator.HandleAsync(
-            new FakeClientConnection { DeviceId = "phone-ok" },
+            accepted,
             PairingEnvelope("phone-ok", FixedPin),
             CancellationToken.None);
+        Assert.True(EnvelopeCodec.TryReadPayload(
+            EnvelopeCodec.Deserialize(accepted.Sent[0]),
+            out PairingAcceptMessage? accept));
         await coordinator.HandleAsync(
             new FakeClientConnection { DeviceId = "phone-bad" },
             PairingEnvelope("phone-bad", "000000"),
@@ -295,6 +366,9 @@ public sealed class PairingCoordinatorTests
         Assert.DoesNotContain(
             logger.Entries,
             e => e.Message.Contains(FixedPin, StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            logger.Entries,
+            e => e.Message.Contains(accept!.ReconnectToken, StringComparison.Ordinal));
     }
 
     [Fact]

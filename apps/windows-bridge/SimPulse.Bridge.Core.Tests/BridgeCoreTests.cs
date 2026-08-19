@@ -45,13 +45,16 @@ public sealed class TrustedDeviceStoreTests
     {
         InMemoryTrustedDeviceStore store = new();
         DateTimeOffset at = DateTimeOffset.Parse("2026-08-18T08:00:00Z");
+        byte[] raw = Enumerable.Repeat((byte)0x33, 32).ToArray();
+        string tokenHex = ReconnectToken.ToHex(raw);
+        string hash = ReconnectToken.Sha256Hex(raw);
 
-        await store.TrustAsync("iphone-1", at, CancellationToken.None);
-        await store.TrustAsync("iphone-1", at, CancellationToken.None);
-        Assert.True(await store.IsTrustedAsync("iphone-1", CancellationToken.None));
+        await store.TrustAsync("iphone-1", at, hash, CancellationToken.None);
+        await store.TrustAsync("iphone-1", at, hash, CancellationToken.None);
+        Assert.True(await store.AuthorizeReconnectAsync("iphone-1", tokenHex, CancellationToken.None));
 
         await store.RevokeAsync("iphone-1", CancellationToken.None);
-        Assert.False(await store.IsTrustedAsync("iphone-1", CancellationToken.None));
+        Assert.False(await store.AuthorizeReconnectAsync("iphone-1", tokenHex, CancellationToken.None));
     }
 }
 

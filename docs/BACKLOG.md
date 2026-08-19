@@ -193,7 +193,8 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Priority:** P0
 - **Status:** BLOCKED
 - **Dependencies:** PROTO-001, BRIDGE-006, Xcode
-- **Acceptance criteria:** Manual IP/PIN pairing; persist trusted Bridge identity; revoke.
+- **Acceptance criteria:** Manual IP/PIN pairing; persist trusted Bridge identity; revoke; surface a connected-but-untrusted session as re-pair required.
+- **Notes:** ADR 0014 client contract: persist `pairing.accept.reconnectToken` in Keychain (not UserDefaults), include it in every `hello`, and require a new PIN pair when no token exists or the Bridge silently rejects it. Certificate pin enforcement from ADR 0013 remains part of this item.
 
 ### IOS-006 — Receive simulator session and correlate
 
@@ -271,7 +272,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** BRIDGE-005, SECURITY.md
 - **Acceptance criteria:** PIN pairing, persist device id, revoke, unpaired clients get no telemetry.
-- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` runs at Bridge host start and again from **Pair new device** via `TrayPairingPresenter` (BRIDGE-007). Reconnect trust remains DeviceId-only with no per-device secret (KI-006); Bridge TLS is now default, while IOS-005 pin enforcement is pending. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens.
+- **Notes:** Six-digit CSPRNG PIN (not persisted). `BeginPairingWindow()` runs at Bridge host start and again from **Pair new device** via `TrayPairingPresenter` (BRIDGE-007). ADR 0014 mitigates KI-006: pairing issues a random 32-byte reconnect token, the Bridge stores only SHA-256 of its raw bytes, and hello requires DeviceId plus token. Legacy rows without a hash must re-pair. Bridge TLS is default; IOS-005 must pin the certificate and keep the token in Keychain. `JsonFileTrustedDeviceStore` when `SIMPULSE_TRUSTED_DEVICES_PATH` is set; otherwise in-memory. PIN logged at Information when the window opens; reconnect tokens and hashes are never logged.
 
 ### BUG-001 — Pre-merge iRacing mmap review fixes
 

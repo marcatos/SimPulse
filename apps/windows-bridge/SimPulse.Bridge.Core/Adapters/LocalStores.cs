@@ -1,3 +1,4 @@
+using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
 
 namespace SimPulse.Bridge.Core.Adapters;
@@ -16,9 +17,17 @@ public sealed class InMemoryTrustedDeviceStore : ITrustedDeviceStore
         return Task.FromResult<IReadOnlyList<TrustedDevice>>(_devices.Values.ToArray());
     }
 
-    public Task TrustAsync(string deviceId, DateTimeOffset trustedAtUtc, CancellationToken cancellationToken)
+    public Task TrustAsync(
+        string deviceId,
+        DateTimeOffset trustedAtUtc,
+        string reconnectTokenSha256,
+        CancellationToken cancellationToken)
     {
-        _devices[deviceId] = new TrustedDevice(deviceId, trustedAtUtc, Revoked: false);
+        _devices[deviceId] = new TrustedDevice(
+            deviceId,
+            trustedAtUtc,
+            Revoked: false,
+            reconnectTokenSha256);
         return Task.CompletedTask;
     }
 
@@ -32,9 +41,14 @@ public sealed class InMemoryTrustedDeviceStore : ITrustedDeviceStore
         return Task.CompletedTask;
     }
 
-    public Task<bool> IsTrustedAsync(string deviceId, CancellationToken cancellationToken)
+    public Task<bool> AuthorizeReconnectAsync(
+        string deviceId,
+        string? reconnectTokenHex,
+        CancellationToken cancellationToken)
     {
-        bool trusted = _devices.TryGetValue(deviceId, out TrustedDevice? device) && !device.Revoked;
+        bool trusted = _devices.TryGetValue(deviceId, out TrustedDevice? device)
+            && !device.Revoked
+            && ReconnectToken.MatchesStoredHash(device.ReconnectTokenSha256, reconnectTokenHex);
         return Task.FromResult(trusted);
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 using Microsoft.Extensions.Logging;
 
@@ -147,14 +148,14 @@ public sealed class PairingCoordinator
         }
 
         connection.DeviceId = hello.DeviceId;
-        connection.IsTrusted = await _store.IsTrustedAsync(hello.DeviceId, cancellationToken);
-        if (connection.IsTrusted)
-        {
-            _logger.LogInformation("Hello trust evaluated. Trusted={Trusted}", connection.IsTrusted);
-            return;
-        }
-
-        _logger.LogDebug("Hello trust evaluated. Trusted={Trusted}", connection.IsTrusted);
+        connection.IsTrusted = await _store.AuthorizeReconnectAsync(
+            hello.DeviceId,
+            hello.ReconnectToken,
+            cancellationToken);
+        _logger.LogInformation(
+            "Hello trust evaluated. Trusted={Trusted} TokenPresent={TokenPresent}",
+            connection.IsTrusted,
+            !string.IsNullOrEmpty(hello.ReconnectToken));
     }
 
     private async Task HandlePairingRequestAsync(
@@ -181,12 +182,25 @@ public sealed class PairingCoordinator
         }
 
         DateTimeOffset trustedAt = _clock.UtcNow;
-        await _store.TrustAsync(request.DeviceId, trustedAt, cancellationToken);
+        byte[] raw = ReconnectToken.CreateRaw();
+        string tokenHex;
+        string tokenSha256;
+        try
+        {
+            tokenHex = ReconnectToken.ToHex(raw);
+            tokenSha256 = ReconnectToken.Sha256Hex(raw);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(raw);
+        }
+
+        await _store.TrustAsync(request.DeviceId, trustedAt, tokenSha256, cancellationToken);
         connection.IsTrusted = true;
         await SendAsync(
             connection,
             MessageTypes.PairingAccept,
-            new PairingAcceptMessage(request.DeviceId, trustedAt),
+            new PairingAcceptMessage(request.DeviceId, trustedAt, tokenHex),
             cancellationToken);
         _logger.LogInformation("Pairing accepted. Trusted={Trusted}", connection.IsTrusted);
     }

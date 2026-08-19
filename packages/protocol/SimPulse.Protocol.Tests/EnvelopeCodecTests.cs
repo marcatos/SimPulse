@@ -19,6 +19,56 @@ public sealed class EnvelopeCodecTests
     }
 
     [Fact]
+    public void Round_trips_hello_reconnect_token()
+    {
+        DateTimeOffset sent = DateTimeOffset.Parse("2026-08-18T08:00:00Z");
+        HelloMessage hello = new("SimPulse", "phone", "phone-1", "ab".PadRight(64, 'c'));
+
+        string json = EnvelopeCodec.Serialize(MessageTypes.Hello, hello, sent, "hello-token");
+        Assert.Contains("reconnectToken", json, StringComparison.Ordinal);
+
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out HelloMessage? restored));
+        Assert.Equal(hello.DeviceId, restored!.DeviceId);
+        Assert.Equal(hello.ReconnectToken, restored.ReconnectToken);
+    }
+
+    [Fact]
+    public void Hello_without_reconnect_token_deserializes_null()
+    {
+        const string json = """
+            {
+              "protocolVersion": 1,
+              "type": "hello",
+              "messageId": "abc",
+              "sentAtUtc": "2026-08-18T08:00:00Z",
+              "payload": { "product": "SimPulse", "role": "phone", "deviceId": "phone-1" }
+            }
+            """;
+
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out HelloMessage? hello));
+        Assert.Equal("phone-1", hello!.DeviceId);
+        Assert.Null(hello.ReconnectToken);
+    }
+
+    [Fact]
+    public void Round_trips_pairing_accept_reconnect_token()
+    {
+        DateTimeOffset sent = DateTimeOffset.Parse("2026-08-18T08:00:00Z");
+        PairingAcceptMessage accept = new("phone-1", sent, "ab".PadRight(64, 'd'));
+
+        string json = EnvelopeCodec.Serialize(MessageTypes.PairingAccept, accept, sent, "acc1");
+        Assert.Contains("reconnectToken", json, StringComparison.Ordinal);
+
+        MessageEnvelope envelope = EnvelopeCodec.Deserialize(json);
+        Assert.True(EnvelopeCodec.TryReadPayload(envelope, out PairingAcceptMessage? restored));
+        Assert.Equal("phone-1", restored!.DeviceId);
+        Assert.Equal(64, restored.ReconnectToken.Length);
+        Assert.Equal(accept.ReconnectToken, restored.ReconnectToken);
+    }
+
+    [Fact]
     public void Ignores_unknown_json_fields()
     {
         const string json = """

@@ -1,10 +1,17 @@
 namespace SimPulse.Protocol;
 
-public sealed record HelloMessage(string Product, string Role, string DeviceId);
+public sealed record HelloMessage(
+    string Product,
+    string Role,
+    string DeviceId,
+    string? ReconnectToken = null);
 
 public sealed record PairingRequestMessage(string DeviceId, string Pin);
 
-public sealed record PairingAcceptMessage(string DeviceId, DateTimeOffset TrustedAtUtc);
+public sealed record PairingAcceptMessage(
+    string DeviceId,
+    DateTimeOffset TrustedAtUtc,
+    string ReconnectToken);
 
 public sealed record PairingRejectMessage(string DeviceId, string Reason);
 
