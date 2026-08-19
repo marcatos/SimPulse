@@ -171,9 +171,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** BLOCKED
+- **Status:** IN_PROGRESS
 - **Dependencies:** Xcode
 - **Acceptance criteria:** Minimum read/write types; usage strings; denial is a documented empty state.
+- **Notes:** Branch `feat/ios-003-healthkit-permissions`. Design + plan in `docs/superpowers/`. Plane work item In Progress.
 
 ### IOS-004 — WatchConnectivity ingest
 
