@@ -119,7 +119,7 @@ public sealed class FileBridgeCertificateSource : IBridgeCertificateSource
         return new X509Certificate2(
             path,
             password,
-            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.EphemeralKeySet);
+            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet);
     }
 
     private X509Certificate2 CreateAndPersist(string path)
@@ -159,7 +159,7 @@ public sealed class FileBridgeCertificateSource : IBridgeCertificateSource
         return new X509Certificate2(
             pfxBytes,
             password,
-            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.EphemeralKeySet);
+            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet);
     }
 
     private static string ComputeFingerprintHex(X509Certificate2 certificate)
