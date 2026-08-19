@@ -144,9 +144,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** BLOCKED
-- **Dependencies:** WATCH-001, IOS-004
+- **Status:** IN_PROGRESS
+- **Dependencies:** WATCH-001
 - **Acceptance criteria:** Workout saved in HealthKit; summary queued if iPhone absent; delivered later.
+- **Notes:** Paired slice with IOS-004 on `feat/watch-ios-sync-summary`. Design: `docs/superpowers/specs/2026-08-19-watch-ios-summary-sync-design.md`. IOS-004 ingest is same-branch delivery, not a prerequisite blocker.
 
 ## iOS
 
@@ -181,9 +182,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** BLOCKED
-- **Dependencies:** WATCH-003
+- **Status:** IN_PROGRESS
+- **Dependencies:** WATCH-003 (summary wire contract; paired delivery)
 - **Acceptance criteria:** Idempotent merge by session ID.
+- **Notes:** Paired slice with WATCH-003 on `feat/watch-ios-sync-summary`. Implement ingest against the shared `WatchWorkoutSummaryMessage` contract; no need to wait for Watch shipping first.
 
 ### IOS-005 — Bridge pairing client
 
@@ -371,7 +373,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 PROTO-001  →  BRIDGE-005, IOS-005, PROTO-003
 PROTO-002  →  IOS-006
 WATCH-001  →  WATCH-002, WATCH-003
-WATCH-003  →  IOS-004
+WATCH-003 ↔ IOS-004  (paired summary sync; same branch)
 IOS-001    →  IOS-002
 IOS-005    →  IOS-006
 BRIDGE-003 or BRIDGE-002 → BRIDGE-004
