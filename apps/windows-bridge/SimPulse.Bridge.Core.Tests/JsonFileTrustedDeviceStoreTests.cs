@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 
 using SimPulse.Bridge.Core.Adapters;
+using SimPulse.Bridge.Core.Application;
 using SimPulse.Bridge.Core.Ports;
 
 namespace SimPulse.Bridge.Core.Tests;
@@ -12,18 +13,27 @@ public sealed class JsonFileTrustedDeviceStoreTests
     {
         using TempStoreFile file = new();
         DateTimeOffset trustedAt = DateTimeOffset.Parse("2026-08-18T10:00:00Z");
+        byte[] raw = Enumerable.Repeat((byte)0x11, 32).ToArray();
+        string tokenHex = ReconnectToken.ToHex(raw);
+        string hash = ReconnectToken.Sha256Hex(raw);
 
         JsonFileTrustedDeviceStore first = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
-        await first.TrustAsync("phone-1", trustedAt, CancellationToken.None);
-        Assert.True(await first.IsTrustedAsync("phone-1", CancellationToken.None));
+        await first.TrustAsync("phone-1", trustedAt, hash, CancellationToken.None);
+        Assert.True(await first.AuthorizeReconnectAsync("phone-1", tokenHex, CancellationToken.None));
 
         JsonFileTrustedDeviceStore reloaded = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
-        Assert.True(await reloaded.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.True(await reloaded.AuthorizeReconnectAsync("phone-1", tokenHex, CancellationToken.None));
         IReadOnlyList<TrustedDevice> listed = await reloaded.ListAsync(CancellationToken.None);
         Assert.Single(listed);
         Assert.Equal("phone-1", listed[0].DeviceId);
         Assert.Equal(trustedAt, listed[0].TrustedAtUtc);
         Assert.False(listed[0].Revoked);
+        Assert.Equal(hash, listed[0].ReconnectTokenSha256);
+
+        string persisted = File.ReadAllText(file.Path);
+        Assert.Contains("\"reconnectTokenSha256\"", persisted, StringComparison.Ordinal);
+        Assert.Contains(hash, persisted, StringComparison.Ordinal);
+        Assert.DoesNotContain(tokenHex, persisted, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -31,14 +41,17 @@ public sealed class JsonFileTrustedDeviceStoreTests
     {
         using TempStoreFile file = new();
         DateTimeOffset trustedAt = DateTimeOffset.Parse("2026-08-18T10:00:00Z");
+        byte[] raw = Enumerable.Repeat((byte)0x22, 32).ToArray();
+        string tokenHex = ReconnectToken.ToHex(raw);
+        string hash = ReconnectToken.Sha256Hex(raw);
 
         JsonFileTrustedDeviceStore first = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
-        await first.TrustAsync("phone-1", trustedAt, CancellationToken.None);
+        await first.TrustAsync("phone-1", trustedAt, hash, CancellationToken.None);
         await first.RevokeAsync("phone-1", CancellationToken.None);
-        Assert.False(await first.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.False(await first.AuthorizeReconnectAsync("phone-1", tokenHex, CancellationToken.None));
 
         JsonFileTrustedDeviceStore reloaded = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
-        Assert.False(await reloaded.IsTrustedAsync("phone-1", CancellationToken.None));
+        Assert.False(await reloaded.AuthorizeReconnectAsync("phone-1", tokenHex, CancellationToken.None));
         IReadOnlyList<TrustedDevice> listed = await reloaded.ListAsync(CancellationToken.None);
         Assert.True(listed[0].Revoked);
     }
@@ -50,8 +63,20 @@ public sealed class JsonFileTrustedDeviceStoreTests
         File.Delete(file.Path);
 
         JsonFileTrustedDeviceStore store = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
-        Assert.False(await store.IsTrustedAsync("missing", CancellationToken.None));
+        Assert.False(await store.AuthorizeReconnectAsync("missing", null, CancellationToken.None));
         Assert.Empty(await store.ListAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Legacy_json_without_hash_is_not_authorized()
+    {
+        using TempStoreFile file = new();
+        File.WriteAllText(file.Path, """
+            [{"deviceId":"phone-old","trustedAtUtc":"2026-08-18T10:00:00+00:00","revoked":false}]
+            """);
+        JsonFileTrustedDeviceStore store = new(file.Path, NullLogger<JsonFileTrustedDeviceStore>.Instance);
+        string anyToken = ReconnectToken.ToHex(Enumerable.Repeat((byte)0x22, 32).ToArray());
+        Assert.False(await store.AuthorizeReconnectAsync("phone-old", anyToken, CancellationToken.None));
     }
 
     private sealed class TempStoreFile : IDisposable
