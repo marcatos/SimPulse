@@ -36,7 +36,6 @@ final class MockHealthAuthorization: HealthAuthorization, @unchecked Sendable {
             return
         }
         if let throwOnRequest {
-            prompted = true
             throw throwOnRequest
         }
         prompted = true

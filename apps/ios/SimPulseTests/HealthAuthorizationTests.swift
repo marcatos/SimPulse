@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class HealthAuthorizationTests: XCTestCase {
-    func testLoadRequestsAccessOnlyOnce() async {
+    func testLoadCallsAuthorizationPortOnEveryLoad() async {
         let auth = MockHealthAuthorization(hasPrompted: false)
         let model = SessionListViewModel(
             repository: MockSessionRepository(sessions: []),
@@ -15,9 +15,6 @@ final class HealthAuthorizationTests: XCTestCase {
 
         XCTAssertEqual(auth.requestCallCount, 2)
         XCTAssertTrue(auth.hasPrompted)
-        // Mock increments every call; ViewModel must still call requestAccessIfNeeded each load,
-        // and the mock/live adapter no-ops the HealthKit sheet when hasPrompted.
-        // Strengthen: use a mock that only increments when !hasPrompted:
     }
 
     func testLoadRequestsHealthKitSheetOnlyWhileNotPrompted() async {
@@ -71,7 +68,7 @@ final class HealthAuthorizationTests: XCTestCase {
 
         await model.load()
 
-        XCTAssertTrue(auth.hasPrompted)
+        XCTAssertFalse(auth.hasPrompted)
         XCTAssertEqual(model.emptyReason, .needsHealthAccess)
         XCTAssertTrue(model.sessions.isEmpty)
     }

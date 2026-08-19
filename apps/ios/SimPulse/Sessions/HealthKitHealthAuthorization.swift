@@ -57,8 +57,7 @@ final class HealthKitHealthAuthorization: HealthAuthorization, @unchecked Sendab
             defaults.set(true, forKey: Self.promptedDefaultsKey)
             log.info("healthkit authorization prompt completed")
         } catch {
-            defaults.set(true, forKey: Self.promptedDefaultsKey)
-            log.error("healthkit authorization failed: \(error.localizedDescription, privacy: .public)")
+            log.info("healthkit authorization failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
         #else
