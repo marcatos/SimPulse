@@ -22,19 +22,19 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 - DOCS-002: public GitHub README (product story, honest status, Watch screenshots). Merged [PR #7](https://github.com/marcatos/SimPulse/pull/7).
 - IOS-001: session list from `SessionRepository` (Mock + HealthKit); ADR 0002 Accepted (SwiftData deferred). Merged [PR #8](https://github.com/marcatos/SimPulse/pull/8).
 - IOS-003: HealthKit permissions — hybrid auth UX, iOS entitlement, Settings empty state. Merged [PR #9](https://github.com/marcatos/SimPulse/pull/9).
+- IOS-002: session detail + Swift Charts HR line. Merged [PR #10](https://github.com/marcatos/SimPulse/pull/10).
 - GitHub Actions CI (INFRA-002 DONE). Apple CI placeholder (INFRA-003 DONE).
 
 ## Partially completed features
 
-- **IOS-002:** session detail + Swift Charts HR line on branch `feat/ios-002-session-detail` (Mac **24 tests passed**; pending PR/merge).
+- **WATCH-003 + IOS-004:** WatchConnectivity workout summary sync (file outbox, WC transfer/ingest, idempotent merge, session list refresh) on branch `feat/watch-ios-sync-summary` (Mac **31 tests passed**; pending PR/merge). Screenshots **N/A** — sync-only; no user-visible UI chrome delta per `.cursor/rules/apple-screenshots.mdc`.
 - Protocol: loopback WebSocket + PIN pairing. TLS remaining (KI-003).
 - iRacing live path (KI-002): adapters tested with synthetic buffers only.
 - Entitlements: `CapabilityGate` only (KI-004).
-- Watch UI: glance/Always On shipped (WATCH-002). HealthKit persist/sync to iPhone is WATCH-003.
 
 ## Active work
 
-- None on `main`. IOS-002 implementation complete on `feat/ios-002-session-detail`; awaiting PR/merge.
+- `feat/watch-ios-sync-summary` — WATCH-003 + IOS-004 implementation complete; awaiting PR/merge.
 
 ## Blocked work
 
@@ -49,7 +49,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Latest successful build
 
 - **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — 129 passed (2026-08-18, Windows). No live iRacing.
-- **iOS / watchOS (simpulse-mac, Xcode 26.6):** `xcodebuild test` scheme SimPulse iPhone 17 — **TEST SUCCEEDED** (24 tests: 5 HealthAuthorization + 7 SessionDetail + 4 SessionRepository + 4 glance + 4 WorkoutSessionController). `build-ios.sh` — **BUILD SUCCEEDED**. CODE_SIGNING_ALLOWED=NO.
+- **iOS / watchOS (simpulse-mac, Xcode 26.6):** `xcodebuild test` scheme SimPulse iPhone 17 — **TEST SUCCEEDED** (31 tests). `build-ios.sh` + `build-watch.sh` — **BUILD SUCCEEDED**. CODE_SIGNING_ALLOWED=NO.
 
 ## Latest successful tests
 
@@ -57,7 +57,7 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 | --- | --- | --- |
 | `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **129 passed** |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1) | **pass** |
-| `xcodebuild test` SimPulse | simpulse-mac, iPhone 17 simulator | **24 passed**, 0 failed (2026-08-19, IOS-002) |
+| `xcodebuild test` SimPulse | simpulse-mac, iPhone 17 simulator | **31 passed**, 0 failed (2026-08-19, WATCH-003/IOS-004) |
 | xcodebuild iOS | simpulse-mac, iPhone 17 / generic iOS Simulator | **BUILD SUCCEEDED** |
 | xcodebuild watchOS | simpulse-mac, watchOS Simulator | **BUILD SUCCEEDED** |
 
@@ -67,6 +67,10 @@ Monorepo. Hexagonal Bridge (`ISimulatorAdapter`). JSON protocol v1 (LAN, pairing
 
 ## Immediate recommended next tasks
 
-1. PR/merge IOS-002 (`feat/ios-002-session-detail`)
-2. WATCH-003 persist/sync or IOS-004 WatchConnectivity ingest
-3. Windows: KI-002 live mmap smoke; KI-003 TLS
+1. PR/merge `feat/watch-ios-sync-summary` (WATCH-003 + IOS-004)
+2. Windows: KI-002 live mmap smoke; KI-003 TLS
+3. PROTO-003 Swift protocol codec (when Bridge/iOS pairing lane is ready)
+
+## Screenshot policy
+
+Apple UI changes require refreshed simulator screenshots before marking UI work DONE (`.cursor/rules/apple-screenshots.mdc`). WATCH-003/IOS-004 sync work did not alter visible UI — screenshots not required for this slice.

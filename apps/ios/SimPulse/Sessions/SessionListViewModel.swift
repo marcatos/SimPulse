@@ -11,12 +11,26 @@ final class SessionListViewModel: ObservableObject {
     private let repository: SessionRepository
     private let authorization: HealthAuthorization
     private let log = Logger(subsystem: "com.marcatos.SimPulse", category: "session-list")
+    private var mergeObserver: NSObjectProtocol?
 
     var sessionsRepository: SessionRepository { repository }
 
     init(repository: SessionRepository, authorization: HealthAuthorization) {
         self.repository = repository
         self.authorization = authorization
+        mergeObserver = NotificationCenter.default.addObserver(
+            forName: .simpulseWorkoutSummaryMerged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { await self?.load() }
+        }
+    }
+
+    deinit {
+        if let mergeObserver {
+            NotificationCenter.default.removeObserver(mergeObserver)
+        }
     }
 
     static func live() -> SessionListViewModel {

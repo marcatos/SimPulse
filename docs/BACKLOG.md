@@ -144,9 +144,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** BLOCKED
-- **Dependencies:** WATCH-001, IOS-004
+- **Status:** DONE
+- **Dependencies:** WATCH-001
 - **Acceptance criteria:** Workout saved in HealthKit; summary queued if iPhone absent; delivered later.
+- **Notes:** Branch `feat/watch-ios-sync-summary` (pending PR/merge). Paired slice with IOS-004. File outbox + `WatchConnectivitySummarySender`; finish hook in `HealthKitWatchWorkoutDataSource`. Mac iPhone 17: **31 tests passed** (2026-08-19). Screenshots N/A (no UI chrome delta). See `docs/handoffs/WATCH-003.md`.
 
 ## iOS
 
@@ -181,9 +182,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** BLOCKED
-- **Dependencies:** WATCH-003
+- **Status:** DONE
+- **Dependencies:** WATCH-003 (summary wire contract; paired delivery)
 - **Acceptance criteria:** Idempotent merge by session ID.
+- **Notes:** Branch `feat/watch-ios-sync-summary` (pending PR/merge). `WatchConnectivitySummaryReceiver` + `UserDefaultsWorkoutSummaryIngest`; session list refresh on merge notification. Mac iPhone 17: **31 tests passed** (2026-08-19). Screenshots N/A (refresh-only; no UI chrome delta). See `docs/handoffs/IOS-004.md`.
 
 ### IOS-005 — Bridge pairing client
 
@@ -371,7 +373,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 PROTO-001  →  BRIDGE-005, IOS-005, PROTO-003
 PROTO-002  →  IOS-006
 WATCH-001  →  WATCH-002, WATCH-003
-WATCH-003  →  IOS-004
+WATCH-003 ↔ IOS-004  (paired summary sync; same branch)
 IOS-001    →  IOS-002
 IOS-005    →  IOS-006
 BRIDGE-003 or BRIDGE-002 → BRIDGE-004

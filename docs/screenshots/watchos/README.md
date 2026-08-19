@@ -1,5 +1,7 @@
 # Watch UI screenshots
 
+Update this folder whenever user-visible Watch UI changes (see `.cursor/rules/apple-screenshots.mdc`).
+
 Captured 2026-08-18 from the **watchOS Simulator** (Apple Watch Series 11, 46mm) on simpulse-mac, Xcode 26.6. DEBUG launch arguments feed `MockWorkoutDataSource` so HealthKit permission is not required.
 
 | File | Mode | Launch argument |
