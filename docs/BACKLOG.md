@@ -163,10 +163,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Dependencies:** IOS-001, ANALYTICS-001
 - **Acceptance criteria:** Duration, HR avg/max, calories, HR over time from stored samples.
-- **Notes:** Dependencies DONE. Detail/charts work still required; not blocked on IOS-003.
+- **Notes:** Branch `feat/ios-002-session-detail`. Design + plan in `docs/superpowers/`. Dependencies DONE; not blocked on IOS-003.
 
 ### IOS-003 — HealthKit permissions
 
