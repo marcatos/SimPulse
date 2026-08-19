@@ -157,16 +157,16 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** Xcode, ADR 0002
 - **Acceptance criteria:** List of local sessions from mock + HealthKit ports.
-- **Notes:** `SessionRepository` + Mock + HealthKit; list UI; ADR 0002 Accepted (SwiftData deferred). 4 session tests + 8 prior = 12 on iPhone 17 (2026-08-19). Branch `feat/ios-001-session-history` (not merged).
+- **Notes:** `SessionRepository` + Mock + HealthKit; list UI; ADR 0002 Accepted (SwiftData deferred). Merged [PR #8](https://github.com/marcatos/SimPulse/pull/8). Mac iPhone 17: 12 tests passed (2026-08-19).
 
 ### IOS-002 — Session detail and charts
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** READY
+- **Status:** DONE
 - **Dependencies:** IOS-001, ANALYTICS-001
 - **Acceptance criteria:** Duration, HR avg/max, calories, HR over time from stored samples.
-- **Notes:** Dependencies DONE. Detail/charts work still required; not blocked on IOS-003.
+- **Notes:** Branch `feat/ios-002-session-detail` (pending PR/merge). `SessionDetail` DTO + `sessionDetail(id:)` port; HealthKit HR sample query; Swift Charts line; navigation from session list. Mac iPhone 17: **24 tests passed** (2026-08-19). Design + plan in `docs/superpowers/`. See `docs/handoffs/IOS-002.md`.
 
 ### IOS-003 — HealthKit permissions
 
@@ -175,7 +175,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Status:** DONE
 - **Dependencies:** Xcode
 - **Acceptance criteria:** Minimum read/write types; usage strings; denial is a documented empty state.
-- **Notes:** Branch `feat/ios-003-healthkit-permissions` (pending merge). Hybrid auth UX (prompt once + UserDefaults), iOS HealthKit entitlement, Settings empty state. Mac iPhone 17: **17 tests passed** (2026-08-19). Design + plan in `docs/superpowers/`.
+- **Notes:** Merged [PR #9](https://github.com/marcatos/SimPulse/pull/9). Hybrid auth UX (prompt once + UserDefaults), iOS HealthKit entitlement, Settings empty state. Mac iPhone 17: **17 tests passed** (2026-08-19). Design + plan in `docs/superpowers/`.
 
 ### IOS-004 — WatchConnectivity ingest
 

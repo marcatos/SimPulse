@@ -26,23 +26,28 @@ struct SessionListView: View {
                     }
                 } else {
                     List(model.sessions) { session in
-                        let row = SessionListRowPresentation.from(session)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(row.titleText)
-                                .font(.headline)
-                            Text(row.durationText)
-                                .font(.body.monospacedDigit())
-                            HStack {
-                                labeled("AVG", row.averageHeartRateText)
-                                labeled("MAX", row.maximumHeartRateText)
-                                labeled("KCAL", row.caloriesText)
+                        NavigationLink(value: session.id) {
+                            let row = SessionListRowPresentation.from(session)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(row.titleText)
+                                    .font(.headline)
+                                Text(row.durationText)
+                                    .font(.body.monospacedDigit())
+                                HStack {
+                                    labeled("AVG", row.averageHeartRateText)
+                                    labeled("MAX", row.maximumHeartRateText)
+                                    labeled("KCAL", row.caloriesText)
+                                }
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
                             }
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 2)
                         }
-                        .padding(.vertical, 2)
                     }
                 }
+            }
+            .navigationDestination(for: String.self) { id in
+                SessionDetailView(sessionId: id, repository: model.sessionsRepository)
             }
             .navigationTitle("Sessions")
             .task {

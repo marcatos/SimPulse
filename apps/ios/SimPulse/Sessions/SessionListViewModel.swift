@@ -12,6 +12,8 @@ final class SessionListViewModel: ObservableObject {
     private let authorization: HealthAuthorization
     private let log = Logger(subsystem: "com.marcatos.SimPulse", category: "session-list")
 
+    var sessionsRepository: SessionRepository { repository }
+
     init(repository: SessionRepository, authorization: HealthAuthorization) {
         self.repository = repository
         self.authorization = authorization
