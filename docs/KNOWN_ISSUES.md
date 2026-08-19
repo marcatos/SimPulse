@@ -11,6 +11,7 @@ Do not hide defects because they are outside the current task.
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
 | KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
 | KI-007 | 2026-08-19 | iOS / HealthKit | Low | Open (by design) |
+| KI-008 | 2026-08-19 | watchOS / iOS / WatchConnectivity | Medium | Open |
 
 ## KI-001 — Apple project not generated
 
@@ -60,6 +61,12 @@ Do not hide defects because they are outside the current task.
 - **Symptoms:** HealthKit does not expose reliable read-authorization status; an empty session list after prompt cannot distinguish “user denied read” from “no Sim Racing workouts yet.” IOS-003 uses one `.needsHealthAccess` empty state for both.
 - **Workaround:** Copy mentions allowing Health access and starting a Watch workout; Open Settings CTA opens app Settings (user navigates to Health manually).
 - **Related:** IOS-003, `docs/superpowers/specs/2026-08-19-ios-003-healthkit-permissions-design.md`
+
+## KI-008 — WatchConnectivity summary sync not E2E verified (WATCH-003 / IOS-004)
+
+- **Symptoms:** Watch → iPhone workout summary delivery via `WCSession.transferUserInfo` has not been exercised end-to-end on paired simulators or physical devices. Unit tests cover the DTO wire format, file outbox, and iOS ingest dedupe only.
+- **Workaround:** Treat summary sync as implemented-but-unverified until a paired Watch/iPhone manual smoke pass is recorded.
+- **Related:** WATCH-003, IOS-004, ADR 0012
 
 ## ANALYTICS-003 — HeartRateWindows (2026-08-18)
 
