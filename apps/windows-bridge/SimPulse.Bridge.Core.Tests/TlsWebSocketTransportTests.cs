@@ -16,6 +16,26 @@ namespace SimPulse.Bridge.Core.Tests;
 public sealed class BridgeTlsPolicyTests
 {
     [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("1")]
+    [InlineData("true")]
+    public void IsTlsEnabled_defaults_to_enabled(string? value)
+    {
+        Assert.True(BridgeTlsPolicy.IsTlsEnabled(value));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("false")]
+    [InlineData("OFF")]
+    [InlineData(" off ")]
+    public void IsTlsEnabled_accepts_explicit_cleartext_values(string value)
+    {
+        Assert.False(BridgeTlsPolicy.IsTlsEnabled(value));
+    }
+
+    [Theory]
     [InlineData("127.0.0.1")]
     [InlineData("localhost")]
     public void IsLoopbackHost_accepts_supported_loopback_hosts(string host)

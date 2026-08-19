@@ -45,6 +45,21 @@ builder.Services.AddSingleton<PairingCoordinator>();
 RegisterPairingUx(builder.Services);
 builder.Services.AddSingleton<TrayPairingPresenter>();
 builder.Services.AddSingleton<IClientSessionHub, ClientSessionHub>();
+builder.Services.AddSingleton<IBridgeCertificateSource>(sp =>
+{
+    string? configuredDirectory = Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_CERT_DIR");
+    string certDirectory = string.IsNullOrWhiteSpace(configuredDirectory)
+        ? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SimPulse",
+            "certs")
+        : configuredDirectory;
+    return new FileBridgeCertificateSource(
+        Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_CERT_PATH"),
+        Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_CERT_PASSWORD"),
+        certDirectory,
+        sp.GetRequiredService<ILogger<FileBridgeCertificateSource>>());
+});
 builder.Services.AddSingleton<IIracingSharedMemory>(sp =>
     new WindowsIracingSharedMemory(sp.GetRequiredService<ILogger<WindowsIracingSharedMemory>>()));
 builder.Services.AddSingleton<ISimulatorAdapter>(sp =>
@@ -63,7 +78,26 @@ builder.Services.AddSingleton<ISimulatorAdapter>(sp =>
 builder.Services.AddSingleton<IBridgeTransport>(sp =>
 {
     (string host, int port) = ReadBindOptions();
+    bool tlsEnabled = BridgeTlsPolicy.IsTlsEnabled(
+        Environment.GetEnvironmentVariable("SIMPULSE_BRIDGE_TLS"));
     PairingCoordinator pairing = sp.GetRequiredService<PairingCoordinator>();
+    if (tlsEnabled)
+    {
+        IBridgeCertificateSource certificateSource =
+            sp.GetRequiredService<IBridgeCertificateSource>();
+        return new KestrelWebSocketTransport(
+            host,
+            port,
+            certificateSource.GetOrCreate(),
+            certificateSource.Sha256FingerprintHex,
+            sp.GetRequiredService<IClientSessionHub>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<ILogger<KestrelWebSocketTransport>>(),
+            pairing.HandleAsync,
+            pairing.Unregister);
+    }
+
+    BridgeTlsPolicy.EnsureCleartextAllowed(host, tlsEnabled);
     return new HttpListenerWebSocketTransport(
         host,
         port,
