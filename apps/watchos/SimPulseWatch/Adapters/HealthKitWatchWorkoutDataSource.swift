@@ -21,13 +21,15 @@ final class HealthKitWatchWorkoutDataSource: NSObject, WorkoutDataSource, @unche
         activeKilocalories: nil,
         isRunning: false
     )
+    private let summarySender: WatchConnectivitySummarySender?
 
     let snapshots: AsyncStream<WorkoutSnapshot>
 
-    override init() {
+    init(summarySender: WatchConnectivitySummarySender? = nil) {
         let stream = AsyncStream<WorkoutSnapshot>.makeStream()
         snapshots = stream.stream
         continuation = stream.continuation
+        self.summarySender = summarySender
         super.init()
     }
 
@@ -82,7 +84,7 @@ final class HealthKitWatchWorkoutDataSource: NSObject, WorkoutDataSource, @unche
 
         workoutSession.end()
         try await workoutBuilder.endCollection(at: Date())
-        _ = try await workoutBuilder.finishWorkout()
+        let finished = try await workoutBuilder.finishWorkout()
 
         lock.lock()
         session = nil
@@ -93,8 +95,41 @@ final class HealthKitWatchWorkoutDataSource: NSObject, WorkoutDataSource, @unche
         lock.unlock()
         continuation?.yield(snapshot)
 
+        if let finished {
+            if let summarySender {
+                let message = Self.buildSummaryMessage(from: finished, snapshot: snapshot)
+                do {
+                    try summarySender.enqueueAndTransfer(message)
+                } catch {
+                    log.error("summary enqueue failed: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+        } else {
+            log.error("healthkit finishWorkout returned nil; summary not enqueued")
+        }
+
         let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
         log.info("healthkit session ended in \(elapsedMs, privacy: .public) ms")
+    }
+
+    private static func buildSummaryMessage(
+        from workout: HKWorkout,
+        snapshot: WorkoutSnapshot
+    ) -> WatchWorkoutSummaryMessage {
+        let endedAt = workout.endDate ?? Date()
+        let activeKilocalories =
+            workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? snapshot.activeKilocalories
+
+        return WatchWorkoutSummaryMessage(
+            schemaVersion: WatchWorkoutSummaryWire.schemaVersion,
+            sessionId: workout.uuid.uuidString,
+            startedAt: workout.startDate,
+            endedAt: endedAt,
+            durationSeconds: workout.duration,
+            averageHeartRateBpm: snapshot.averageHeartRateBpm,
+            maximumHeartRateBpm: snapshot.maximumHeartRateBpm,
+            activeKilocalories: activeKilocalories
+        )
     }
 
     private func requestAuthorization() async throws {

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		019C6D59349D3C40F2ACEAB8 /* WorkoutSummaryOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */; };
 		082D69C177D258AF9DCC96F3 /* HealthKitWatchWorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA335657307F0EA39358C10B /* HealthKitWatchWorkoutDataSource.swift */; };
+		F3A8B2C1D4E5F60718293A4B /* WatchConnectivitySummarySender.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F3A4B5C6D7E8091A2B3C4D /* WatchConnectivitySummarySender.swift */; };
 		1306815FFF73736AE3D7A2C0 /* SessionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7F39FCB4D486EF8C41EC2B /* SessionDetail.swift */; };
 		193C2223101B33919B25657D /* WatchWorkoutSummarySyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7350B43CF554760A568E4E93 /* WatchWorkoutSummarySyncTests.swift */; };
 		32FB951937BB89A42D2A802A /* HealthAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D74183C76D98D6224733E314 /* HealthAuthorization.swift */; };
@@ -119,6 +120,7 @@
 		DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryOutbox.swift; sourceTree = "<group>"; };
 		E79A029B04949135D59F3D86 /* SessionDetailPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailPresentation.swift; sourceTree = "<group>"; };
 		EA335657307F0EA39358C10B /* HealthKitWatchWorkoutDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitWatchWorkoutDataSource.swift; sourceTree = "<group>"; };
+		E2F3A4B5C6D7E8091A2B3C4D /* WatchConnectivitySummarySender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivitySummarySender.swift; sourceTree = "<group>"; };
 		F209876A7068CF8E49694C43 /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimPulseApp.swift; sourceTree = "<group>"; };
 		F8ED7753EF19B00DE6E04F2F /* SessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummary.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 			isa = PBXGroup;
 			children = (
 				EA335657307F0EA39358C10B /* HealthKitWatchWorkoutDataSource.swift */,
+				E2F3A4B5C6D7E8091A2B3C4D /* WatchConnectivitySummarySender.swift */,
 			);
 			path = Adapters;
 			sourceTree = "<group>";
@@ -400,6 +403,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				082D69C177D258AF9DCC96F3 /* HealthKitWatchWorkoutDataSource.swift in Sources */,
+				F3A8B2C1D4E5F60718293A4B /* WatchConnectivitySummarySender.swift in Sources */,
 				852F151E66985EED67C4D27C /* SimPulseWatchApp.swift in Sources */,
 				993934C0863E89506B439A12 /* WatchWorkoutSession.swift in Sources */,
 				CDC6AE7D2332DEC3C009155E /* WatchWorkoutSummaryMessage.swift in Sources */,

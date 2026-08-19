@@ -23,7 +23,11 @@ final class WorkoutViewModel: ObservableObject {
     }
 
     static func live() -> WorkoutViewModel {
-        WorkoutViewModel(controller: WorkoutSessionController(source: HealthKitWatchWorkoutDataSource()))
+        let outbox = FileWorkoutSummaryOutbox()
+        let sender = WatchConnectivitySummarySender(outbox: outbox)
+        sender.start()
+        let source = HealthKitWatchWorkoutDataSource(summarySender: sender)
+        return WorkoutViewModel(controller: WorkoutSessionController(source: source))
     }
 
     func toggle() {
