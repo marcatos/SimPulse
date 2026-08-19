@@ -24,6 +24,21 @@ final class WatchWorkoutSummarySyncTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
+    func testMessageFromFactoryMatchesExplicitInit() {
+        let explicit = sampleMessage(sessionId: "factory-session")
+        let fromFactory = WatchWorkoutSummaryMessage.from(
+            sessionId: explicit.sessionId,
+            startedAt: explicit.startedAt,
+            endedAt: explicit.endedAt,
+            durationSeconds: explicit.durationSeconds,
+            averageHeartRateBpm: explicit.averageHeartRateBpm,
+            maximumHeartRateBpm: explicit.maximumHeartRateBpm,
+            activeKilocalories: explicit.activeKilocalories
+        )
+
+        XCTAssertEqual(fromFactory, explicit)
+    }
+
     func testUnknownSchemaVersionReturnsNil() throws {
         var future = sampleMessage()
         future.schemaVersion = 99
@@ -54,6 +69,31 @@ final class WatchWorkoutSummarySyncTests: XCTestCase {
         let pending = try outbox.pendingMessages()
         XCTAssertEqual(pending.count, 1)
         XCTAssertEqual(pending[0].durationSeconds, 2_400)
+    }
+
+    func testOutboxQuarantinesUndecodableFile() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        let outbox = FileWorkoutSummaryOutbox(outboxDirectory: tempDir)
+        let valid = sampleMessage(sessionId: "valid-session")
+        try outbox.enqueue(valid)
+
+        let poisonURL = tempDir.appendingPathComponent("poison.json")
+        try Data("{ not-json".utf8).write(to: poisonURL)
+
+        XCTAssertEqual(outbox.pendingCount, 2)
+        let pending = try outbox.pendingMessages()
+        XCTAssertEqual(pending.count, 1)
+        XCTAssertEqual(pending[0].sessionId, "valid-session")
+        XCTAssertEqual(outbox.pendingCount, 1)
+
+        let quarantineURL = tempDir.appendingPathComponent("quarantine/poison.json")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: quarantineURL.path))
     }
 
     func testIngestDuplicateReturnsFalse() throws {
