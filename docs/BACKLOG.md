@@ -154,9 +154,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** BLOCKED
+- **Status:** DONE
 - **Dependencies:** Xcode, ADR 0002
 - **Acceptance criteria:** List of local sessions from mock + HealthKit ports.
+- **Notes:** `SessionRepository` + Mock + HealthKit; list UI; ADR 0002 Accepted (SwiftData deferred). 4 session tests + 8 prior = 12 on iPhone 17 (2026-08-19). Branch `feat/ios-001-session-history` (not merged).
 
 ### IOS-002 — Session detail and charts
 
