@@ -4,9 +4,9 @@
 
 | Threat | Impact | Mitigations now | Later |
 | --- | --- | --- | --- |
-| Malicious LAN device talks to Bridge | Fake session metadata, nuisance | Bridge accepts sessions only after pairing; bind configurable | TLS with pinned cert |
+| Malicious LAN device talks to Bridge | Fake session metadata, nuisance | Bridge accepts sessions only after pairing; TLS is default and exposes a certificate fingerprint for client pinning; bind configurable | IOS-005 client pin enforcement |
 | Unauthorized Bridge connection | Untrusted PC feeds iPhone | Explicit PIN pairing; persist trusted device IDs; revocation | Device attestation if needed |
-| Reconnect impersonation (DeviceId-only trust) | Attacker replays a known trusted DeviceId without PIN | Pairing PIN establishes trust once; revoke removes DeviceId from store | Per-device reconnect secret; TLS |
+| Reconnect impersonation (DeviceId-only trust) | Attacker replays a known trusted DeviceId without PIN | Pairing PIN establishes trust once; TLS is on by default; revoke removes DeviceId from store | Per-device reconnect secret (KI-006) |
 | Replay of protocol messages | Duplicate events | Message IDs; idempotent merge | Sequence numbers + window |
 | Spoofed simulator events | Distorted reports | Adapter is local process; paired Bridge is the trust boundary | Signed session summaries |
 | Compromised pairing credentials | Attacker becomes trusted | PIN is not stored in the trusted-device file; generated with `RandomNumberGenerator`; valid only during an explicit pairing window (5 minutes, successful pair, or 5 failed attempts) | Rotate pairing material |
@@ -25,15 +25,25 @@ After PIN pairing succeeds, the Bridge persists the client **DeviceId** as trust
 Phase 0 limitations (intentional, documented):
 
 - **DeviceId-only:** trust is keyed only on the client-asserted DeviceId string.
-- **Cleartext:** WebSocket traffic is not encrypted; no TLS.
+- **TLS does not replace reconnect proof:** Bridge traffic is encrypted by default, but a client that knows the pinned fingerprint and a trusted DeviceId can still assert that DeviceId.
 - **No per-device secret:** reconnect does not require a stored token, HMAC, or challenge response.
+- **Explicit local opt-out:** `SIMPULSE_BRIDGE_TLS=0`, `false`, or `off` enables cleartext only when the Bridge host is `127.0.0.1` or `localhost`.
 - **Revocation is the mitigation:** `RevokeAsync` drops the DeviceId from the trusted store; subsequent Hellos with that id are untrusted until a new PIN pair.
 
 Any LAN client that knows (or guesses) a trusted DeviceId can reconnect as that device until it is revoked. Pairing PIN establishes initial trust; it is not re-checked on every connection.
 
+## Bridge TLS and certificate pinning
+
+The Bridge defaults to `wss://127.0.0.1:8742/ws/` using a persisted self-signed certificate. It logs `TlsCertSha256` at Information when the certificate is ready and when the TLS listener starts. This value is lowercase SHA-256 of the certificate DER with no colons; clients must pin it and reject any mismatch. IOS-005 remains responsible for implementing this check in the iPhone client.
+
+By default the PFX is generated under `%LOCALAPPDATA%\SimPulse\certs`. `SIMPULSE_BRIDGE_CERT_PATH`, `SIMPULSE_BRIDGE_CERT_PASSWORD`, and `SIMPULSE_BRIDGE_CERT_DIR` customize certificate loading and persistence. Passwords and private key material are never logged and must not be committed.
+
+TLS protects transport confidentiality and server identity once a client pins the fingerprint. It does not fix KI-006: trusted reconnect still relies on a client-asserted DeviceId without a per-device proof-of-possession secret.
+
 ## Defaults
 
 - Pairing is required before telemetry is sent.
+- Bridge WebSocket TLS is enabled unless explicitly disabled for loopback-only diagnostics.
 - Do not listen on public WAN interfaces by product default. LAN only.
 - No analytics SDK, no ads SDK.
 - Do not invent cryptography. Use platform TLS and OS credential storage when those steps are implemented.

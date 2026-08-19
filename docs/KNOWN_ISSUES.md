@@ -6,7 +6,7 @@ Do not hide defects because they are outside the current task.
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Closed |
 | KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Open |
-| KI-003 | 2026-08-18 | Protocol | Low | Open (TLS remaining) |
+| KI-003 | 2026-08-18 | Protocol | Low | Mitigated 2026-08-19 (Bridge TLS shipped; IOS-005 pin pending) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
 | KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
@@ -29,12 +29,12 @@ Do not hide defects because they are outside the current task.
 - **Remaining:** live smoke with a real sim + mmap (`irsdkEnableMem=1`). ANALYTICS-003 `RaceReportBuilder` peak-event wiring stays out of scope.
 - **Related:** ADR 0006, BRIDGE-003, BRIDGE-008, BUG-001, BUG-004
 
-## KI-003 — Transport is still cleartext (tray pairing UX shipped)
+## KI-003 — Bridge TLS shipped; client pin enforcement pending
 
-- **Symptoms:** Loopback WebSocket (`http://127.0.0.1:8742/ws/` by default) accepts clients. Windows interactive Bridge runs as `WinExe` with `NotifyIconPairingUx` (PIN balloon, **Show current PIN** / **Pair new device** / **Exit**). If tray startup fails or times out (5s), Bridge falls back to `ConsolePairingUx` and keeps running. Non-interactive, `SIMPULSE_BRIDGE_TRAY=0`, or Linux uses `ConsolePairingUx` only. Trusted clients receive `simulator.race-event` envelopes (no biometric / telemetry-frame payloads). PIN is logged at Information when the window opens. TLS is not implemented. Default bind is loopback (`0.0.0.0` is opt-in).
-- **Workaround:** On Windows, read the PIN from the tray balloon or **Show current PIN** (does not rotate the PIN; after the window closes it reports `pairing window closed`). WinExe file logs are under `%LOCALAPPDATA%\SimPulse\logs` (`SIMPULSE_LOG_DIR` / `SIMPULSE_LOG_FILE=0`) and include the coordinator Information `Pin=` line — restrict that directory. Persist trusted devices with `SIMPULSE_TRUSTED_DEVICES_PATH`. For console logs while debugging, `dotnet run --property:OutputType=Exe` (see `docs/DEVELOPMENT.md`). Keep Bridge on loopback until TLS exists.
-- **Suspected cause:** BRIDGE-005 + BRIDGE-006 shipped listen/accept, PIN window, and race-event broadcast; BRIDGE-007 shipped tray UX. TLS remains Phase 0 follow-up.
-- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003, KI-006
+- **Status:** Mitigated 2026-08-19. Bridge now defaults to Kestrel TLS at `wss://127.0.0.1:8742/ws/`, persists or loads a self-signed PFX, and logs the lowercase certificate-DER SHA-256 fingerprint for pinning. Cleartext requires explicit `SIMPULSE_BRIDGE_TLS=0`, `false`, or `off` and is refused outside loopback.
+- **Remaining:** IOS-005 must pin `TlsCertSha256` and reject certificate mismatches. Until that client exists, the Bridge-side pin contract is covered by .NET transport tests rather than an end-to-end iPhone flow.
+- **Operational note:** Read the fingerprint from Information logs. Keep the generated PFX and any configured password outside source control. TLS does not address DeviceId-only reconnect trust (KI-006).
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003, ADR 0013, KI-006, IOS-005
 
 ## KI-005 — Android and Wear OS projects not generated
 
@@ -45,11 +45,11 @@ Do not hide defects because they are outside the current task.
 
 ## KI-006 — Reconnect trust is DeviceId-only (Phase 0)
 
-- **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted, sent in cleartext over unencrypted WebSocket; there is no per-device reconnect secret and no TLS.
+- **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted; TLS is now the Bridge default, but there is still no per-device reconnect secret or proof of possession.
 - **Impact:** Any LAN peer that knows or guesses a trusted DeviceId can impersonate that device until revoke.
-- **Workaround:** Revoke compromised DeviceIds; keep Bridge on loopback unless LAN pairing is intentional; treat DeviceId as a capability token, not proof of possession.
-- **Suspected cause:** Phase 0 scope — PIN establishes trust once; reconnect hardening (TLS, per-device secrets) is deferred.
-- **Related:** SECURITY.md, BRIDGE-006, ADR 0003, KI-003
+- **Workaround:** Revoke compromised DeviceIds; keep Bridge on loopback unless LAN pairing is intentional; require clients to pin the Bridge certificate; treat DeviceId as a capability token, not proof of possession.
+- **Suspected cause:** Phase 0 scope — PIN establishes trust once; TLS shipped under KI-003, while per-device reconnect secrets remain deferred.
+- **Related:** SECURITY.md, BRIDGE-006, ADR 0003, ADR 0013, KI-003
 
 ## KI-004 — Entitlements are code-level only
 
