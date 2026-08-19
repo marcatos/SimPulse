@@ -81,3 +81,9 @@ The commit contains only the Task 4 documentation and report files. Pre-existing
 - IOS-005 is still required before the iPhone can use the new reconnect contract end to end.
 - Existing trusted devices must pair again once because legacy rows have no token hash.
 - Plane KI-006 intentionally remains open until merge.
+
+## Final review fixes
+
+- **Files:** `docs/ARCHITECTURE.md` now records reconnect-token SHA-256 storage without plaintext; `docs/BACKLOG.md` now requires IOS-005 to surface connected-but-untrusted sessions as re-pair required.
+- **Tests:** `dotnet test SimPulse.sln --configuration Release` — 160 passed, 0 failed, 0 skipped.
+- **Commit:** `docs(bridge): document reconnect hash in architecture` (this commit; its SHA is recorded in Git history because a commit cannot contain its own content-addressed SHA).

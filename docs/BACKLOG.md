@@ -193,8 +193,8 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 - **Priority:** P0
 - **Status:** BLOCKED
 - **Dependencies:** PROTO-001, BRIDGE-006, Xcode
-- **Acceptance criteria:** Manual IP/PIN pairing; persist trusted Bridge identity; revoke.
-- **Notes:** ADR 0014 client contract: persist `pairing.accept.reconnectToken` in Keychain (not UserDefaults), include it in every `hello`, and require a new PIN pair when no token exists. Certificate pin enforcement from ADR 0013 remains part of this item.
+- **Acceptance criteria:** Manual IP/PIN pairing; persist trusted Bridge identity; revoke; surface a connected-but-untrusted session as re-pair required.
+- **Notes:** ADR 0014 client contract: persist `pairing.accept.reconnectToken` in Keychain (not UserDefaults), include it in every `hello`, and require a new PIN pair when no token exists or the Bridge silently rejects it. Certificate pin enforcement from ADR 0013 remains part of this item.
 
 ### IOS-006 — Receive simulator session and correlate
 
