@@ -31,10 +31,13 @@ final class MockHealthAuthorization: HealthAuthorization, @unchecked Sendable {
         if shouldCount {
             requestCallCount += 1
         }
-        if let throwOnRequest { throw throwOnRequest }
         guard isAvailable else {
             prompted = true
             return
+        }
+        if let throwOnRequest {
+            prompted = true
+            throw throwOnRequest
         }
         prompted = true
     }

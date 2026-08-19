@@ -60,4 +60,19 @@ final class HealthAuthorizationTests: XCTestCase {
 
         XCTAssertEqual(model.emptyReason, .healthUnavailable)
     }
+
+    func testLoadContinuesAfterAuthThrowAndSetsNeedsHealthAccess() async {
+        let auth = MockHealthAuthorization(hasPrompted: false)
+        auth.throwOnRequest = NSError(domain: "test", code: 1)
+        let model = SessionListViewModel(
+            repository: MockSessionRepository(sessions: []),
+            authorization: auth
+        )
+
+        await model.load()
+
+        XCTAssertTrue(auth.hasPrompted)
+        XCTAssertEqual(model.emptyReason, .needsHealthAccess)
+        XCTAssertTrue(model.sessions.isEmpty)
+    }
 }
