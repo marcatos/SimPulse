@@ -163,18 +163,19 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** BLOCKED
+- **Status:** READY
 - **Dependencies:** IOS-001, ANALYTICS-001
 - **Acceptance criteria:** Duration, HR avg/max, calories, HR over time from stored samples.
+- **Notes:** Dependencies DONE. Detail/charts work still required; not blocked on IOS-003.
 
 ### IOS-003 — HealthKit permissions
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** Xcode
 - **Acceptance criteria:** Minimum read/write types; usage strings; denial is a documented empty state.
-- **Notes:** Branch `feat/ios-003-healthkit-permissions`. Design + plan in `docs/superpowers/`. Plane work item In Progress.
+- **Notes:** Branch `feat/ios-003-healthkit-permissions` (pending merge). Hybrid auth UX (prompt once + UserDefaults), iOS HealthKit entitlement, Settings empty state. Mac iPhone 17: **17 tests passed** (2026-08-19). Design + plan in `docs/superpowers/`.
 
 ### IOS-004 — WatchConnectivity ingest
 
