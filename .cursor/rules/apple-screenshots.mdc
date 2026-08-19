@@ -1,0 +1,51 @@
+---
+description: Refresh iPhone and Apple Watch screenshots when Apple UI changes
+alwaysApply: true
+---
+
+# Apple UI screenshots (mandatory)
+
+When a change **alters user-visible UI** on iPhone and/or Apple Watch, agents **must** refresh the matching screenshots before marking the work done (or before PR/merge).
+
+## When this applies
+
+Triggers (any of):
+
+- New or changed SwiftUI screens, layout, copy, navigation, empty states, charts, controls
+- Watch glance / Always On / workout UI changes
+- Public README or docs that display those screenshots
+
+Does **not** apply to: pure backend/protocol/.NET Bridge, HealthKit adapters with no UI delta, docs-only non-visual edits, test-only changes.
+
+## Where files live
+
+| Platform | Directory | Index |
+| --- | --- | --- |
+| watchOS | `docs/screenshots/watchos/` | `docs/screenshots/watchos/README.md` |
+| iOS | `docs/screenshots/ios/` | `docs/screenshots/ios/README.md` |
+
+Update the platform README table (filename, mode, launch args, simulator, date). If the root `README.md` embeds shots, refresh those embeds too.
+
+## How to capture (simpulse-mac)
+
+Prefer DEBUG launch arguments / mocks so HealthKit permission is not required (same pattern as Watch `--simpulse-preview-*`).
+
+```sh
+# Watch example
+xcrun simctl io <watch-udid> screenshot docs/screenshots/watchos/<name>.png
+
+# iPhone example
+xcrun simctl io <iphone-udid> screenshot docs/screenshots/ios/<name>.png
+```
+
+Record UDID / device model / Xcode version in the platform README. Physical-device shots are optional extras, not a substitute when simulator shots exist.
+
+## Definition of done gate
+
+A UI-affecting Apple backlog item is **not** DONE until:
+
+1. Screenshots for the changed surface(s) are updated (or newly added)
+2. `docs/screenshots/<platform>/README.md` lists them
+3. Handoff notes “screenshots updated” (or “NOT EXECUTED — no Mac” if capture was impossible — then leave CURRENT_STATE explicit)
+
+Do not ship stale Watch/iPhone marketing or docs images after a visible UI change.

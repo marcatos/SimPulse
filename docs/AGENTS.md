@@ -54,6 +54,7 @@ After a material change, update:
 - `docs/REGRESSIONS.md` if something that worked now does not (or a regression was fixed)
 - ADR if architectural
 - Handoff for substantial work
+- **Apple screenshots** when iPhone or Watch **user-visible UI** changes — see `.cursor/rules/apple-screenshots.mdc` and `docs/screenshots/`
 
 ## Handoff procedure
 
@@ -89,6 +90,7 @@ A backlog item is DONE only when applicable:
 - Implementation complete
 - Tests added and passing on an actually available platform
 - Documentation updated (CURRENT_STATE, BACKLOG, issues/ADRs/handoff)
+- **iOS/watchOS screenshots refreshed** if the change altered user-visible Apple UI (`.cursor/rules/apple-screenshots.mdc`); record NOT EXECUTED in the handoff if Mac capture was impossible
 - No new unexplained warnings
 - Apple/Xcode results recorded as NOT EXECUTED when the platform is missing
 - Regression test added when a regression was fixed
