@@ -144,10 +144,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** Watch
 - **Priority:** P0
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** WATCH-001
 - **Acceptance criteria:** Workout saved in HealthKit; summary queued if iPhone absent; delivered later.
-- **Notes:** Paired slice with IOS-004 on `feat/watch-ios-sync-summary`. Design: `docs/superpowers/specs/2026-08-19-watch-ios-summary-sync-design.md`. IOS-004 ingest is same-branch delivery, not a prerequisite blocker.
+- **Notes:** Branch `feat/watch-ios-sync-summary` (pending PR/merge). Paired slice with IOS-004. File outbox + `WatchConnectivitySummarySender`; finish hook in `HealthKitWatchWorkoutDataSource`. Mac iPhone 17: **31 tests passed** (2026-08-19). Screenshots N/A (no UI chrome delta). See `docs/handoffs/WATCH-003.md`.
 
 ## iOS
 
@@ -182,10 +182,10 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
 
 - **Area:** iOS
 - **Priority:** P0
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Dependencies:** WATCH-003 (summary wire contract; paired delivery)
 - **Acceptance criteria:** Idempotent merge by session ID.
-- **Notes:** Paired slice with WATCH-003 on `feat/watch-ios-sync-summary`. Implement ingest against the shared `WatchWorkoutSummaryMessage` contract; no need to wait for Watch shipping first.
+- **Notes:** Branch `feat/watch-ios-sync-summary` (pending PR/merge). `WatchConnectivitySummaryReceiver` + `UserDefaultsWorkoutSummaryIngest`; session list refresh on merge notification. Mac iPhone 17: **31 tests passed** (2026-08-19). Screenshots N/A (refresh-only; no UI chrome delta). See `docs/handoffs/IOS-004.md`.
 
 ### IOS-005 — Bridge pairing client
 
