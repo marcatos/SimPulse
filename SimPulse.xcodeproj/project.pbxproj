@@ -22,6 +22,7 @@
 		61583443DEDF589651627109 /* SessionListRowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A5AAB96B604BEECD30847C9 /* SessionListRowPresentation.swift */; };
 		626E7E4562115099EC1F6CCA /* WorkoutSessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C73CBDA236F07F9D8857AB /* WorkoutSessionController.swift */; };
 		6DD990C4E711049F55F793B6 /* WatchConnectivitySummarySender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8A0F85B5FA29B49CCA22E5 /* WatchConnectivitySummarySender.swift */; };
+		8E4B9C3D2E5F6A7B0C1D2E3F /* WatchConnectivitySummaryReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F3A8B2C1D4E5F6A9B0C1D2E /* WatchConnectivitySummaryReceiver.swift */; };
 		6F66D7C92E064948995B6827 /* WorkoutGlancePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2036E7B26DF68A395E46B2 /* WorkoutGlancePresentation.swift */; };
 		755ABA9F7BF0541A8AC42AA4 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8CBE9C50B85442CDF058F05 /* SessionRepository.swift */; };
 		7BC0D8A698B327B4CDA457F8 /* WorkoutPreviewLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1021FCAD2DC32C99764E9859 /* WorkoutPreviewLaunch.swift */; };
@@ -125,6 +126,7 @@
 		F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimPulseApp.swift; sourceTree = "<group>"; };
 		F8ED7753EF19B00DE6E04F2F /* SessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummary.swift; sourceTree = "<group>"; };
 		FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryIngest.swift; sourceTree = "<group>"; };
+		7F3A8B2C1D4E5F6A9B0C1D2E /* WatchConnectivitySummaryReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivitySummaryReceiver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -150,6 +152,7 @@
 		6E13A3B61320A78CC28CF330 /* Sync */ = {
 			isa = PBXGroup;
 			children = (
+				7F3A8B2C1D4E5F6A9B0C1D2E /* WatchConnectivitySummaryReceiver.swift */,
 				D6A971B31C621C9FFEDEFA65 /* WatchWorkoutSummaryMessage.swift */,
 				FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */,
 				DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */,
@@ -389,6 +392,7 @@
 				755ABA9F7BF0541A8AC42AA4 /* SessionRepository.swift in Sources */,
 				53DB7861270E285112FE8E12 /* SessionSummary.swift in Sources */,
 				CF46C07A897C3BEA9DC6351E /* SimPulseApp.swift in Sources */,
+				8E4B9C3D2E5F6A7B0C1D2E3F /* WatchConnectivitySummaryReceiver.swift in Sources */,
 				48E21224EF0F43C0E62F6CF5 /* WatchWorkoutSummaryMessage.swift in Sources */,
 				ACF10CC7E4F051A1AFDED10A /* WorkoutDataSource.swift in Sources */,
 				924F160D9F3E7C09AECE58CC /* WorkoutGlancePresentation.swift in Sources */,
