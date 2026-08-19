@@ -7,10 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		019C6D59349D3C40F2ACEAB8 /* WorkoutSummaryOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */; };
 		082D69C177D258AF9DCC96F3 /* HealthKitWatchWorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA335657307F0EA39358C10B /* HealthKitWatchWorkoutDataSource.swift */; };
 		1306815FFF73736AE3D7A2C0 /* SessionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7F39FCB4D486EF8C41EC2B /* SessionDetail.swift */; };
+		193C2223101B33919B25657D /* WatchWorkoutSummarySyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7350B43CF554760A568E4E93 /* WatchWorkoutSummarySyncTests.swift */; };
 		32FB951937BB89A42D2A802A /* HealthAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D74183C76D98D6224733E314 /* HealthAuthorization.swift */; };
 		3D9BA9F992EC39C25BCC760A /* WorkoutSessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3371D9C7ED7FDC49BACC11D5 /* WorkoutSessionControllerTests.swift */; };
+		48E21224EF0F43C0E62F6CF5 /* WatchWorkoutSummaryMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A971B31C621C9FFEDEFA65 /* WatchWorkoutSummaryMessage.swift */; };
 		4A699C8EF2B182019B946823 /* WorkoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB496D27D5DCAF9FE1456EE /* WorkoutViewModel.swift */; };
 		5224E62FBFB78CC8E1C65DB7 /* WorkoutGlancePresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FEF0472806C98E48CD5F02 /* WorkoutGlancePresentationTests.swift */; };
 		5286D7A194C0001B67728E3D /* WorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8DCEA81964064B7A41B1C69 /* WorkoutDataSource.swift */; };
@@ -35,12 +38,17 @@
 		B03C571E6B0B473608C843B8 /* SessionDetailPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79A029B04949135D59F3D86 /* SessionDetailPresentation.swift */; };
 		B20B7484C3C75AAFC7C1D7DE /* SimPulseWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = D61787B41BE58979F30245A0 /* SimPulseWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BC5A3245436EECA84C55325A /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F209876A7068CF8E49694C43 /* SessionDetailView.swift */; };
+		C4E680A24B9C2610066C1D25 /* WorkoutSummaryIngest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */; };
+		CDC6AE7D2332DEC3C009155E /* WatchWorkoutSummaryMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A971B31C621C9FFEDEFA65 /* WatchWorkoutSummaryMessage.swift */; };
 		CF46C07A897C3BEA9DC6351E /* SimPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */; };
 		D12D5AA1F4E917F8B7A811AB /* HealthKitWorkoutDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CCC3DE03FFAAAFA2CE0BD40 /* HealthKitWorkoutDataSource.swift */; };
+		DB6BD89CACCE6315DB56629D /* WorkoutSummaryIngest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */; };
 		E02728838C81DCADBEF3A04F /* HealthAuthorizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E67505E6891137ECFDF4C6 /* HealthAuthorizationTests.swift */; };
 		E1AEEE5C7838E16DC0AE3D56 /* HealthKitSessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA40C91894ACAAB4EAA07E39 /* HealthKitSessionRepository.swift */; };
+		F72CC8B7AEAAE415456C1131 /* SessionDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5217F3C853395BEFDDB342 /* SessionDetailViewModelTests.swift */; };
 		F89BDA8C68ED9A49E02FBB56 /* SessionFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 780D8DF713F9CE55265DDAF5 /* SessionFormatting.swift */; };
 		FA5CB4FC5972258D40303AC4 /* SessionDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C350C71A345EEF9507DF650D /* SessionDetailTests.swift */; };
+		FECAF5E00A66E1478EE250FE /* WorkoutSummaryOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,6 +98,7 @@
 		6332D26DE02BEF7A1E5B4881 /* SessionRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepositoryTests.swift; sourceTree = "<group>"; };
 		6A5AAB96B604BEECD30847C9 /* SessionListRowPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListRowPresentation.swift; sourceTree = "<group>"; };
 		6FB496D27D5DCAF9FE1456EE /* WorkoutViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutViewModel.swift; sourceTree = "<group>"; };
+		7350B43CF554760A568E4E93 /* WatchWorkoutSummarySyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutSummarySyncTests.swift; sourceTree = "<group>"; };
 		780D8DF713F9CE55265DDAF5 /* SessionFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormatting.swift; sourceTree = "<group>"; };
 		7CCC3DE03FFAAAFA2CE0BD40 /* HealthKitWorkoutDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitWorkoutDataSource.swift; sourceTree = "<group>"; };
 		7CD23896901DF52B1CDA79AD /* SimPulseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SimPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,13 +112,17 @@
 		C9A1DD43C28EECED599FA284 /* WatchWorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutSession.swift; sourceTree = "<group>"; };
 		D5C73CBDA236F07F9D8857AB /* WorkoutSessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionController.swift; sourceTree = "<group>"; };
 		D61787B41BE58979F30245A0 /* SimPulseWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimPulseWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6A971B31C621C9FFEDEFA65 /* WatchWorkoutSummaryMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutSummaryMessage.swift; sourceTree = "<group>"; };
 		D74183C76D98D6224733E314 /* HealthAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthorization.swift; sourceTree = "<group>"; };
 		DA40C91894ACAAB4EAA07E39 /* HealthKitSessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSessionRepository.swift; sourceTree = "<group>"; };
+		DB5217F3C853395BEFDDB342 /* SessionDetailViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailViewModelTests.swift; sourceTree = "<group>"; };
+		DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryOutbox.swift; sourceTree = "<group>"; };
 		E79A029B04949135D59F3D86 /* SessionDetailPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailPresentation.swift; sourceTree = "<group>"; };
 		EA335657307F0EA39358C10B /* HealthKitWatchWorkoutDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitWatchWorkoutDataSource.swift; sourceTree = "<group>"; };
 		F209876A7068CF8E49694C43 /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		F28B21393D4DC87921BFA2DF /* SimPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimPulseApp.swift; sourceTree = "<group>"; };
 		F8ED7753EF19B00DE6E04F2F /* SessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummary.swift; sourceTree = "<group>"; };
+		FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryIngest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -131,6 +144,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6E13A3B61320A78CC28CF330 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				D6A971B31C621C9FFEDEFA65 /* WatchWorkoutSummaryMessage.swift */,
+				FD158208F2EE30350AC67A2C /* WorkoutSummaryIngest.swift */,
+				DFEE867C31F2AB2DB4D57A1D /* WorkoutSummaryOutbox.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
 		6E3EC819E13496FAF8AF7799 /* SimPulseWatch */ = {
 			isa = PBXGroup;
 			children = (
@@ -149,6 +172,7 @@
 			children = (
 				B731647A4094F1A5F388F904 /* Entitlements */,
 				E30D1A3D87469E8938342126 /* Sessions */,
+				6E13A3B61320A78CC28CF330 /* Sync */,
 				E5AAF89DF61A1D672BF308C3 /* Workout */,
 				05F4EC300A3D352327D7615E /* SessionListView.swift */,
 				3AC27ECB7C436F27DA548D0F /* SimPulse.entitlements */,
@@ -205,7 +229,9 @@
 			children = (
 				30E67505E6891137ECFDF4C6 /* HealthAuthorizationTests.swift */,
 				C350C71A345EEF9507DF650D /* SessionDetailTests.swift */,
+				DB5217F3C853395BEFDDB342 /* SessionDetailViewModelTests.swift */,
 				6332D26DE02BEF7A1E5B4881 /* SessionRepositoryTests.swift */,
+				7350B43CF554760A568E4E93 /* WatchWorkoutSummarySyncTests.swift */,
 				97FEF0472806C98E48CD5F02 /* WorkoutGlancePresentationTests.swift */,
 				3371D9C7ED7FDC49BACC11D5 /* WorkoutSessionControllerTests.swift */,
 			);
@@ -360,9 +386,12 @@
 				755ABA9F7BF0541A8AC42AA4 /* SessionRepository.swift in Sources */,
 				53DB7861270E285112FE8E12 /* SessionSummary.swift in Sources */,
 				CF46C07A897C3BEA9DC6351E /* SimPulseApp.swift in Sources */,
+				48E21224EF0F43C0E62F6CF5 /* WatchWorkoutSummaryMessage.swift in Sources */,
 				ACF10CC7E4F051A1AFDED10A /* WorkoutDataSource.swift in Sources */,
 				924F160D9F3E7C09AECE58CC /* WorkoutGlancePresentation.swift in Sources */,
 				626E7E4562115099EC1F6CCA /* WorkoutSessionController.swift in Sources */,
+				DB6BD89CACCE6315DB56629D /* WorkoutSummaryIngest.swift in Sources */,
+				FECAF5E00A66E1478EE250FE /* WorkoutSummaryOutbox.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,10 +402,13 @@
 				082D69C177D258AF9DCC96F3 /* HealthKitWatchWorkoutDataSource.swift in Sources */,
 				852F151E66985EED67C4D27C /* SimPulseWatchApp.swift in Sources */,
 				993934C0863E89506B439A12 /* WatchWorkoutSession.swift in Sources */,
+				CDC6AE7D2332DEC3C009155E /* WatchWorkoutSummaryMessage.swift in Sources */,
 				5286D7A194C0001B67728E3D /* WorkoutDataSource.swift in Sources */,
 				6F66D7C92E064948995B6827 /* WorkoutGlancePresentation.swift in Sources */,
 				7BC0D8A698B327B4CDA457F8 /* WorkoutPreviewLaunch.swift in Sources */,
 				ABCAF8F1844CAC29EA28846A /* WorkoutSessionController.swift in Sources */,
+				C4E680A24B9C2610066C1D25 /* WorkoutSummaryIngest.swift in Sources */,
+				019C6D59349D3C40F2ACEAB8 /* WorkoutSummaryOutbox.swift in Sources */,
 				58EE5FBDC71F27B6984B1F11 /* WorkoutView.swift in Sources */,
 				4A699C8EF2B182019B946823 /* WorkoutViewModel.swift in Sources */,
 			);
@@ -388,7 +420,9 @@
 			files = (
 				E02728838C81DCADBEF3A04F /* HealthAuthorizationTests.swift in Sources */,
 				FA5CB4FC5972258D40303AC4 /* SessionDetailTests.swift in Sources */,
+				F72CC8B7AEAAE415456C1131 /* SessionDetailViewModelTests.swift in Sources */,
 				A4BCC64561677CE5E0ADD4A7 /* SessionRepositoryTests.swift in Sources */,
+				193C2223101B33919B25657D /* WatchWorkoutSummarySyncTests.swift in Sources */,
 				5224E62FBFB78CC8E1C65DB7 /* WorkoutGlancePresentationTests.swift in Sources */,
 				3D9BA9F992EC39C25BCC760A /* WorkoutSessionControllerTests.swift in Sources */,
 			);

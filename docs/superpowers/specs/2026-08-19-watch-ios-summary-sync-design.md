@@ -1,7 +1,7 @@
 # WATCH-003 + IOS-004 — WatchConnectivity workout summary sync
 
 **Date:** 2026-08-19  
-**Status:** Approved for planning (pending user review of this file)  
+**Status:** Approved  
 **Backlog:** WATCH-003 (Watch persist + queue), IOS-004 (iPhone ingest)  
 **Depends on:** WATCH-001 (DONE), IOS-001/003 (DONE). Circular BACKLOG deps resolved: implement as one paired slice; edge order Watch outbox → iOS ingest.
 
@@ -66,7 +66,7 @@ Unknown `schemaVersion` on iOS: log WARN, ignore (do not crash).
 ### Behavior
 
 1. End workout → HealthKit save (existing) → build summary → enqueue.
-2. If session reachable → transfer; on acknowledged delivery (or successful transfer handoff), remove from outbox.
+2. If session reachable → `transferUserInfo`; on successful handoff to the system queue (no WC delivery ACK), remove from outbox.
 3. If unreachable → leave on disk; flush when reachable again.
 4. Companion disconnect during recording still does not stop the workout (WATCH-001).
 

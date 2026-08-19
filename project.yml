@@ -52,6 +52,7 @@ targets:
     platform: watchOS
     sources:
       - path: apps/watchos/SimPulseWatch
+      - path: apps/ios/SimPulse/Sync
       - path: apps/ios/SimPulse/Workout
         excludes:
           - HealthKitWorkoutDataSource.swift
