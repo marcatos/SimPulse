@@ -19,7 +19,7 @@ iPhone and Windows Bridge must talk on the LAN with no cloud. Need versioning, t
 
 **Pairing:** user starts pairing on both sides, PIN is compared, Bridge stores a device identifier. PIN is not stored. Trusted devices can be revoked. Unpaired clients do not receive telemetry.
 
-**TLS:** not in the Phase 0 skeleton. LAN + pairing is the v1 trust model. Adding TLS with a pinned self-signed certificate is the next security step, not a custom crypto protocol.
+**TLS:** the original Phase 0 skeleton used cleartext LAN transport. The 2026-08-19 follow-up in [ADR 0013](0013-bridge-tls-kestrel.md) implemented TLS by default with a Bridge-owned self-signed certificate and a SHA-256 fingerprint for client pinning. Explicit cleartext opt-out is restricted to loopback. Pairing semantics and the v1 envelope remain unchanged.
 
 ## Alternatives considered
 

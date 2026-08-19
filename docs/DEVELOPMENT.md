@@ -67,6 +67,22 @@ If the tray STA/`NotifyIcon` fails or does not become ready within 5 seconds, Br
 
 With `WinExe`, the console is hidden. File logs are written under `%LOCALAPPDATA%\SimPulse\logs` (or the user-profile equivalent). Override with `SIMPULSE_LOG_DIR`; disable with `SIMPULSE_LOG_FILE=0`. Use `SIMPULSE_LOG_LEVEL` for verbosity.
 
+## Windows Bridge TLS
+
+The Bridge listens on `wss://127.0.0.1:8742/ws/` by default. On first TLS startup it creates `%LOCALAPPDATA%\SimPulse\certs\bridge-dev.pfx`; `SIMPULSE_BRIDGE_CERT_DIR` changes the generated-certificate directory. To supply an existing PFX, set `SIMPULSE_BRIDGE_CERT_PATH` and, when required, `SIMPULSE_BRIDGE_CERT_PASSWORD`. Never commit the PFX or password.
+
+At Information level, startup logs include `TlsEnabled=true` and `TlsCertSha256=<fingerprint>`. The fingerprint is lowercase SHA-256 of the certificate DER, without colons. Clients must pin this exact value and reject a mismatch; the future IOS-005 pairing client will implement that client-side check.
+
+TLS is enabled when `SIMPULSE_BRIDGE_TLS` is unset, empty, `1`, or any value except the explicit cleartext values `0`, `false`, and `off` (case-insensitive). Cleartext is for local diagnostics only:
+
+```powershell
+$env:SIMPULSE_BRIDGE_TLS = "0"
+dotnet run --project apps/windows-bridge/SimPulse.Bridge --property:OutputType=Exe
+# ws://127.0.0.1:8742/ws/
+```
+
+The Bridge fails fast if cleartext is selected with a non-loopback `SIMPULSE_BRIDGE_HOST`. TLS mode may bind to an explicitly configured LAN address; do not expose the Bridge to the public WAN.
+
 ## Logging
 
 Use `Microsoft.Extensions.Logging` with levels Trace/Debug/Information/Warning/Error/Critical.
