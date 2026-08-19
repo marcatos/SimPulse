@@ -61,6 +61,41 @@ final class SessionDetailTests: XCTestCase {
         XCTAssertTrue(detail!.heartRatePoints.isEmpty)
     }
 
+    func testDetailPresentationFormatsMetricsFromMockDetail() async throws {
+        let repo = MockSessionRepository()
+        let detail = try await repo.sessionDetail(id: "mock-1")
+        XCTAssertNotNil(detail)
+
+        let presentation = SessionDetailPresentation.from(detail!)
+
+        XCTAssertEqual(presentation.titleText, SessionFormatting.formatStart(detail!.startedAt))
+        XCTAssertEqual(presentation.durationText, "01:00:15")
+        XCTAssertEqual(presentation.averageHeartRateText, "132")
+        XCTAssertEqual(presentation.maximumHeartRateText, "161")
+        XCTAssertEqual(presentation.caloriesText, "220")
+        XCTAssertTrue(presentation.hasHeartRateChart)
+    }
+
+    func testDetailPresentationEmptyHeartRateHasNoChart() {
+        let detail = SessionDetail(
+            id: "empty-hr",
+            startedAt: Date(timeIntervalSince1970: 1_700_100_000),
+            duration: 600,
+            averageHeartRateBpm: nil,
+            maximumHeartRateBpm: nil,
+            activeKilocalories: 50,
+            heartRatePoints: [],
+            source: .mock
+        )
+
+        let presentation = SessionDetailPresentation.from(detail)
+
+        XCTAssertEqual(presentation.averageHeartRateText, "--")
+        XCTAssertEqual(presentation.maximumHeartRateText, "--")
+        XCTAssertEqual(presentation.caloriesText, "50")
+        XCTAssertFalse(presentation.hasHeartRateChart)
+    }
+
     func testMetricsCalculatorAverageAndMax() {
         let points = [
             HeartRatePoint(timestamp: Date(timeIntervalSince1970: 1), beatsPerMinute: 100),
