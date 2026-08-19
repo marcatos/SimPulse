@@ -4,11 +4,13 @@ import os
 import WatchConnectivity
 
 /// Queues workout summaries on disk and hands them to the system via `transferUserInfo`.
-/// Outbox entries are removed after a successful handoff; the system may deliver later.
+/// Outbox entries are removed only after `session(_:didFinish:error:)` reports success.
 final class WatchConnectivitySummarySender: NSObject, WCSessionDelegate, @unchecked Sendable {
     private let outbox: WorkoutSummaryOutbox
     private let session: WCSession
     private let log = Logger(subsystem: "com.marcatos.SimPulse", category: "wc-sender")
+    private let lock = NSLock()
+    private var inFlightSessionIds = Set<String>()
 
     init(outbox: WorkoutSummaryOutbox, session: WCSession = .default) {
         self.outbox = outbox
@@ -54,10 +56,30 @@ final class WatchConnectivitySummarySender: NSObject, WCSessionDelegate, @unchec
             return
         }
 
+        lock.lock()
+        if inFlightSessionIds.contains(message.sessionId) {
+            lock.unlock()
+            log.info("transfer already in flight sessionId=\(message.sessionId, privacy: .public)")
+            return
+        }
+        lock.unlock()
+
+        if outstandingSessionIds().contains(message.sessionId) {
+            lock.lock()
+            inFlightSessionIds.insert(message.sessionId)
+            lock.unlock()
+            log.info("transfer already outstanding sessionId=\(message.sessionId, privacy: .public)")
+            return
+        }
+
         let userInfo = try message.makeUserInfo()
         session.transferUserInfo(userInfo)
-        try outbox.remove(sessionId: message.sessionId)
-        log.info("transferUserInfo handed off sessionId=\(message.sessionId, privacy: .public)")
+
+        lock.lock()
+        inFlightSessionIds.insert(message.sessionId)
+        lock.unlock()
+
+        log.info("transferUserInfo queued sessionId=\(message.sessionId, privacy: .public)")
     }
 
     func session(
@@ -76,6 +98,51 @@ final class WatchConnectivitySummarySender: NSObject, WCSessionDelegate, @unchec
     func sessionReachabilityDidChange(_ session: WCSession) {
         log.info("reachability changed reachable=\(session.isReachable, privacy: .public)")
         flushIfPossible()
+    }
+
+    func session(
+        _ session: WCSession,
+        didFinish userInfoTransfer: WCSessionUserInfoTransfer,
+        error: Error?
+    ) {
+        let sessionId = (try? WatchWorkoutSummaryMessage.fromUserInfo(userInfoTransfer.userInfo))??.sessionId
+
+        lock.lock()
+        if let sessionId {
+            inFlightSessionIds.remove(sessionId)
+        }
+        lock.unlock()
+
+        guard let sessionId else {
+            log.error("didFinish could not decode sessionId from transfer")
+            return
+        }
+
+        if let error {
+            log.error(
+                "transferUserInfo failed sessionId=\(sessionId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+
+        do {
+            try outbox.remove(sessionId: sessionId)
+            log.info("transferUserInfo confirmed sessionId=\(sessionId, privacy: .public)")
+        } catch {
+            log.error(
+                "outbox remove after transfer failed sessionId=\(sessionId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    private func outstandingSessionIds() -> Set<String> {
+        var ids = Set<String>()
+        for transfer in session.outstandingUserInfoTransfers {
+            if let message = try? WatchWorkoutSummaryMessage.fromUserInfo(transfer.userInfo), let message {
+                ids.insert(message.sessionId)
+            }
+        }
+        return ids
     }
 }
 #endif

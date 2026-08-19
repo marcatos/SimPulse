@@ -116,15 +116,13 @@ final class HealthKitWatchWorkoutDataSource: NSObject, WorkoutDataSource, @unche
         from workout: HKWorkout,
         snapshot: WorkoutSnapshot
     ) -> WatchWorkoutSummaryMessage {
-        let endedAt = workout.endDate ?? Date()
         let activeKilocalories =
             workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? snapshot.activeKilocalories
 
-        return WatchWorkoutSummaryMessage(
-            schemaVersion: WatchWorkoutSummaryWire.schemaVersion,
+        return WatchWorkoutSummaryMessage.from(
             sessionId: workout.uuid.uuidString,
             startedAt: workout.startDate,
-            endedAt: endedAt,
+            endedAt: workout.endDate,
             durationSeconds: workout.duration,
             averageHeartRateBpm: snapshot.averageHeartRateBpm,
             maximumHeartRateBpm: snapshot.maximumHeartRateBpm,

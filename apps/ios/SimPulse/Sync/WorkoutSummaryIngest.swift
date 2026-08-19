@@ -9,12 +9,16 @@ final class UserDefaultsWorkoutSummaryIngest: WorkoutSummaryIngest, @unchecked S
     static let seenKey = "com.marcatos.SimPulse.seenWorkoutSummaryIds"
 
     private let defaults: UserDefaults
+    private let lock = NSLock()
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
     }
 
     func merge(_ message: WatchWorkoutSummaryMessage) throws -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+
         var seen = defaults.stringArray(forKey: Self.seenKey) ?? []
         if seen.contains(message.sessionId) {
             return false

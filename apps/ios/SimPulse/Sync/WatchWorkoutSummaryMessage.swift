@@ -17,6 +17,27 @@ struct WatchWorkoutSummaryMessage: Codable, Equatable, Sendable {
 }
 
 extension WatchWorkoutSummaryMessage {
+    static func from(
+        sessionId: String,
+        startedAt: Date,
+        endedAt: Date,
+        durationSeconds: TimeInterval,
+        averageHeartRateBpm: Int?,
+        maximumHeartRateBpm: Int?,
+        activeKilocalories: Double?
+    ) -> WatchWorkoutSummaryMessage {
+        WatchWorkoutSummaryMessage(
+            schemaVersion: WatchWorkoutSummaryWire.schemaVersion,
+            sessionId: sessionId,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            durationSeconds: durationSeconds,
+            averageHeartRateBpm: averageHeartRateBpm,
+            maximumHeartRateBpm: maximumHeartRateBpm,
+            activeKilocalories: activeKilocalories
+        )
+    }
+
     func makeUserInfo() throws -> [String: Any] {
         let data = try Self.encoder.encode(self)
         return [WatchWorkoutSummaryWire.userInfoKey: data]
