@@ -139,9 +139,9 @@ On Windows those Apple scripts record **NOT EXECUTED**. That is intentional: thi
 
 ## Protocol and pairing
 
-Bridge ↔ iPhone uses versioned JSON over WebSocket on the LAN after PIN pairing. Unknown fields and unknown message types are ignored. Pairing is required before telemetry. TLS and a per-device reconnect secret are planned (known issues KI-003, KI-006).
+Bridge ↔ iPhone uses versioned JSON over WebSocket on the LAN after PIN pairing. Unknown fields and unknown message types are ignored. Pairing is required before telemetry. TLS is enabled by default, and reconnect requires a per-device token rather than DeviceId alone. IOS-005 still has to persist that token in Keychain and enforce the Bridge certificate pin.
 
-Schemas: `packages/protocol/schemas`. Design: [ADR 0003](docs/adr/0003-bridge-protocol.md). Security notes: [`docs/SECURITY.md`](docs/SECURITY.md).
+Schemas: `packages/protocol/schemas`. Design: [ADR 0003](docs/adr/0003-bridge-protocol.md), [ADR 0013](docs/adr/0013-bridge-tls-kestrel.md), and [ADR 0014](docs/adr/0014-reconnect-token.md). Security notes: [`docs/SECURITY.md`](docs/SECURITY.md).
 
 ## Privacy
 

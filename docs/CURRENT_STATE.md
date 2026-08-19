@@ -13,9 +13,9 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Completed features
 
 - Git repository on `main` with monorepo layout, EditorConfig, gitattributes, license, `.env.example`.
-- Documentation system (`docs/*`, ADRs 0001–0009 + 0012–0013, AGENTS.md, privacy/security, backlog). Canonical operational status lives on Plane Pages.
+- Documentation system (`docs/*`, ADRs 0001–0009 + 0012–0014, AGENTS.md, privacy/security, backlog). Canonical operational status lives on Plane.
 - C# domain, protocol v1 envelope/codec, analytics (HR/energy summaries, RaceReport from DriverSession, HeartRateWindows lap/event averages gated by timeline offset, non-medical wording).
-- Windows Bridge worker + Core library: fixture replay adapter, first-party iRacing mmap session reader (KI-002 live replay smoke 2026-08-19), gated PIN pairing, tray WinExe UX, MEL file logs, and session/lap race-event broadcast. KI-003 adds Kestrel TLS by default at `wss://127.0.0.1:8742/ws/`, a persisted self-signed certificate with logged SHA-256 pin, and loopback-only explicit cleartext opt-out. Merged [PR #12](https://github.com/marcatos/SimPulse/pull/12).
+- Windows Bridge worker + Core library: fixture replay adapter, first-party iRacing mmap session reader (KI-002 live replay smoke 2026-08-19), gated PIN pairing, tray WinExe UX, MEL file logs, and session/lap race-event broadcast. KI-003 adds Kestrel TLS by default at `wss://127.0.0.1:8742/ws/`, a persisted self-signed certificate with logged SHA-256 pin, and loopback-only explicit cleartext opt-out. KI-006 reconnect now requires a random per-device token; the Bridge stores only its raw-byte SHA-256 hash. TLS merged in [PR #12](https://github.com/marcatos/SimPulse/pull/12); reconnect-token branch is pending merge.
 - INFRA-004: XcodeGen `project.yml` → `SimPulse.xcodeproj` (iOS + embedded Watch).
 - WATCH-001: `WorkoutSessionController` start/end; companion unreachability does not stop recording; HealthKit Watch adapter (`HKWorkoutActivityType.other`, metadata Sim Racing). Merged PR #5.
 - WATCH-002: glanceable Watch UI — large HR, elapsed, Idle/Recording; Always On hides Start/End. Merged [PR #6](https://github.com/marcatos/SimPulse/pull/6). Simulator screenshots in `docs/screenshots/watchos/`.
@@ -29,12 +29,12 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 ## Partially completed features
 
 - WatchConnectivity paired-device E2E (KI-008).
-- Protocol: Bridge TLS + PIN pairing shipped; IOS-005 client-side certificate pin enforcement remains.
+- Protocol: Bridge TLS + PIN pairing + per-device reconnect proof shipped on the current branch; IOS-005 certificate pin enforcement, Keychain token persistence, and hello token sending remain.
 - Entitlements: `CapabilityGate` only (KI-004).
 
 ## Active work
 
-- None claimed. Next: IOS-005 Bridge client pin, or PROTO-003 Swift codec.
+- KI-006 implementation and documentation are complete on `feat/reconnect-token`, pending review/merge. Next: IOS-005 Bridge certificate pin + Keychain reconnect token, or PROTO-003 Swift codec.
 
 ## Blocked work
 
@@ -48,14 +48,14 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Latest successful build
 
-- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — 149 passed (2026-08-19, Windows, KI-003). Live iRacing replay smoke (KI-002) produced SessionStart + lap 1→2 events.
+- **.NET Bridge host:** `dotnet test SimPulse.sln --configuration Release` — 160 passed (2026-08-19, Windows, KI-006). Live iRacing replay smoke (KI-002) produced SessionStart + lap 1→2 events.
 - **iOS / watchOS (simpulse-mac, Xcode 26.6):** `xcodebuild test` scheme SimPulse iPhone 17 — **TEST SUCCEEDED** (31 tests). `build-ios.sh` + `build-watch.sh` — **BUILD SUCCEEDED**. CODE_SIGNING_ALLOWED=NO.
 
 ## Latest successful tests
 
 | Suite | Platform | Result |
 | --- | --- | --- |
-| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **149 passed**, 0 failed (2026-08-19, KI-003) |
+| `dotnet test SimPulse.sln --configuration Release` | Windows 10.0.26200, SDK 8.0.424 | **160 passed**, 0 failed (2026-08-19, KI-006) |
 | KI-002 live mmap smoke (iRacing replay) | Windows, `iRacingSim64DX11` | **PASS** mmap + SessionStart + LapComplete/LapStart (2026-08-19) |
 | GitHub Actions `.NET` job | `windows-latest`, `ubuntu-latest` (PR #1) | **pass** |
 | `xcodebuild test` SimPulse | simpulse-mac, iPhone 17 simulator | **31 passed**, 0 failed (2026-08-19, WATCH-003/IOS-004) |
@@ -64,11 +64,11 @@ Phase 0 bootstrap is complete enough for parallel agents to start Phase 1–4 wo
 
 ## Architecture summary
 
-Monorepo. Hexagonal Bridge (`ISimulatorAdapter`, `IBridgeCertificateSource`). JSON protocol v1 over TLS by default (LAN, pairing required, client pin contract in ADR 0013). HealthKit is source of truth for workouts. Correlation uses explicit clock sources (ADR 0004). No cloud. No GPL iRacing wrappers (IRSDKSharper rejected).
+Monorepo. Hexagonal Bridge (`ISimulatorAdapter`, `IBridgeCertificateSource`, `ITrustedDeviceStore`). JSON protocol v1 over TLS by default (LAN, pairing required, client pin contract in ADR 0013, reconnect token in ADR 0014). HealthKit is source of truth for workouts. Correlation uses explicit clock sources (ADR 0004). No cloud. No GPL iRacing wrappers (IRSDKSharper rejected).
 
 ## Immediate recommended next tasks
 
-1. IOS-005 Bridge client pairing + certificate pin enforcement
+1. IOS-005 Bridge client pairing + certificate pin enforcement + Keychain reconnect token
 2. PROTO-003 Swift protocol codec
 3. KI-008 paired Watch/iPhone WatchConnectivity E2E when a Mac is available
 

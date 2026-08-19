@@ -21,6 +21,8 @@ iPhone and Windows Bridge must talk on the LAN with no cloud. Need versioning, t
 
 **TLS:** the original Phase 0 skeleton used cleartext LAN transport. The 2026-08-19 follow-up in [ADR 0013](0013-bridge-tls-kestrel.md) implemented TLS by default with a Bridge-owned self-signed certificate and a SHA-256 fingerprint for client pinning. Explicit cleartext opt-out is restricted to loopback. Pairing semantics and the v1 envelope remain unchanged.
 
+**Reconnect proof:** [ADR 0014](0014-reconnect-token.md) requires a per-device opaque token after PIN pairing; DeviceId alone no longer authorizes reconnect.
+
 ## Alternatives considered
 
 - **Protobuf / MessagePack:** Smaller and stricter. Worse to inspect during early development; codegen across Swift and C# adds tool surface. Revisit if profiling shows JSON cost on dense telemetry.

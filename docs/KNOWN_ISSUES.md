@@ -9,7 +9,7 @@ Do not hide defects because they are outside the current task.
 | KI-003 | 2026-08-18 | Protocol | Low | Mitigated 2026-08-19 (Bridge TLS shipped; IOS-005 pin pending) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
-| KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
+| KI-006 | 2026-08-18 | Bridge / Security | Low | Mitigated 2026-08-19 (Bridge token shipped; IOS-005 pending) |
 | KI-007 | 2026-08-19 | iOS / HealthKit | Low | Open (by design) |
 | KI-008 | 2026-08-19 | watchOS / iOS / WatchConnectivity | Medium | Open |
 
@@ -30,8 +30,8 @@ Do not hide defects because they are outside the current task.
 
 - **Status:** Mitigated 2026-08-19. Bridge now defaults to Kestrel TLS at `wss://127.0.0.1:8742/ws/`, persists or loads a self-signed PFX, and logs the lowercase certificate-DER SHA-256 fingerprint for pinning. Cleartext requires explicit `SIMPULSE_BRIDGE_TLS=0`, `false`, or `off` and is refused outside loopback.
 - **Remaining:** IOS-005 must pin `TlsCertSha256` and reject certificate mismatches. Until that client exists, the Bridge-side pin contract is covered by .NET transport tests rather than an end-to-end iPhone flow.
-- **Operational note:** Read the fingerprint from Information logs. Keep the generated PFX and any configured password outside source control. TLS does not address DeviceId-only reconnect trust (KI-006).
-- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003, ADR 0013, KI-006, IOS-005
+- **Operational note:** Read the fingerprint from Information logs. Keep the generated PFX and any configured password outside source control. Per-device reconnect proof is specified by ADR 0014.
+- **Related:** PROTO-001, BRIDGE-005, BRIDGE-006, BRIDGE-007, ADR 0003, ADR 0013, ADR 0014, KI-006, IOS-005
 
 ## KI-005 — Android and Wear OS projects not generated
 
@@ -40,13 +40,12 @@ Do not hide defects because they are outside the current task.
 - **Suspected cause:** Phase 9 deferred until the Apple vertical slice (Phases 1–5).
 - **Related:** ADR 0010, AND-001, WEAROS-001
 
-## KI-006 — Reconnect trust is DeviceId-only (Phase 0)
+## KI-006 — Per-device reconnect token
 
-- **Symptoms:** After PIN pairing, reconnecting clients send `hello` with a previously trusted DeviceId and are accepted without PIN re-entry. DeviceId is client-asserted; TLS is now the Bridge default, but there is still no per-device reconnect secret or proof of possession.
-- **Impact:** Any LAN peer that knows or guesses a trusted DeviceId can impersonate that device until revoke.
-- **Workaround:** Revoke compromised DeviceIds; keep Bridge on loopback unless LAN pairing is intentional; require clients to pin the Bridge certificate; treat DeviceId as a capability token, not proof of possession.
-- **Suspected cause:** Phase 0 scope — PIN establishes trust once; TLS shipped under KI-003, while per-device reconnect secrets remain deferred.
-- **Related:** SECURITY.md, BRIDGE-006, ADR 0003, ADR 0013, KI-003
+- **Status:** Mitigated 2026-08-19 on the Bridge. Successful PIN pairing now returns a random 32-byte `pairing.accept.reconnectToken`; reconnect authorization requires the same token on `hello` and compares its raw-byte SHA-256 against the stored hash in fixed time. DeviceId alone, missing/wrong tokens, legacy rows without a hash, and revoked devices are untrusted.
+- **Storage:** The Bridge stores only `reconnectTokenSha256` and does not log token material. Legacy devices must pair again. The Bridge store is not Keychain and never needs the plaintext token after `pairing.accept`.
+- **Remaining:** IOS-005 must persist `pairing.accept.reconnectToken` in Keychain (not UserDefaults), send it on every hello, and pin the Bridge TLS certificate. Until that client exists, the end-to-end iPhone reconnect path is not verified.
+- **Related:** SECURITY.md, BRIDGE-006, IOS-005, ADR 0003, ADR 0013, ADR 0014, KI-003
 
 ## KI-004 — Entitlements are code-level only
 
