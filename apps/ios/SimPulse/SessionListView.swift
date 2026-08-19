@@ -58,9 +58,15 @@ struct SessionListView: View {
 }
 
 #Preview("Empty") {
-    SessionListView(model: SessionListViewModel(repository: MockSessionRepository(sessions: [])))
+    SessionListView(model: SessionListViewModel(
+        repository: MockSessionRepository(sessions: []),
+        authorization: MockHealthAuthorization(hasPrompted: true)
+    ))
 }
 
 #Preview("Mock sessions") {
-    SessionListView(model: SessionListViewModel(repository: MockSessionRepository()))
+    SessionListView(model: SessionListViewModel(
+        repository: MockSessionRepository(),
+        authorization: MockHealthAuthorization(hasPrompted: true)
+    ))
 }
