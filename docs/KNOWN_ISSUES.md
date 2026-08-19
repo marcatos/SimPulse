@@ -5,7 +5,7 @@ Do not hide defects because they are outside the current task.
 | ID | Date | Component | Severity | Status |
 | --- | --- | --- | --- | --- |
 | KI-001 | 2026-08-18 | Apple apps | High (blocks Phase 1–2) | Closed |
-| KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Open |
+| KI-002 | 2026-08-18 | Bridge / iRacing | Medium (live still needs sim + memmap) | Closed 2026-08-19 (live replay smoke) |
 | KI-003 | 2026-08-18 | Protocol | Low | Mitigated 2026-08-19 (Bridge TLS shipped; IOS-005 pin pending) |
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
@@ -19,15 +19,12 @@ Do not hide defects because they are outside the current task.
 - **Symptoms (historical):** No `.xcodeproj` on Windows; missing simulator runtimes on the Mac.
 - **Related:** ADR 0009, ADR 0012, INFRA-003, INFRA-004, WATCH-001
 
-## KI-002 — Live iRacing still requires a running sim + memmap
+## KI-002 — Live iRacing mmap smoke
 
-- **Symptoms:** Without `SIMPULSE_FIXTURE_PATH`, Bridge probes `Local\IRSDKMemMapFileName`. If the map is missing at process start (iRacing closed, memmap disabled, or non-Windows), `IsAvailableAsync` is false but `BridgeRuntime` still enters `SubscribeAsync`. The adapter polls `TryOpen` and starts the session when the mmap appears. No live YAML or variable-table telemetry until the official map is present and `irsdk_stConnected` is set.
-- **Reproduction:** Run Bridge without `SIMPULSE_FIXTURE_PATH` on a PC without iRacing, or with iRacing running but `irsdkEnableMem` off.
-- **Workaround:** Replay `tests/fixtures/telemetry/iracing-practice-short.json`, or start iRacing with memory telemetry enabled (`irsdkEnableMem=1`; Bridge may already be running).
-- **Suspected cause:** Live bytes are read only when the official mmap is present and `irsdk_stConnected` is set. CI never requires a live session.
-- **Done in adapters (BRIDGE-008, not live-verified):** player car (`DriverCarIdx`), `SessionNum`, `SessionTime`, and `sessionInfoUpdate` YAML cache. mmap Latin1 YAML string is reused when `sessionInfoUpdate` is unchanged (BUG-005). Available identity changes re-run `Parse` on the cached YAML (BUG-004). Lap tracking resets on Available `SessionNum`. LapStart/LapComplete carry `sessionNum` so tracker keys do not drop race lap 1. Latest `varBuf` by tickCount. `IRSDKDataValidEvent` wait is best-effort (missing/timeout → false, caller still reads, then poll idle). Trusted clients still get race-events only — no 60 Hz WebSocket telemetry frames.
-- **Remaining:** live smoke with a real sim + mmap (`irsdkEnableMem=1`). ANALYTICS-003 `RaceReportBuilder` peak-event wiring stays out of scope.
-- **Related:** ADR 0006, BRIDGE-003, BRIDGE-008, BUG-001, BUG-004
+- **Status:** Closed 2026-08-19. Live replay on this PC (`iRacingSim64DX11`, `irsdkEnableMem=1` in `Documents\iRacing\app.ini`) opened `Local\IRSDKMemMapFileName` with `irsdk_stConnected=1`. Bridge (no `SIMPULSE_FIXTURE_PATH`) logged mmap open, `Available=True`, `iRacing session started` (YAML length 43694), `SessionStart`, then `LapStart` lap 1 / `LapComplete` lap 1 / `LapStart` lap 2 with `SessionNum=2`. Trusted-client broadcast had Recipients=0 (no paired phone). Repeat locally with `pwsh -File scripts/smoke-iracing-mmap.ps1`.
+- **Still true when the sim is closed:** Without `SIMPULSE_FIXTURE_PATH`, Bridge probes the official mmap, `IsAvailableAsync` is false until the map appears, and `BridgeRuntime` still enters `SubscribeAsync` so it can attach later. Fixture replay remains `tests/fixtures/telemetry/iracing-practice-short.json`. CI never requires a live session.
+- **Out of scope:** ANALYTICS-003 `RaceReportBuilder` peak-event wiring; 60 Hz WebSocket telemetry frames (race-events only).
+- **Related:** ADR 0006, BRIDGE-003, BRIDGE-008, BUG-001, BUG-004, `docs/handoffs/KI-002.md`
 
 ## KI-003 — Bridge TLS shipped; client pin enforcement pending
 

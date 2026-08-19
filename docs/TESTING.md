@@ -13,6 +13,8 @@
 
 Ordinary CI must never require an active iRacing session or a physical Watch.
 
+Optional live mmap smoke (Windows, sim or replay running): `pwsh -File scripts/smoke-iracing-mmap.ps1`. Not part of CI.
+
 ## Fixtures
 
 Canonical telemetry fixtures live in `tests/fixtures/`.
