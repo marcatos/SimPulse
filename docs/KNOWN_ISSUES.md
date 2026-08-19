@@ -10,6 +10,7 @@ Do not hide defects because they are outside the current task.
 | KI-004 | 2026-08-18 | Product | Medium | Open |
 | KI-005 | 2026-08-18 | Android / Wear OS | Medium (blocks Phase 9) | Open |
 | KI-006 | 2026-08-18 | Bridge / Security | Low | Open (Phase 0 limitation) |
+| KI-007 | 2026-08-19 | iOS / HealthKit | Low | Open (by design) |
 
 ## KI-001 — Apple project not generated
 
@@ -53,6 +54,12 @@ Do not hide defects because they are outside the current task.
 
 - **Symptoms:** Free/Premium/Pro gates exist as functions; StoreKit is absent; UI does not enforce limits.
 - **Related:** ADR 0008, IOS-010
+
+## KI-007 — HealthKit read auth indistinguishable from empty list (IOS-003)
+
+- **Symptoms:** HealthKit does not expose reliable read-authorization status; an empty session list after prompt cannot distinguish “user denied read” from “no Sim Racing workouts yet.” IOS-003 uses one `.needsHealthAccess` empty state for both.
+- **Workaround:** Copy mentions allowing Health access and starting a Watch workout; Open Settings CTA opens app Settings (user navigates to Health manually).
+- **Related:** IOS-003, `docs/superpowers/specs/2026-08-19-ios-003-healthkit-permissions-design.md`
 
 ## ANALYTICS-003 — HeartRateWindows (2026-08-18)
 

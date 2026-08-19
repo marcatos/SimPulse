@@ -23,8 +23,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.marcatos.SimPulse
         INFOPLIST_KEY_CFBundleDisplayName: SimPulse
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_NSHealthShareUsageDescription: SimPulse reads heart rate and energy from Apple Watch workouts you start in the app. Not a medical device.
-        INFOPLIST_KEY_NSHealthUpdateUsageDescription: SimPulse saves Sim Racing workouts to Health so they stay on this iPhone.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: SimPulse reads heart rate, energy, and past Sim Racing workouts from Health. Not a medical device.
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: SimPulse may save Sim Racing workout data to Health on this iPhone. Not a medical device.
+        CODE_SIGN_ENTITLEMENTS: apps/ios/SimPulse/SimPulse.entitlements
         TARGETED_DEVICE_FAMILY: "1,2"
     dependencies:
       - target: SimPulseWatch
