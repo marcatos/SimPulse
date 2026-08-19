@@ -21,6 +21,10 @@ final class HealthKitSessionRepository: SessionRepository, @unchecked Sendable {
     init() {}
     #endif
 
+    func sessionDetail(id: String) async throws -> SessionDetail? {
+        nil
+    }
+
     func listSessions() async throws -> [SessionSummary] {
         #if canImport(HealthKit)
         guard HKHealthStore.isHealthDataAvailable() else {
