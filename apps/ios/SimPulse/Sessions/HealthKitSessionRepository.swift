@@ -42,10 +42,10 @@ final class HealthKitSessionRepository: SessionRepository, @unchecked Sendable {
 
             let samples: [HKQuantitySample]
             do {
-                samples = try await fetchHeartRateSamples(from: workout.startDate, to: workout.endDate)
+                samples = try await fetchHeartRateSamples(for: workout)
             } catch {
                 log.error("healthkit hr query failed: \(error.localizedDescription, privacy: .public)")
-                return nil
+                samples = []
             }
 
             let points = Self.mapHeartRateSamples(samples)
@@ -128,14 +128,26 @@ final class HealthKitSessionRepository: SessionRepository, @unchecked Sendable {
         }
     }
 
-    private func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HKQuantitySample] {
-        try await withCheckedThrowingContinuation { continuation in
-            let heartRateType = HKQuantityType(.heartRate)
-            let predicate = HKQuery.predicateForSamples(
-                withStart: start,
-                end: end,
+    private func fetchHeartRateSamples(for workout: HKWorkout) async throws -> [HKQuantitySample] {
+        // Prefer samples linked to the workout; fall back to time window if HealthKit returns none.
+        let linked = try await queryHeartRateSamples(
+            predicate: HKQuery.predicateForObjects(from: workout)
+        )
+        if !linked.isEmpty {
+            return linked
+        }
+        return try await queryHeartRateSamples(
+            predicate: HKQuery.predicateForSamples(
+                withStart: workout.startDate,
+                end: workout.endDate,
                 options: [.strictStartDate, .strictEndDate]
             )
+        )
+    }
+
+    private func queryHeartRateSamples(predicate: NSPredicate) async throws -> [HKQuantitySample] {
+        try await withCheckedThrowingContinuation { continuation in
+            let heartRateType = HKQuantityType(.heartRate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
             let query = HKSampleQuery(
                 sampleType: heartRateType,
