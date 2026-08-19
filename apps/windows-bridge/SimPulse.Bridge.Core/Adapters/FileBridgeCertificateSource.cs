@@ -1,6 +1,9 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 
 using Microsoft.Extensions.Logging;
 
@@ -154,12 +157,72 @@ public sealed class FileBridgeCertificateSource : IBridgeCertificateSource
 
         string password = _certPassword ?? string.Empty;
         byte[] pfxBytes = created.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes(path, pfxBytes);
+        string temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
 
-        return new X509Certificate2(
-            pfxBytes,
-            password,
-            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet);
+        try
+        {
+            using (FileStream stream = new(
+                temporaryPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None))
+            {
+                stream.Write(pfxBytes);
+                stream.Flush(flushToDisk: true);
+            }
+
+            RestrictToCurrentUser(temporaryPath);
+
+            try
+            {
+                File.Move(temporaryPath, path);
+                RestrictToCurrentUser(path);
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                _logger.LogInformation(
+                    "Another process persisted the bridge certificate first; loading the winning file. Path={Path}",
+                    path);
+            }
+
+            return LoadFromFile(path);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(pfxBytes);
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
+    }
+
+    private static void RestrictToCurrentUser(string path)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            RestrictToCurrentWindowsUser(path);
+        }
+        else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static void RestrictToCurrentWindowsUser(string path)
+    {
+        SecurityIdentifier currentUser = WindowsIdentity.GetCurrent().User
+            ?? throw new InvalidOperationException("Current Windows user has no security identifier.");
+        FileSecurity security = new();
+        security.SetOwner(currentUser);
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        security.AddAccessRule(
+            new FileSystemAccessRule(
+                currentUser,
+                FileSystemRights.FullControl,
+                AccessControlType.Allow));
+        new FileInfo(path).SetAccessControl(security);
     }
 
     private static string ComputeFingerprintHex(X509Certificate2 certificate)
