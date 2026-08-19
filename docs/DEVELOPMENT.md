@@ -95,6 +95,16 @@ Every long-running process logs start, major steps with durations, and a finish 
 
 Ordinary automated tests use fixtures in `tests/fixtures`. An active iRacing session is never required for CI.
 
+## Live iRacing mmap smoke
+
+With iRacing in a session or replay (`irsdkEnableMem=1` in `Documents\iRacing\app.ini`):
+
+```powershell
+pwsh -File scripts/smoke-iracing-mmap.ps1
+```
+
+The script waits for `Local\IRSDKMemMapFileName`, runs the Release Bridge host without `SIMPULSE_FIXTURE_PATH`, and looks for Information logs `mmap open succeeded` and `iRacing session started`. Do not commit those log files or pairing PINs.
+
 ## Adding a dependency
 
 Answer the five questions in [`THIRD_PARTY.md`](THIRD_PARTY.md) and record the license before merging.

@@ -283,7 +283,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
   - BridgeRuntime enters SubscribeAsync when `IsAvailableAsync` is false so mmap can appear after startup
   - IRSDK session YAML decoded as Windows-1252 / Latin1
   - KI-002 / BRIDGE-003 handoff document first-DriverInfo car and sessionInfoUpdate follow-up
-- **Notes:** Whole-branch Important findings for `feat/iracing-mmap-hr-windows`. Should-fix done: shared `IracingHeaderReader` offsets; Debug on repeated TryOpen. Session YAML Latin1; runtime always subscribes. Player car / `sessionInfoUpdate` / ANALYTICS-003 wiring left as KI-002 follow-ups.
+- **Notes:** Whole-branch Important findings for `feat/iracing-mmap-hr-windows`. Should-fix done: shared `IracingHeaderReader` offsets; Debug on repeated TryOpen. Session YAML Latin1; runtime always subscribes. Player car / `sessionInfoUpdate` landed in BRIDGE-008; live mmap smoke closed as KI-002 (2026-08-19). ANALYTICS-003 peak-event wiring remains separate.
 
 ### BRIDGE-007 — Tray / background UX
 
@@ -309,7 +309,7 @@ Do not mark DONE unless acceptance criteria are met on a real platform.
   - LapStart/LapComplete from Lap increases
   - No 60 Hz WebSocket frames
   - Tests pass without a live sim
-- **Notes:** Header/var parsers + YAML list match (unmatched lookups → Unavailable). Live path reads latest varBuf; `IracingLiveSession` caches YAML on `sessionInfoUpdate`, re-resolves identity, emits lap events, and leaves `NormalizedSimulatorUpdate.Telemetry` null. Verified with synthetic buffers + `FakeIracingSharedMemory` (`dotnet test SimPulse.sln --configuration Release`, 126 passed on Windows 2026-08-18). No live-on-track / iRacing session was run. Live mmap smoke remains KI-002. See `docs/handoffs/BRIDGE-008.md`.
+- **Notes:** Header/var parsers + YAML list match (unmatched lookups → Unavailable). Live path reads latest varBuf; `IracingLiveSession` caches YAML on `sessionInfoUpdate`, re-resolves identity, emits lap events, and leaves `NormalizedSimulatorUpdate.Telemetry` null. Synthetic buffers + `FakeIracingSharedMemory` remain the CI path. Live replay smoke closed KI-002 (2026-08-19: mmap + SessionStart + lap 1→2). See `docs/handoffs/BRIDGE-008.md` and `docs/handoffs/KI-002.md`.
 
 ### BUG-005 — SessionNum in lap keys + YAML decode cache
 

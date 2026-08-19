@@ -8,7 +8,7 @@ SimPulse is a local-first biometric platform for sim racers. An Apple Watch reco
 
 This is not a calorie counter with a racing skin. The product is **synchronization**.
 
-> SimPulse is early, public, and not an App Store release yet. Watch recording and the Windows Bridge are real; iPhone history, HealthKit sync, and live race reports are the next slice.
+> SimPulse is early, public, and not an App Store release yet. Watch recording, iPhone session list/detail, and the Windows Bridge (including live iRacing mmap) are real; live Race Reports and App Store distribution are the next slice.
 
 ---
 
@@ -63,11 +63,11 @@ Simulator captures (Apple Watch Series 11, 46 mm). See [`docs/screenshots/watcho
 | --- | --- |
 | Start / end Sim Racing workout on Watch (HealthKit) | **Shipped** — unit tested; companion unreachability does not stop recording |
 | Glanceable live UI (HR, elapsed, Always On) | **Shipped** — simulator screenshots above |
-| Persist workout and sync summary to iPhone | Next (WATCH-003, needs WatchConnectivity ingest) |
-| iPhone session history, charts, Race Report UI | Next |
+| Persist workout and sync summary to iPhone | **Shipped** — unit tested; paired-device E2E still KI-008 |
+| iPhone session history, charts, Race Report UI | Session list + detail shipped; Race Report UI next |
 | Windows Bridge host, PIN pairing, tray UX | **Shipped** — fixture-tested |
-| iRacing memory-mapped session reader | **Built** — live session smoke still pending |
-| LAN protocol v1 (JSON, pairing, time-sync) | **Shipped** on loopback; TLS not yet |
+| iRacing memory-mapped session reader | **Shipped** — live replay smoke 2026-08-19 |
+| LAN protocol v1 (JSON, pairing, TLS, time-sync) | **Shipped** TLS default; IOS-005 client pin pending |
 | Analytics: HR/energy summaries, Race Report model, lap/event windows | **Shipped** as pure C# libraries |
 | App Store / TestFlight / StoreKit | Not started |
 
