@@ -14,6 +14,17 @@ final class SessionDetailTests: XCTestCase {
         XCTAssertEqual(times, times.sorted())
     }
 
+    func testMockDetailSyntheticPointsSpanSessionDuration() async throws {
+        let repo = MockSessionRepository()
+        let detail = try await repo.sessionDetail(id: "mock-1")
+        XCTAssertNotNil(detail)
+        let points = detail!.heartRatePoints
+        XCTAssertFalse(points.isEmpty)
+        XCTAssertEqual(points.first!.timestamp, detail!.startedAt)
+        let expectedEnd = detail!.startedAt.addingTimeInterval(detail!.duration)
+        XCTAssertEqual(points.last!.timestamp, expectedEnd)
+    }
+
     func testMockDetailUnknownIdReturnsNil() async throws {
         let repo = MockSessionRepository()
         let detail = try await repo.sessionDetail(id: "missing")
